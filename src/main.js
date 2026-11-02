@@ -46,4 +46,6 @@ function boot(){const had=load();initScene();resize();applyLoadedVisuals();S.reg
   addEventListener('pagehide',save);
   setInterval(loop,50);requestAnimationFrame(frame);}
 boot();
+// iPhone は viewport と touch-action だけではピンチの拡大を止められないため
+['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});

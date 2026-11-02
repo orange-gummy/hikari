@@ -10,6 +10,7 @@
 :root[data-theme="dark"]{--bg:#04050c}
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;margin:0}
+html{touch-action:pan-x pan-y}   /* ダブルタップとピンチで画面を拡大させない（星図の拡大は skills.js で独自に処理） */
 body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-weight:300;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
 button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);outline-offset:2px;border-radius:6px}
