@@ -2,7 +2,7 @@
 /* =====================================================================
    LOOP / BOOT
    ===================================================================== */
-function applyLoadedVisuals(){for(let i=0;i<7;i++){const lost=i<6?i<S.lost:S.greyLost;const v=S.cleared?1:lost?0:1;A[i]=v;TG[i]=v;RV[i]=v;}lastUnit=unitIndex(S.E);paintSpeed();}
+function applyLoadedVisuals(){for(let i=0;i<7;i++){const v=memTarget(i);A[i]=v;TG[i]=v;RV[i]=v;}lastUnit=unitIndex(S.E);paintSpeed();}
 function prologue(){story('pro1',LINES.pro1);setTimeout(()=>story('pro2',LINES.pro2),4400);setTimeout(()=>story('start',LINES.start),8800);}
 let lastT=performance.now(),acc=0,secAcc=0,saveAcc=0,lastStage=-1,paused=false,panelHold=false;
 pbody.addEventListener('pointerdown',()=>{panelHold=true;});addEventListener('pointerup',()=>{setTimeout(()=>{panelHold=false;},60);});addEventListener('pointercancel',()=>{panelHold=false;});
@@ -17,13 +17,14 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.tier!=null){const i=FXQ.tier;FXQ.tier=null;TIERFX={i,t:Date.now()};if(curTab==='drive')renderDrive(true);const u=devUI.find(x=>x.i===i);if(u&&u.el){const sv=u.el.querySelector('svg').getBoundingClientRect(),c=mix(COLORS[DEVICES[i].col].rgb,G,1-A[DEVICES[i].col]);TRIP.push({x:sv.left+sv.width/2,y:sv.top+sv.height/2,t:0,c});
     u.el.dataset.sweep='1';u.el.style.background='';u.el.style.backgroundImage='linear-gradient(90deg,transparent,'+rgb(c,0.22)+',transparent)';u.el.style.backgroundSize='40% 100%';u.el.style.backgroundRepeat='no-repeat';const an=u.el.animate&&u.el.animate([{backgroundPosition:'-60% 0'},{backgroundPosition:'160% 0'}],{duration:900,easing:'ease-out'});if(an)an.onfinish=()=>{u.el.style.backgroundImage='';delete u.el.dataset.sweep;};}}
   if(FXQ.letter){toast('故郷からの便り　<b>+'+fmt(FXQ.letter)+'</b>');FXQ.letter=0;}
-  if(has('aS')&&S.autoStop&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&S.stage>=BRAKE_STAGE){const g=wGain();if(g>=Math.max(5,2*(S.W+skillSpent()))){startBrake(g);BRK.auto=true;}}
+  if(has('aS')&&S.autoStop&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&S.stage>=BRAKE_STAGE){const g=wGain();if(g>=Math.max(5,S.stopK*(S.W+skillSpent()))){startBrake(g);BRK.auto=true;}}
+  if(FXQ.restart){FXQ.restart=0;if(curTab==='drive')renderDrive(true);}
   if(FXQ.milestone){FXQ.milestone=false;fla=Math.max(fla,0.1);}
   if(FXQ.prestige){FXQ.prestige=false;if(!BRK){stk=60;fla=0.25;}}
   if(FXQ.region){FXQ.region=false;fla=Math.max(fla,0.12);if(curTab==='drive')renderDrive(true);}
   if(S.stage!==lastStage){lastStage=S.stage;paintSpeed();if(curTab==='drive')renderDrive(false);}
   paintHUD();rollHV();acc+=dt;if(acc>0.25){acc=0;paintGoal();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();}
-  secAcc+=dt;if(secAcc>1){secAcc=0;checkAch();renderPanelTabsOnly();if(skillOpen&&S.W!==lastWShown)renderSkill();}
+  secAcc+=dt;if(secAcc>1){secAcc=0;checkAch();if(!S.flags.rsOpen&&lGain()>=1){S.flags.rsOpen=1;toast('再出発ができるようになった　<b>RESET</b>');}renderPanelTabsOnly();if(skillOpen&&S.W!==lastWShown)renderSkill();}
   saveAcc+=dt;if(saveAcc>10){saveAcc=0;save();}
 }
 let HVR=null;

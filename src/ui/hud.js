@@ -10,7 +10,7 @@ CONS_PTS.forEach(p=>{CHL.push(el('circle',{cx:p[0],cy:p[1],r:6},consEl));CD.push
 function arcD(r,a0,a1){return 'M'+(88+r*Math.cos(a0)).toFixed(2)+' '+(88+r*Math.sin(a0)).toFixed(2)+'A'+r+' '+r+' 0 0 1 '+(88+r*Math.cos(a1)).toFixed(2)+' '+(88+r*Math.sin(a1)).toFixed(2);}
 const TKG=el('g',{},ringEl);for(let i=0;i<72;i++){const a=i/72*6.283,r2=i%6===0?80:83;el('line',{x1:88+86*Math.cos(a),y1:88+86*Math.sin(a),x2:88+r2*Math.cos(a),y2:88+r2*Math.sin(a),stroke:'rgba(236,238,242,0.3)','stroke-width':0.5},TKG);}
 const SEG=[];for(let i=0;i<12;i++){const a0=-1.5708+i/12*6.283+0.05;SEG.push(el('path',{d:arcD(74,a0,a0+6.283/12-0.1),fill:'none','stroke-width':2.2,'stroke-linecap':'round'},ringEl));}
-function nextMemIndex(){if(S.cleared)return -1;if(S.lost<6)return S.lost;if(!S.greyLost)return 6;return -1;}
+function nextMemIndex(){if(S.cleared)return -1;let i=S.lost;while(i<6&&i<S.kept)i++;if(i<6)return i;if(!S.greyLost)return 6;return -1;}
 function paintColorUI(ag){
   const n=nines(S.stage);
   for(let i=0;i<12;i++){if(i<n){const ci=i%6;SEG[i].setAttribute('stroke',rgb(mix(COLORS[ci].rgb,G,1-A[ci]),1));}else SEG[i].setAttribute('stroke','rgba(255,255,255,0.12)');}
@@ -46,7 +46,7 @@ function goal(){const s=S.stage,nx=s+1;
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];
   if(S.dev[0]===0)return['DRIVEで太陽帆を買う','drive',false];
   if(S.maxStage===0)return['BOOSTで秒速10kmまで加速する'+(S.E<accelCost(1)?'（あと'+fmt(accelCost(1)-S.E)+'）':''),S.E>=accelCost(1)?'boost':null,false];
-  if(S.maxStage>=BRAKE_STAGE&&S.prestiges===0&&wGain()>=5)return['RESETで緊急停止して、歪みを得る','reset',false];
+  if(S.maxStage>=BRAKE_STAGE&&S.prestiges===0&&S.restarts===0&&wGain()>=5)return['RESETで緊急停止して、歪みを得る','reset',false];
   if(nx<=MAX_STAGE){const c=accelCost(nx),rest=S.E<c?'（あと'+fmt(c-S.E)+'）':'';return[(nx>DILATION_STAGE?'時間の進み /'+fmtG(stageGamma(nx))+' まで加速する':speedText(nx)+'まで加速する')+rest,S.E>=c?'boost':null,false];}
   return['故郷まで あと'+Math.ceil(Math.max(0,GOAL_LY-S.dist)).toLocaleString('ja-JP')+'光年',null,false];}
 let lastGoal='';
