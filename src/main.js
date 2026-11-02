@@ -46,3 +46,4 @@ function boot(){const had=load();initScene();resize();applyLoadedVisuals();S.reg
   addEventListener('pagehide',save);
   setInterval(loop,50);requestAnimationFrame(frame);}
 boot();
+if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});

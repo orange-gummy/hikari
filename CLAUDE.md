@@ -22,12 +22,15 @@
   `data` → `state` → `economy` → `story` → `render/scene` → `render/sky` → `ui/common` → `ui/hud` → `ui/panel` → `ui/skills` → `ui/settings` → `climax` → `main`
   - `state.js` の `FXQ` は経済の計算から演出への合図。経済側（data〜story）は DOM や描画に触れない（試算ツールが読むため）。
 - `tools/balance_bot.js`：`src/` の data・state・economy・story を読み込み、自動プレイで最初から到着までを試算する。
-- 動作確認：`.claude/launch.json` の `hikari`（`python -m http.server 8123`）。index.html を直接開いても動く。
+- `manifest.webmanifest` `sw.js` `icons/`：PWA。service worker は自分のファイルをネットワーク優先で読み、つながらないときだけ保存分を使う（版の上げ忘れの心配がない）。Google Fonts は一度読んだ分を保存。**`index.html` で読み込むファイルを増減したら `sw.js` の `FILES` も合わせる。**
+- `tools/make_icons.py`：アイコン（案2「7色の星座」）を描き直す。`python tools/make_icons.py`（Pillow が必要）。
+- 動作確認：`.claude/launch.json` の `hikari`（`python -m http.server 8123`）。index.html を直接開いても動く（そのときは service worker を登録しない）。
+- git：作者はこのリポジトリだけ `orange-gummy <87234041+orange-gummy@users.noreply.github.com>`（PC全体の設定とは別。公開リポジトリなので noreply を使う）。リモートは https://github.com/orange-gummy/hikari.git。改行は `.gitattributes` で LF に固定。
   出力例：`stage 22 min 46.8 years 10035 prest 9 loses 23.8 33.3 …`（到着までの分数、故郷の年月、緊急停止の回数、色を失った時刻）
 
 ## 最初にやってほしいこと（方針を確認してから）
 1. ~~**ファイル分割**~~：完了（2026-11-02）。普通の `<script src>` を並べる方式を選んだ。ES Modules や Vite への移行は、Electron 化のときに必要なら検討する。
-2. **PWA**：設計書では完了扱いだが、今の index.html には manifest と service worker が入っていない。オフラインで動き、ホーム画面に追加できるようにする。
+2. ~~**PWA**~~：完了（2026-11-02）。localhost でオフライン動作を確認済み。スマホのホーム画面への追加は、HTTPS で公開してから確認する（公開先は GitHub Pages の予定、未作成）。
 3. ~~バランス試算ツールを分割後の構成でも動くようにする。~~ 完了。分割の前後で出力が一致することを確認済み。
 
 ## 主な仕組み（詳しくは設計書）

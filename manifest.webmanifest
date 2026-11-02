@@ -1,0 +1,16 @@
+{
+  "name": "光の手前で",
+  "short_name": "光の手前で",
+  "description": "光の速さに近づきながら、故郷を目指す。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#04050C",
+  "theme_color": "#04050C",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
