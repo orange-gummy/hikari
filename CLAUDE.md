@@ -7,6 +7,7 @@
 
 - 設計書（Claude Doc）：https://claude.ai/artifact/UAeLBS6FcrFhBY4G1kjsDd
 - 第一段階の公開版：https://claude.ai/artifact/D3XgW5RX8AAWugpJ22NG8S
+- PWA 版（GitHub Pages、`main` に push すると1〜2分で反映）：https://orange-gummy.github.io/hikari/
 - 現状：第一段階（本編を通しで遊べる形）完了。自動プレイで約47分で故郷に着く。
 
 ## 作業の進め方（必ず守る）
@@ -30,7 +31,7 @@
 
 ## 最初にやってほしいこと（方針を確認してから）
 1. ~~**ファイル分割**~~：完了（2026-11-02）。普通の `<script src>` を並べる方式を選んだ。ES Modules や Vite への移行は、Electron 化のときに必要なら検討する。
-2. ~~**PWA**~~：完了（2026-11-02）。localhost でオフライン動作を確認済み。スマホのホーム画面への追加は、HTTPS で公開してから確認する（公開先は GitHub Pages の予定、未作成）。
+2. ~~**PWA**~~：完了（2026-11-02）。localhost でオフライン動作を確認済み。GitHub Pages で公開済み（service worker・manifest・アイコンの動作を確認）。スマホのホーム画面への追加は未確認。
 3. ~~バランス試算ツールを分割後の構成でも動くようにする。~~ 完了。分割の前後で出力が一致することを確認済み。
 
 ## 主な仕組み（詳しくは設計書）
