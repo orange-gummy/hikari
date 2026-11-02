@@ -85,7 +85,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #panel{position:relative;display:flex;flex-direction:column;background:none;min-height:0}
 #panel::before{content:"";position:absolute;left:0;right:0;bottom:0;top:-28px;pointer-events:none;z-index:0;background:linear-gradient(to bottom,rgba(5,6,14,0),rgba(5,6,14,.52) 44px,rgba(5,6,14,.6));-webkit-mask-image:linear-gradient(to bottom,transparent,#000 44px);mask-image:linear-gradient(to bottom,transparent,#000 44px)}
 #pbody,#tabs{position:relative;z-index:1}
-#pbody{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 20px 6px;min-height:0;overscroll-behavior:contain}
+#pbody{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 20px 6px;min-height:0;overscroll-behavior:contain;scrollbar-width:none}
+#pbody::-webkit-scrollbar{display:none}
 #tabs{display:flex;justify-content:space-between;padding:8px 14px 10px;border-top:0.5px solid var(--line-soft)}
 #tabs button{font-family:var(--label);font-size:11px;letter-spacing:.08em;color:var(--ink-dim);padding:6px 8px;border-radius:12px;border:0.5px solid transparent}
 #tabs button[aria-selected="true"]{color:var(--ink-strong);border-color:rgba(255,255,255,.35)}
