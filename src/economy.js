@@ -1,0 +1,106 @@
+'use strict';
+/* =====================================================================
+   ECONOMY ― 計算と行動
+   ===================================================================== */
+function nines(s){return s<11?0:s-10;}
+function stageBeta(s){return s<=11?SPEEDS[s]:1-Math.pow(10,-nines(s));}
+function stageGamma(s){if(s<11){const b=SPEEDS[s];return 1/Math.sqrt(1-b*b);}const e=Math.pow(10,-nines(s));return 1/Math.sqrt(e*(2-e));}
+function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)return String(Math.round(SPEEDS[s]*100));return s===12?'99':'99.'+'9'.repeat(s-12);}
+function stageLabel(s){return stagePct(s);}
+function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
+function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
+function accelCost(s){let c=STAGE_COST[s];if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
+function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
+function regionMult(i){const m=REGIONS[S.region].m;return (m[i]||1)*(m.all||1);}
+function milMult(n){let m=1;const b=has('eA')?3:2;for(const x of MILESTONES)if(n>=x)m*=b;return m;}
+function synK(){return has('e5')?1.5:1;}
+const TIER_NEED=[0,0,10,25,50,100,200],TIER_COST=[0,0,300,1e5,3e7,1e10,3e12],ROMAN=['','I','II','III','IV','V','VI'];
+function upgA(i){return Math.pow(has('e5')?2.5:2,(S.tier[i]||1)-1);}
+function tierNext(i){const t=(S.tier[i]||1)+1;if(t>6)return null;return{t,need:TIER_NEED[t],cost:DEVICES[i].cost*TIER_COST[t]};}
+function tierUp(i){const n=tierNext(i);if(!n||S.dev[i]<n.need||S.E<n.cost)return;S.E-=n.cost;S.tier[i]=n.t;FXQ.tier=i;}
+function kinds(){let k=0;for(let i=0;i<8;i++)if(S.dev[i]>0)k++;return k;}
+function synMult(i){if((S.tier[i]||1)<3)return 1;const n=S.dev,k=synK();
+  switch(i){case 0:return 1+0.02*n[1]*k;case 1:return 1+0.02*n[2]*k;case 2:return 1+0.03*n[5]*k;case 3:return 1+0.01*n[0]*k;case 4:return 1+0.03*n[6]*k;case 6:return 1+0.05*n[ANCHOR]*k;case 7:return 1+0.10*kinds()*k;default:return 1;}}
+function batteryCapRaw(P){return Math.max(2000,P*3600*(has('e3')?4:1));}
+function traitMult(i){const n=S.dev;switch(i){
+  case 0:return 1+0.25*Math.min(S.stage,11)+0.2*nines(S.stage);
+  case 2:{const cap=batteryCapRaw(baseRateNoFusion());return 1+2*Math.min(1,S.battery/cap);}
+  case 3:return S.runTime<300?3:1;
+  case 4:return 1+0.1*Math.floor(n[0]/10);
+  case 5:return S.pulse>0?4:1;
+  case 6:return 1+Math.log10(1+S.years);
+  case 7:return 1+0.15*S.skills.length;
+  default:return 1;}}
+function fissionBonus(){return 1+Math.min(1,0.005*S.dev[1]);}
+function devBase(i){if(i===ANCHOR)return 0;return DEVICES[i].prod*S.dev[i]*milMult(S.dev[i])*upgA(i)*synMult(i)*regionMult(i);}
+function devRateRaw(i){return devBase(i)*traitMult(i);}
+function globalMult(){return stageGamma(S.stage)*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*(1+0.01*S.W)*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1);}
+function resonant(){const c={};for(let i=0;i<8;i++){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
+function lostN(){return S.cleared?0:S.lost+(S.greyLost?1:0);}
+function onMilestone(){FXQ.milestone=true;if(has('eC'))S.crit=30;}
+function baseRateNoFusion(){let b=0;for(let i=0;i<8;i++)if(i!==2)b+=devBase(i);return b*globalMult();}
+function prodRate(){let b=0;for(let i=0;i<8;i++)b+=devRateRaw(i);return b*globalMult();}
+function devShare(i){return devRateRaw(i)*globalMult();}
+function tapGain(){return Math.max(1,prodRate()*0.05)*(has('c2')?3:1)*(has('cA')?5:1)*((S.tier[5]||1)>=3?1+0.02*S.dev[5]*synK():1);}
+function growth(i){return DEVICES[i].growth||DEVICE_GROWTH;}
+function devCost(i,k){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);return c*(Math.pow(g,k)-1)/(g-1);}
+function devMax(i){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);return Math.max(0,Math.floor(Math.log(S.E*(g-1)/c+1)/Math.log(g)));}
+function batteryCap(){return batteryCapRaw(prodRate());}
+function batteryRate(){return 0.03+(has('e2')?0.02:0);}
+function offlineCap(){return (has('c3')?24:has('c1')?8:2)*3600;}
+function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22));}
+function shipK(){return SHIP_K*(has('p3')?1.5:1);}
+function anchorCut(){return Math.min(0.6,0.03*S.dev[ANCHOR]*(has('cB')?1.5:1));}
+function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR;}
+function wsUnlocked(){return S.maxStage>=WORKSHOP_STAGE;}
+function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
+function autoBuy(){for(let i=7;i>=0;i--){if(!has('a'+i)||S.auto[i]===0)continue;if(!(S.dev[i]>0||S.maxStage>=DEVICES[i].unlock))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;S.autoBought++;if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
+function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
+
+function tick(dt,offMul){
+  const P=prodRate();const gain=P*(offMul||1)*dt;
+  S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;
+  autoBuy();if(has('aT')&&S.autoTier){for(let i=0;i<8;i++){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<MAX_STAGE&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
+  for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
+  const dy=yearsPerSec()*dt;S.years+=dy;
+  if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy*Math.max(stageBeta(S.stage),0.02));}
+  if(S.battery>0)S.battery=Math.min(batteryCap(),S.battery*Math.pow(1+batteryRate(),dy));
+  S.runTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.battery>0&&S.batDep>0&&batGrowth()>=4)release();if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);
+}
+function buyDevice(i,mode){
+  if(S.stage<DEVICES[i].unlock&&S.maxStage<DEVICES[i].unlock&&S.dev[i]===0)return;
+  const k=mode==='max'?devMax(i):mode==='10'?10:1;if(k<1)return;
+  const c=devCost(i,k);if(c>S.E)return;
+  const first=S.dev[i]===0,before=S.dev[i];
+  S.E-=c;S.dev[i]+=k;
+  if(first&&LINES['dev'+i])story('dev'+i,LINES['dev'+i]);
+  if(MILESTONES.some(m=>before<m&&S.dev[i]>=m))onMilestone();
+  return true;
+}
+function buyUpgrade(id){const u=UPGRADES.find(x=>x.id===id);if(!u||upgHas(id)||S.dev[u.dev]<u.need||S.E<u.cost)return;S.E-=u.cost;S.upg.push(id);FXQ.milestone=true;}
+function accelerate(){
+  if(S.stage>=MAX_STAGE)return;
+  const c=accelCost(S.stage+1);if(S.E<c)return;
+  const g0=stageGamma(S.stage);S.E-=c;if(has('pW')){const w=prodRate()*60;S.E+=w;S.Erun+=w;}S.coast=0;S.stage++;if(S.stage>S.maxStage)S.maxStage=S.stage;
+  if(has('pA'))S.burst=60;
+  FXQ.accel=stageGamma(S.stage)/g0;
+  const key='s'+S.stage;if(LINES[key])story(key,LINES[key]);
+  if(S.stage===DILATION_STAGE&&!S.flags.dilx)setTimeout(()=>story('dilx',LINES.dilx),5200);
+  if(S.stage>=GREY_STAGE)forceLoseAll();
+  
+}
+function skillSpent(){return S.skills.reduce((a,id)=>a+SKILLS.find(k=>k.id===id).cost,0);}
+function prestige(respec){
+  const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
+  const carry=has('c5')?S.peakP*60:0;
+  if(respec){S.W+=skillSpent();S.skills=[];}
+  S.W+=g;S.wTotal+=g;S.prestiges++;S.E=carry;S.Erun=0;S.dev=DEVICES.map(()=>0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=0;S.battery=0;S.batDep=0;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
+  story('prest1',LINES.prest1);FXQ.prestige=true;
+}
+function skillAvailable(k){if(has(k.id))return false;
+  if(k.step===0)return true;return SKILLS.some(x=>x.br===k.br&&x.step===k.step-1&&has(x.id));}
+function buySkill(id){const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
+function deposit(f){const room=batteryCap()-S.battery;const a=Math.min(room,S.E*(f||1));if(a<=0)return;S.E-=a;S.battery+=a;S.batDep+=a;S.deposited=true;}
+function batGrowth(){return S.batDep>0?S.battery/S.batDep:1;}
+function overMulFor(b){const g=Math.max(1,batGrowth());return Math.min(10,1+3*Math.log2(g))*(has('eB')?1.5:1);}
+function release(){if(S.battery<=0)return 0;const b=S.battery,m=overMulFor(b);S.E+=b;S.Erun+=Math.max(0,b-S.batDep);S.battery=0;S.batDep=0;S.over=has('eB')?45:30;S.overMul=m;S.released=true;FXQ.release=b;return m;}
