@@ -34,7 +34,7 @@ function traitMult(i){const n=S.dev;switch(i){
 function fissionBonus(){return 1+Math.min(1,0.005*S.dev[1]);}
 function devBase(i){if(i===ANCHOR)return 0;return DEVICES[i].prod*S.dev[i]*milMult(S.dev[i])*upgA(i)*synMult(i)*regionMult(i);}
 function devRateRaw(i){return devBase(i)*traitMult(i);}
-function globalMult(){return stageGamma(S.stage)*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*(1+0.01*S.W)*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'));}
+function globalMult(){return stageGamma(S.stage)*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*(1+0.01*S.W)*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+0.1*S.stage:1)*(has('eL')?1+0.05*S.lTotal:1)*(has('cG')&&S.sig>0?10:1);}
 function resonant(){const c={};for(let i=0;i<8;i++){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
 function memHas(i){if(S.cleared)return true;return i===6?!S.greyLost:i>=S.lost;}
@@ -49,13 +49,13 @@ function devCost(i,k){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);r
 function devMax(i){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);return Math.max(0,Math.floor(Math.log(S.E*(g-1)/c+1)/Math.log(g)));}
 function batteryCap(){return batteryCapRaw(prodRate());}
 function batteryRate(){return 0.03+(has('e2')?0.02:0);}
-function offlineCap(){return (has('c3')?24:has('c1')?8:2)*3600;}
+function offlineCap(){return (has('c7')?72:has('c3')?24:has('c1')?8:2)*3600;}
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return Math.min(0.6,0.03*S.dev[ANCHOR]*(has('cB')?1.5:1));}
 function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR;}
 function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
-function autoBuy(){for(let i=7;i>=0;i--){if(!has('a'+i)||S.auto[i]===0)continue;if(!(S.dev[i]>0||S.maxStage>=DEVICES[i].unlock))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
+function autoBuy(){for(let i=8;i>=0;i--){if(!has('a'+i)||S.auto[i]===0)continue;if(!(S.dev[i]>0||S.maxStage>=DEVICES[i].unlock))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
 function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 
 function tick(dt,offMul){
@@ -66,7 +66,7 @@ function tick(dt,offMul){
   const dy=yearsPerSec()*dt;S.years+=dy;
   if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy*Math.max(stageBeta(S.stage),0.02));}
   if(S.battery>0)S.battery=Math.min(batteryCap(),S.battery*Math.pow(1+batteryRate(),dy));
-  S.runTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.battery>0&&S.batDep>0&&batGrowth()>=4)release();if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);
+  S.runTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.battery>0&&S.batDep>0&&batGrowth()>=4)release();if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);if(S.sig>0)S.sig=Math.max(0,S.sig-dt);autoLearn();
 }
 function buyDevice(i,mode){
   if(S.stage<DEVICES[i].unlock&&S.maxStage<DEVICES[i].unlock&&S.dev[i]===0)return;
@@ -93,9 +93,9 @@ function accelerate(){
 function skillSpent(){return S.skills.reduce((a,id)=>a+SKILLS.find(k=>k.id===id).cost,0);}
 function prestige(respec){
   const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
-  const carry=has('c5')?S.peakP*60:0;
+  const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage/2):0,keep=has('eM')?0.5:0;
   if(respec){S.W+=skillSpent();S.skills=[];}
-  S.W+=g;S.wTotal+=g;S.prestiges++;S.E=carry;S.Erun=0;S.dev=DEVICES.map(()=>0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=0;S.battery=0;S.batDep=0;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
+  S.W+=g;S.wTotal+=g;S.prestiges++;S.E=carry;S.Erun=0;S.dev=DEVICES.map(()=>0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   story('prest1',LINES.prest1);FXQ.prestige=true;
 }
 /* 再出発（第二層） */
@@ -104,12 +104,15 @@ function rebirth(){
   const g=lGain();if(g<1)return 0;
   S.L+=g;S.lTotal+=g;S.restarts++;S.cleared=false;S.lost=0;S.greyLost=false;delete S.flags.near;
   S.E=0;S.Erun=0;S.dev=DEVICES.map(()=>0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=0;S.maxStage=0;S.battery=0;S.batDep=0;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
-  S.W=0;S.skills=[];S.prestiges=0;S.years=0;S.dist=0;S.region=0;S.sling=0;S.coast=0;S.crit=0;
+  S.prevSkills=S.skills.slice();S.W=0;S.skills=[];S.prestiges=0;S.sig=0;S.years=0;S.dist=0;S.region=0;S.sling=0;S.coast=0;S.crit=0;
   FXQ.restart=g;return g;
 }
 function glowNext(id){const a=AFTERGLOW.find(x=>x.id===id),l=glow(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyGlow(id){const n=glowNext(id);if(!n||S.L<n.cost)return false;S.L-=n.cost;S.ag[id]=n.l+1;return true;}
-function skillAvailable(k){if(has(k.id))return false;
+function lightStar(id){const k=SKILLS.find(x=>x.id===id);if(!k||!k.glow||S.lit.includes(id)||S.L<k.glow)return false;S.L-=k.glow;S.lit.push(id);return true;}
+function starLit(k){return !k.glow||S.lit.includes(k.id);}
+function autoLearn(){if(!has('aM'))return;for(const id of S.prevSkills){if(has(id))continue;const k=SKILLS.find(x=>x.id===id);if(!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);}}
+function skillAvailable(k){if(has(k.id)||k.glow)return false;
   if(k.step===0)return true;return SKILLS.some(x=>x.br===k.br&&x.step===k.step-1&&has(x.id));}
 function buySkill(id){const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
 function deposit(f){const room=batteryCap()-S.battery;const a=Math.min(room,S.E*(f||1));if(a<=0)return;S.E-=a;S.battery+=a;S.batDep+=a;S.deposited=true;}
