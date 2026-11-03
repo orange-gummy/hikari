@@ -37,9 +37,8 @@ function devRateRaw(i){return devBase(i)*traitMult(i);}
 function globalMult(){return stageGamma(S.stage)*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*(1+0.01*S.W)*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'));}
 function resonant(){const c={};for(let i=0;i<8;i++){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
-function memHas(i){if(S.cleared)return true;if(i===6)return !S.greyLost;return i<S.kept||i>=S.lost;}  // 再出発の回数ぶん、失う順の最初の色から残る
-function memFloor(){return Math.min(0.4,0.05*S.restarts);}  // 失った色の彩度の下限
-function memTarget(i){return memHas(i)?1:memFloor();}
+function memHas(i){if(S.cleared)return true;return i===6?!S.greyLost:i>=S.lost;}
+function memTarget(i){return memHas(i)?1:0;}
 function onMilestone(){FXQ.milestone=true;if(has('eC'))S.crit=30;}
 function baseRateNoFusion(){let b=0;for(let i=0;i<8;i++)if(i!==2)b+=devBase(i);return b*globalMult();}
 function prodRate(){let b=0;for(let i=0;i<8;i++)b+=devRateRaw(i);return b*globalMult();}
@@ -51,7 +50,7 @@ function devMax(i){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);retu
 function batteryCap(){return batteryCapRaw(prodRate());}
 function batteryRate(){return 0.03+(has('e2')?0.02:0);}
 function offlineCap(){return (has('c3')?24:has('c1')?8:2)*3600;}
-function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*W_MULT[glow('wm')];}
+function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return Math.min(0.6,0.03*S.dev[ANCHOR]*(has('cB')?1.5:1));}
 function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR;}
@@ -101,15 +100,15 @@ function prestige(respec){
   story('prest1',LINES.prest1);FXQ.prestige=true;
 }
 /* 再出発（第二層） */
-function lGain(){if(S.cleared||S.dist<RESTART_LY)return 0;return Math.floor(Math.pow(S.dist/100,0.6)*(1+0.1*S.restarts));}
+function lGain(){return S.cleared?Math.floor(RESTART_BASE*(1+0.1*S.restarts)):0;}
 function rebirth(){
   const g=lGain();if(g<1)return 0;
-  S.L+=g;S.lTotal+=g;S.restarts++;S.kept=Math.min(6,S.restarts);
+  S.L+=g;S.lTotal+=g;S.restarts++;S.cleared=false;S.lost=0;S.greyLost=false;delete S.flags.near;
   S.E=0;S.Erun=0;S.dev=DEVICES.map(()=>0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=0;S.maxStage=0;S.battery=0;S.batDep=0;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   S.W=0;S.skills=[];S.prestiges=0;S.years=0;S.dist=0;S.region=0;S.sling=0;S.coast=0;S.crit=0;
   FXQ.restart=g;return g;
 }
-function glowNext(id){const a=AFTERGLOW.find(x=>x.id===id),l=glow(id);return l<a.cost.length?{l,cost:a.cost[l],text:a.lv[l]}:null;}
+function glowNext(id){const a=AFTERGLOW.find(x=>x.id===id),l=glow(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyGlow(id){const n=glowNext(id);if(!n||S.L<n.cost)return false;S.L-=n.cost;S.ag[id]=n.l+1;return true;}
 function skillAvailable(k){if(has(k.id))return false;
   if(k.step===0)return true;return SKILLS.some(x=>x.br===k.br&&x.step===k.step-1&&has(x.id));}

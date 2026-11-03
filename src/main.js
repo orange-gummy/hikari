@@ -24,7 +24,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.region){FXQ.region=false;fla=Math.max(fla,0.12);if(curTab==='drive')renderDrive(true);}
   if(S.stage!==lastStage){lastStage=S.stage;paintSpeed();if(curTab==='drive')renderDrive(false);}
   paintHUD();rollHV();acc+=dt;if(acc>0.25){acc=0;paintGoal();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();}
-  secAcc+=dt;if(secAcc>1){secAcc=0;checkAch();if(!S.flags.rsOpen&&lGain()>=1){S.flags.rsOpen=1;toast('再出発ができるようになった　<b>RESET</b>');}renderPanelTabsOnly();if(skillOpen&&S.W!==lastWShown)renderSkill();}
+  secAcc+=dt;if(secAcc>1){secAcc=0;checkAch();renderPanelTabsOnly();if(skillOpen&&S.W!==lastWShown)renderSkill();}
   saveAcc+=dt;if(saveAcc>10){saveAcc=0;save();}
 }
 let HVR=null;

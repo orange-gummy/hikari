@@ -93,16 +93,16 @@ function renderReset(){const g=wGain(),lg=lGain(),am3=glow('am')>=3;let h='<div 
   (has('aS')?'<div class="row"><span class="note" style="margin:0">自動停止（得られる歪みが持ち分の'+S.stopK+'倍で）</span><button class="auto" id="aStop"'+(S.autoStop?' data-on':'')+'>'+(S.autoStop?'自動':'手動')+'</button></div>':'')+
   (has('aS')&&am3?'<div class="row" style="padding:2px 0"><span class="note" style="margin:0">停止の条件</span><span class="seg" id="stopK">'+STOP_K.map(k=>'<button data-k="'+k+'" aria-pressed="'+(S.stopK===k)+'">×'+k+'</button>').join('')+'</span></div>':'')+
   '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>';
-  if(S.restarts>0||S.L>0||S.dist>=RESTART_LY*0.5){
+  if(S.cleared||S.restarts>0||S.L>0){
     h+='<div class="phead" style="margin-top:22px"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる残光</span><span class="big">'+fmt(lg)+'</span></div>'+
-    '<div class="note">再出発すると、最初の宙域に戻る。歪みとスキル、進んだ距離、故郷で過ぎた年月もなくなる。日誌と実績、残光は残る。失った色は戻らないが、再出発のたびに少しずつ思い出す。</div>'+
-    '<button class="act" id="rsGo"'+(lg<1?' disabled':'')+'>再出発する</button>'+(S.dist<RESTART_LY&&!S.cleared?'<div class="note">この周回で'+RESTART_LY+'光年進むと使える。</div>':'')+
+    '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、残光は残る。</div>'+
+    '<button class="act" id="rsGo"'+(lg<1?' disabled':'')+'>再出発する</button>'+(!S.cleared?'<div class="note">故郷に着くと使える。</div>':'')+
     '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの再出発</span><span class="num">'+S.restarts+' 回</span></div>'+
     '<div class="phead" style="margin-top:18px"><span class="lab">AFTERGLOW</span></div>';
-    AFTERGLOW.forEach(a=>{const l=glow(a.id),n=glowNext(a.id),pips=a.cost.map((_,k)=>k<l?'●':'○').join('');
+    AFTERGLOW.forEach(a=>{const l=glow(a.id),n=glowNext(a.id),pips=a.max?Array.from({length:a.max},(_,k)=>k<l?'●':'○').join(''):'Lv '+l;
       h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+a.name+'　<span class="num" style="font-size:11px;letter-spacing:.2em;color:var(--ink-dim)">'+pips+'</span></div>'+
-      '<div class="dvTrait">'+(l?'いま：'+a.lv[l-1]+(n?'<br>':''):'')+(n?'次：'+n.text:'')+'</div></div>'+
+      '<div class="dvTrait">'+(l?'いま：'+a.text(l)+(n?'<br>':''):'')+(n?'次：'+n.text:'')+'</div></div>'+
       (n?'<button class="buy" data-g="'+a.id+'"'+(S.L<n.cost?' disabled':'')+'>残光 '+n.cost+'</button>':'')+'</div></div>';});
   }
   pbody.dataset.k='';pbody.innerHTML=h;
@@ -110,7 +110,7 @@ function renderReset(){const g=wGain(),lg=lGain(),am3=glow('am')>=3;let h='<div 
   pbody.querySelectorAll('#stopK button').forEach(b=>b.onclick=()=>{S.stopK=+b.dataset.k;renderPanel(true);});
   pbody.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{if(buyGlow(b.dataset.g)){fla=Math.max(fla,0.1);renderPanel(true);}});
   document.getElementById('rGo').onclick=()=>confirmBox('緊急停止','歪みを '+fmt(g)+' 得て、速度0からやり直す。距離と年月はそのまま残る。このあとスキルを選べる。',()=>{startBrake(g);});
-  const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','残光を '+fmt(lg)+' 得て、最初の宙域からやり直す。歪みとスキル、距離、故郷の年月もなくなる。日誌と実績、残光は残る。',()=>{startBrake(0);BRK.rs=true;});}
+  const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','残光を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、残光は残る。',()=>{startBrake(0);BRK.rs=true;});}
 let logMode='log';
 function renderLog(){pbody.dataset.k='';let h='<div class="phead"><span class="lab">LOG</span><span class="seg"><button data-m="log">日誌</button><button data-m="ach">実績 '+S.ach.length+'/'+ACHIEVEMENTS.length+'</button></span></div>';
   if(logMode==='log'){S.log.slice().reverse().forEach((e,j)=>{const col=e.c>=0?rgb(COLORS[e.c].rgb,1):'var(--ink-dim)';h+='<div class="le"><span class="y" style="color:'+col+'">故郷 '+e.y.toLocaleString('ja-JP')+'年</span><span class="t" style="opacity:'+(j===0?1:0.75)+'">'+e.t+'</span></div>';});}
