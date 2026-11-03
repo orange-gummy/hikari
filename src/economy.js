@@ -9,7 +9,8 @@ function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)retu
 function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
-function accelCost(s){let c=STAGE_COST[s];if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
+function stageCost(s){return s<=12?STAGE_COST[s]:STAGE_COST[12]*Math.pow(stageMultAt(glow('rm')),s-12);}
+function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
 function regionMult(i){const m=REGIONS[S.region].m;return (m[i]||1)*(m.all||1);}
 function milMult(n){let m=1;const b=has('eA')?3:2;for(const x of MILESTONES)if(n>=x)m*=b;return m;}

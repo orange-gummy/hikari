@@ -54,7 +54,7 @@ function paintGoal(){const gEl=document.getElementById('goal'),hide=!!(BRK||RST|
 /* HUD */
 let lastUnit=0;
 function paintHUD(){const p=fmtParts(S.E);document.getElementById('eV').textContent=p[0];document.getElementById('eU').textContent=p[1];const L=(p[0]+p[1]).length;document.getElementById('spdV').style.fontSize=(L<=6?28:L<=9?23:19)+'px';document.getElementById('rate').textContent='+'+fmt(prodRate())+' / 秒'+(S.stage>=DILATION_STAGE?'（×'+fmtG(stageGamma(S.stage))+'）':'')+(S.over>0?'　過負荷 ×'+S.overMul.toFixed(1):'');
-  document.getElementById('yr').textContent=Math.floor(S.years).toLocaleString('ja-JP');document.getElementById('yrRate').textContent='+'+fmtY(yearsPerSec()*timeMult)+' 年/秒';
+  document.getElementById('yr').textContent=Math.floor(S.years).toLocaleString('ja-JP');{const yr=yearsPerSec()*timeMult;document.getElementById('yrRate').textContent=yr<0.01?'+'+fmtY(yr*86400)+' 年/日':'+'+fmtY(yr)+' 年/秒';}
   const nm=nextMemIndex(),m=document.getElementById('mem');if(nm>=0&&nm<6){m.textContent='記憶が薄れるまで あと'+fmtY(Math.max(0,LOSE_YEARS[nm]-S.years))+'年';m.style.color=S.years/LOSE_YEARS[nm]>0.85?'#ffb38a':'';}else if(nm===6){m.textContent='最後の記憶が揺らいでいる';m.style.color='#ffb38a';}else m.textContent='';
   const u=unitIndex(S.E);if(u>lastUnit&&u>=2){unitPop(numKanji?UNITS[UNITS.length-u][1]:'e'+(u*4));}if(u>lastUnit)lastUnit=u;paintRoute();}
 function paintSpeed(){const s=S.stage,g=fmtG(stageGamma(s)),h=document.getElementById('hV'),dil=s>=DILATION_STAGE;

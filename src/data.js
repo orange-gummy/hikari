@@ -5,7 +5,7 @@
 const SAVE_KEY='hikari_save';
 const SAVE_VERSION=5;
 const SECONDS_PER_YEAR=3.156e7;
-const SHIP_K=4000;            // 現実1秒あたりの船内秒
+const SHIP_K=33;              // 現実1秒あたりの船内秒
 const GOAL_LY=10000;
 const ARRIVE_RATIO=0.99;      // この割合まで来たら「光速の限界へ」が開く
 
@@ -18,7 +18,7 @@ const COLORS=[
   {name:'白',rgb:[246,247,252],lose:'雪の白さが、思い出せない。',back:'雪の白。'},
   {name:'灰',rgb:[165,168,178],lose:'空の色が、思い出せない。',back:'雨の匂い。'}
 ];
-const LOSE_YEARS=[3,15,50,250,800,2500];
+const LOSE_YEARS=[1,5,25,150,800,2500];
 const GREY_STAGE=21;
 
 const DEVICES=[
@@ -50,7 +50,8 @@ const REGIONS=[
 const C_KMS=299792;
 const KMS=[0,10,30,100,300,1000,3000];          // 秒速km の段階（3,000km/sで光速の約1%）
 const SPEEDS=[0,10/C_KMS,30/C_KMS,100/C_KMS,300/C_KMS,1000/C_KMS,0.01,0.05,0.1,0.3,0.5,0.9]; // 光速比。0.9より上は9が増える
-const STAGE_COST=(()=>{const c=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];for(let s=13;s<=22;s++)c.push(c[s-1]*(s<19?120:340));return c;})();
+const STAGE_MULT=500;   // 光速の99%より先は、段階ごとに加速コストがこの倍率で上がる
+const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階12（光速の99%）まで。その先は STAGE_MULT 倍ずつ（stageCost）
 const MAX_STAGE=22;
 const BATTERY_STAGE=4;
 const BRAKE_STAGE=11;    // 緊急停止が使えるのは光速の90%から
@@ -107,11 +108,13 @@ const SKILLS=[
   {id:'aM',br:3,step:13,name:'自動化：星図',desc:'歪みが溜まると、前の周回で覚えた順にスキルを自動で覚える',cost:0,glow:20}
 ];
 /* 再出発（第二層）：故郷に着いたあと、もう一度遠い宙域から船を出す（強くてニューゲーム） */
-const RESTART_BASE=10;   // 1回着くごとの残光。再出発の回数1回につき+10%
+const RESTART_BASE=30;   // 1回着くごとの残光。再出発の回数1回につき+10%
+function stageMultAt(l){return Math.max(50,STAGE_MULT*Math.pow(0.75,l));}
 function wMultAt(l){return l<=3?[1,2,5,10][l]:10*Math.pow(2,l-3);}
 const AFTERGLOW=[  // max:0 は上限なし
   {id:'wm',name:'歪みの増幅',max:0,cost:l=>5*Math.pow(2,l),text:l=>'得られる歪み ×'+wMultAt(l)},
   {id:'sk',name:'船内時間',max:0,cost:l=>5*Math.pow(2,l),text:l=>'船内時間 ×'+(1+0.25*l)+'。生産も故郷の時間も速くなる'},
+  {id:'rm',name:'航路の記憶',max:0,cost:l=>5*Math.pow(2,l),text:l=>'光速の99%より先の加速コストの上がり方 ×'+Math.round(stageMultAt(l))},
   {id:'am',name:'自動化の記憶',max:3,cost:l=>[5,10,20][l],text:l=>['','自動購入（太陽帆〜真空エネルギー炉）を覚えた状態で始まる','加速・TIER・放出の自動化も覚えた状態で始まる','緊急停止の自動化も覚えた状態で始まり、停止の条件を選べる'][l]}
 ];
 const AM_GRANT=[[],['a0','a1','a2','a3','a4','a5','a6','a7'],['aA','aT','aR'],['aS']];
