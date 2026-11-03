@@ -4,7 +4,7 @@
    ===================================================================== */
 function freshState(){return{v:SAVE_VERSION,E:0,Erun:0,maxE:0,dev:DEVICES.map(()=>0),frac:DEVICES.map(()=>0),upg:[],stage:0,maxStage:0,W:0,wTotal:0,skills:[],prestiges:0,peakP:0,
   battery:0,years:0,dist:0,lost:0,greyLost:false,flags:{},ach:[],log:[],taps:0,deposited:false,idleBack:false,cleared:false,
-  runTime:0,pulse:0,burst:0,over:0,overMul:1,batDep:0,released:false,auto:[1,1,1,1,1,1,1,1],autoT:[0,0,0,0,0,0,0,0],autoBud:0.5,autoBought:0,autoAcc:true,autoTier:true,autoRel:true,autoStop:true,sling:0,coast:0,crit:0,tier:[1,1,1,1,1,1,1,1],wsBuilt:0,region:0,
+  runTime:0,pulse:0,burst:0,over:0,overMul:1,batDep:0,released:false,auto:[1,1,1,1,1,1,1,1],autoT:[0,0,0,0,0,0,0,0],autoBud:0.5,autoBought:0,autoAcc:true,autoTier:true,autoRel:true,autoStop:true,sling:0,coast:0,crit:0,tier:[1,1,1,1,1,1,1,1],region:0,
   L:0,lTotal:0,restarts:0,ag:{},stopK:2,last:Date.now()};}
 let S=freshState();
 function has(id){if(S.skills.includes(id))return true;const l=S.ag.am||0;if(!l||id[0]!=='a')return false;for(let k=1;k<=l;k++)if(AM_GRANT[k].includes(id))return true;return false;}

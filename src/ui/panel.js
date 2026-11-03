@@ -23,7 +23,7 @@ function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}
 function renderDrive(force){
   const order=[0,1,2,3,ANCHOR,4,5,6,7].sort((a,b)=>DEVICES[a].unlock-DEVICES[b].unlock);
   const visible=order.filter(devVisible);const nextLocked=order.find(i=>!devVisible(i));
-  const key=visible.join()+'|'+nextLocked+'|'+buyMode+'|'+S.tier.join()+'|'+DEVICES.map((_,i)=>{const n=tierNext(i);return n&&S.dev[i]>=n.need?1:0;}).join('')+'|'+wsUnlocked()+'|'+S.skills.filter(x=>x[0]==='a').join()+'|'+S.auto.join()+'|'+S.autoTier;
+  const key=visible.join()+'|'+nextLocked+'|'+buyMode+'|'+S.tier.join()+'|'+DEVICES.map((_,i)=>{const n=tierNext(i);return n&&S.dev[i]>=n.need?1:0;}).join('')+'|'+S.skills.filter(x=>x[0]==='a').join()+'|'+S.auto.join()+'|'+S.autoTier;
   if(force||pbody.dataset.k!==key){pbody.dataset.k=key;pbody.innerHTML='';devUI=[];
     const h=document.createElement('div');h.className='phead';h.innerHTML='<span class="lab">DEVICES</span><span class="seg"><button data-m="1">×1</button><button data-m="10">×10</button><button data-m="max">MAX</button></span>';pbody.appendChild(h);
     h.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.m===buyMode);b.addEventListener('click',()=>{buyMode=b.dataset.m;renderPanel(true);});});

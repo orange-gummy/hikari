@@ -54,9 +54,8 @@ function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm')
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return Math.min(0.6,0.03*S.dev[ANCHOR]*(has('cB')?1.5:1));}
 function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR;}
-function wsUnlocked(){return S.maxStage>=WORKSHOP_STAGE;}
 function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
-function autoBuy(){for(let i=7;i>=0;i--){if(!has('a'+i)||S.auto[i]===0)continue;if(!(S.dev[i]>0||S.maxStage>=DEVICES[i].unlock))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;S.autoBought++;if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
+function autoBuy(){for(let i=7;i>=0;i--){if(!has('a'+i)||S.auto[i]===0)continue;if(!(S.dev[i]>0||S.maxStage>=DEVICES[i].unlock))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
 function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 
 function tick(dt,offMul){
