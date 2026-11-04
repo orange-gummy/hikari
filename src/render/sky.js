@@ -68,8 +68,6 @@ function startRestart(rs){RST={t:0,rs:!!rs};curTab='drive';renderPanel(true);doc
 function drawRst(){const r=RST;r.t++;const t=r.t;
   if(t<30){SPDF=0;}
   if(t>=30&&t<90){const p=(t-30)/60,pulse=Math.pow(Math.max(0,Math.sin(p*Math.PI*2)),2),warm=mix([255,236,200],G,1-A[0]*0.5);blob(RC.x,RC.y,30+60*pulse,warm,0.55*pulse+0.08);blob(RC.x,RC.y,8+6*pulse,[255,250,240],0.9*(0.3+0.7*pulse));ROTV=2*p;}
-  if(t===40&&NEWSK.length){const k=SKILLS.find(z=>z.id===NEWSK[0]),c=BR_COL[k.br],e=document.getElementById('accBig');e.style.textShadow='none';e.innerHTML='<svg width="96" height="96" viewBox="-24 -24 48 48"><circle r="20" fill="none" stroke="'+rgb(c,0.5)+'"/><g fill="none" stroke="'+rgb(c,1)+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+(SK_ICON[k.id]||SK_ICON.a)+'</g></svg>';e.style.transition='none';e.style.opacity='0';e.style.transform='translate(-50%,-50%) scale(.8)';requestAnimationFrame(()=>{e.style.transition='opacity .5s, transform 1.2s cubic-bezier(.2,.8,.2,1)';e.style.opacity='0.9';e.style.transform='translate(-50%,-50%) scale(1)';});}
-  if(t===105){const e=document.getElementById('accBig');e.style.opacity='0';}
   if(t===60){const ln=r.rs&&RESTART_LINES[S.restarts];if(ln)story('rs'+S.restarts,ln);else subtitle('もう一度、帆を張る。');}
   if(t===80&&r.rs){for(let i=0;i<7;i++)TG[i]=memTarget(i);paintGoal();}
   if(t===80){['hud','route','panel'].forEach((id,i)=>{document.getElementById(id).style.transitionDelay=(i*0.25)+'s';});document.getElementById('app').classList.remove('rstDim');setTimeout(()=>{['hud','route','panel'].forEach(id=>document.getElementById(id).style.transitionDelay='');},1500);}

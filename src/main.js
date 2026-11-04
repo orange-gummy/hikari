@@ -17,7 +17,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.tier!=null){const i=FXQ.tier;FXQ.tier=null;TIERFX={i,t:Date.now()};if(curTab==='drive')renderDrive(true);const u=devUI.find(x=>x.i===i);if(u&&u.el){const sv=u.el.querySelector('svg').getBoundingClientRect(),c=mix(COLORS[DEVICES[i].col].rgb,G,1-A[DEVICES[i].col]);TRIP.push({x:sv.left+sv.width/2,y:sv.top+sv.height/2,t:0,c});
     u.el.dataset.sweep='1';u.el.style.background='';u.el.style.backgroundImage='linear-gradient(90deg,transparent,'+rgb(c,0.22)+',transparent)';u.el.style.backgroundSize='40% 100%';u.el.style.backgroundRepeat='no-repeat';const an=u.el.animate&&u.el.animate([{backgroundPosition:'-60% 0'},{backgroundPosition:'160% 0'}],{duration:900,easing:'ease-out'});if(an)an.onfinish=()=>{u.el.style.backgroundImage='';delete u.el.dataset.sweep;};}}
   if(FXQ.letter){toast('故郷からの便り　<b>+'+fmt(FXQ.letter)+'</b>');FXQ.letter=0;}
-  if(has('aS')&&S.autoStop&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&S.stage>=BRAKE_STAGE){const g=wGain();if(g>=Math.max(5,S.stopK*(S.W+skillSpent()))){startBrake(g);BRK.auto=true;}}
+  if(has('aS')&&S.autoStop&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&!document.querySelector('.modal.on,#title.on')&&S.stage>=BRAKE_STAGE){/* 小窓が開いている間は止めない（演出が小窓の裏で流れてしまう） */const g=wGain();if(g>=Math.max(5,S.stopK*(S.W+skillSpent()))){startBrake(g);BRK.auto=true;}}
   if(FXQ.restart){FXQ.restart=0;if(curTab==='drive')renderDrive(true);}
   if(FXQ.milestone){FXQ.milestone=false;fla=Math.max(fla,0.1);}
   if(FXQ.prestige){FXQ.prestige=false;if(!BRK){stk=60;fla=0.25;}}
