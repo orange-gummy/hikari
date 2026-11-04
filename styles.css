@@ -37,6 +37,11 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #rLine{position:absolute;left:6px;right:14px;top:12px;height:1px;background:rgba(255,255,255,.18)}
 #rDone{position:absolute;left:6px;top:12px;height:1px;background:rgba(246,247,251,.75);width:0}
 .rTick{position:absolute;top:9px;width:1px;height:7px;background:rgba(255,255,255,.3)}
+#rNames{position:absolute;left:0;right:0;top:-4px;height:10px;pointer-events:none}
+#rNames span{position:absolute;transform:translateX(-50%);font-size:9.5px;color:var(--ink-dim);opacity:.75;white-space:nowrap;font-family:var(--ui)}
+#rNames span:last-child{transform:translateX(-100%)}
+#rNames span{color:rgba(214,190,255,.9);opacity:1}
+#rNames span.on{color:rgba(214,190,255,.95);opacity:1}
 #rShip{position:absolute;top:6px;width:12px;height:13px;margin-left:-6px;transition:left .5s}
 #rHome{position:absolute;right:8px;top:12px;width:4px;height:4px;margin:-2px -2px 0 0;border-radius:50%;background:#cfe0ff}
 #rInfo{position:absolute;left:0;right:0;top:22px;display:flex;justify-content:space-between;font-size:11px;color:var(--ink-dim)}

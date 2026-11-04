@@ -14,10 +14,15 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
     const gc=mix([255,200,110],G,1-A[3]);for(let k=0;k<(fxLow?30:80);k++){const d=R(24,36);P.push({x:sx+R(-40,40),y:sy+R(-8,8),vx:(tx-sx)/d+R(-1.2,1.2),vy:(ty-sy)/d+R(-1.2,1.2),l:1,c:gc,r:R(1,2.4),dr:0.9/d});}
     fla=Math.max(fla,fxLow?0.05:0.14);const v=document.getElementById('spdV');setTimeout(()=>{v.style.transform='scale(1.3)';v.style.color='#ffd38a';setTimeout(()=>{v.style.transform='';v.style.color='';},900);},450);}
   if(FXQ.autoDone!=null){const i=FXQ.autoDone;FXQ.autoDone=null;toast(DEVICES[i].name+'が <b>'+S.dev[i]+'台</b> に届いた');if(curTab==='drive')renderDrive(true);}
-  if(FXQ.tier!=null){const i=FXQ.tier;FXQ.tier=null;TIERFX={i,t:Date.now()};if(curTab==='drive')renderDrive(true);const u=devUI.find(x=>x.i===i);if(u&&u.el){const sv=u.el.querySelector('svg').getBoundingClientRect(),c=mix(COLORS[DEVICES[i].col].rgb,G,1-A[DEVICES[i].col]);TRIP.push({x:sv.left+sv.width/2,y:sv.top+sv.height/2,t:0,c});
+  if(FXQ.tier!=null){const i=FXQ.tier;FXQ.tier=null;TIERFX={i,t:Date.now()};if(curTab==='drive')renderDrive(true);const u=devUI.find(x=>x.i===i);if(u&&u.el){const sv=u.el.querySelector('svg').getBoundingClientRect(),c=mix(colRGB(DEVICES[i].col),G,1-A[DEVICES[i].col]);TRIP.push({x:sv.left+sv.width/2,y:sv.top+sv.height/2,t:0,c});
     u.el.dataset.sweep='1';u.el.style.background='';u.el.style.backgroundImage='linear-gradient(90deg,transparent,'+rgb(c,0.22)+',transparent)';u.el.style.backgroundSize='40% 100%';u.el.style.backgroundRepeat='no-repeat';const an=u.el.animate&&u.el.animate([{backgroundPosition:'-60% 0'},{backgroundPosition:'160% 0'}],{duration:900,easing:'ease-out'});if(an)an.onfinish=()=>{u.el.style.backgroundImage='';delete u.el.dataset.sweep;};}}
   if(FXQ.letter){toast('故郷からの便り　<b>+'+fmt(FXQ.letter)+'</b>');FXQ.letter=0;}
   if(FXQ.restart){FXQ.restart=0;if(curTab==='drive')renderDrive(true);}
+  // ③：航海では緊急停止を自動で（小窓が開いている間は待つ）
+  if(voyStopReady()&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(wGain());BRK.auto=true;}
+  if(FXQ.found){const ks=FXQ.found;FXQ.found=null;fla=Math.max(fla,0.22);ks.forEach(k=>toast('新しい色　<b style="color:'+rgb(NEW_COLORS[k].rgb,1)+'">'+NEW_COLORS[k].name+'</b>　'+DEVICES[ANCHOR+1+k].name+'が使えるようになった'));if(curTab==='drive')renderDrive(true);}
+  if(FXQ.redraw){FXQ.redraw=0;if(curTab==='drive')renderDrive(true);}
+  if(FXQ.voyage){FXQ.voyage=false;routeMode=null;}
   if(FXQ.milestone){FXQ.milestone=false;fla=Math.max(fla,0.1);}
   if(FXQ.prestige){FXQ.prestige=false;if(!BRK){stk=60;fla=0.25;}}
   if(FXQ.region){FXQ.region=false;fla=Math.max(fla,0.12);if(curTab==='drive')renderDrive(true);}

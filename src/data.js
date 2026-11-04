@@ -20,6 +20,13 @@ const COLORS=[
   {name:'灰',rgb:[165,168,178],lose:'空の色が、思い出せない。',back:'雨の匂い。'}
 ];
 const LOSE_YEARS=[1,5,25,150,800,2500];
+// ③の航海で見つける色（星座の隣に、新しい星座として並ぶ）
+const NEW_COLORS=[
+  {name:'紫',rgb:[180,140,255],find:'渦の紫。知らない色がある。'},
+  {name:'藍',rgb:[90,111,224],find:'深い藍。銀河が、群れになって流れている。'},
+  {name:'銀',rgb:[205,210,226],find:'網の銀。銀河をつなぐ糸が、光っている。'},
+  {name:'赤',rgb:[255,120,110],find:'はじまりの赤。最初の光が、ここまで届いていた。'}
+];
 const GREY_STAGE=21;
 
 const DEVICES=[
@@ -31,9 +38,15 @@ const DEVICES=[
   {name:'パルサー共振器',cost:5.5e6,prod:1e5,unlock:17,col:5,emb:'pulsar',trait:'タップ後10秒間 ×4',spawn:{to:3,rate:0.3,why:'強磁場で生まれた陽電子を閉じ込める'}},
   {name:'ブラックホール抽出炉',cost:9e7,prod:1.25e6,unlock:19,col:0,emb:'hole',trait:'故郷で過ぎた年月が長いほど強い',spawn:{to:2,rate:0.4,why:'降着円盤のプラズマを切り分けて点火する'}},
   {name:'真空エネルギー炉',cost:1.5e9,prod:1.6e7,unlock:21,col:4,emb:'vacuum',trait:'覚えたスキル1つにつき+15%'},
-  {name:'時間の錨',cost:5e6,prod:0,unlock:14,col:6,emb:'anchor',trait:'生産しない。1台ごとに故郷の時間の進み−3%（最大−60%）',growth:1.5}
+  {name:'時間の錨',cost:5e6,prod:0,unlock:14,col:6,emb:'anchor',trait:'生産しない。1台ごとに故郷の時間の進み−3%（最大−60%）',growth:1.5},
+  // ③の航海で目的地に着くと加わる装置（find＝見つけた目的地の数。col 7〜10 は NEW_COLORS）
+  {name:'銀河核炉',cost:2e10,prod:3e8,unlock:12,find:1,col:7,emb:'galaxy',trait:'航海で進んだ距離が長いほど強い'},
+  {name:'暗黒物質炉',cost:5e11,prod:6e9,unlock:12,find:2,col:8,emb:'dark',trait:'見えない重さが、持っている装置1台ごとに+0.2%'},
+  {name:'網の糸車',cost:2e13,prod:1.5e11,unlock:12,find:3,col:9,emb:'web',trait:'見つけた色1つにつき ×2'},
+  {name:'背景放射の器',cost:1e15,prod:4e12,unlock:12,find:4,col:10,emb:'cmb',trait:'航海に出てからの時間が長いほど強い'}
 ];
 const ANCHOR=8;
+const PRODI=DEVICES.map((_,i)=>i).filter(i=>i!==ANCHOR);   // 生産する装置
 const DEVICE_GROWTH=1.15;
 const MILESTONES=[25,50,100,200];
 const SYN=['核分裂炉1台ごとに太陽帆+2%','核融合炉1台ごとに核分裂炉+2%','パルサー共振器1台ごとに核融合炉+3%','太陽帆1台ごとに反物質炉+1%','ブラックホール抽出炉1台ごとに集光殻+3%','1台ごとにタップの獲得+2%','時間の錨1台ごとに抽出炉+5%','持っている装置の種類1つにつき+10%'];
@@ -108,6 +121,16 @@ const SKILLS=[
   {id:'aM',br:3,step:12,name:'自動化：星図',desc:'歪みが溜まると、前の周回で覚えた順にスキルを自動で覚える',cost:0,glow:40}
 ];
 /* 再出発（第二層）：故郷に着いたあと、もう一度遠い宙域から船を出す（強くてニューゲーム） */
+// ③ さらに遠くへ：故郷を出発点に、目的地を順に目指す長い航海
+const DEST=[{name:'隣の銀河',ly:2.5e6},{name:'銀河群',ly:3e7},{name:'大規模構造',ly:5e8},{name:'宇宙の果て',ly:4.65e10}];
+const VOY_BASE=30;        // 航海の距離の伸びの基準倍率
+const TRAIL=[  // 航跡の強化
+  {id:'vs',name:'航海の速さ',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で進む距離 ×'+fmtN(Math.pow(2.5,l))},
+  {id:'ls',name:'残光の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'1万光年ごとに入る残光 ×'+Math.pow(2,l)},
+  {id:'ps',name:'先回り',max:5,cost:l=>10*Math.pow(3,l),text:l=>'航路を引き直したあと、段階'+(2*l)+'から始まる'}
+];
+function fmtN(n){return n<1e4?String(Math.round(n)):n.toExponential(1).replace('+','');}
+function colRGB(c){return c<7?COLORS[c].rgb:NEW_COLORS[c-7].rgb;}   // 装置の色（7〜は航海で見つけた色）
 const RESTART_BASE=30;   // 1回着くごとの残光。再出発の回数1回につき+10%
 function stageMultAt(l){return Math.max(50,STAGE_MULT*Math.pow(0.75,l));}
 function wMultAt(l){return l<=3?[1,2,5,10][l]:10*Math.pow(2,l-3);}
@@ -118,6 +141,7 @@ const AFTERGLOW=[  // max:0 は上限なし
   {id:'am',name:'自動化の記憶',max:2,cost:l=>[5,10][l],text:l=>['','自動購入（太陽帆〜真空エネルギー炉）を覚えた状態で始まる','加速・TIER・放出の自動化も覚えた状態で始まる'][l]}
 ];
 const AM_GRANT=[[],['a0','a1','a2','a3','a4','a5','a6','a7'],['aA','aT','aR']];
+const VOY_LINES={start:'故郷の光が、背中の向こうで小さくなっていく。',redraw:'航路を、もう一度引き直す。'};
 const RESTART_LINES={1:'空の色を確かめてから、もう一度出た。',2:'前にも、同じ星を見た。',3:'着いた日の雨の匂いを、まだ覚えている。',4:'夕焼けをもう一度見るために、帆を張る。',5:'故郷の窓の明かりは、前より少し増えていた。',6:'若葉の色は、着くたびに少し違う。',7:'失うと分かっていて、それでも見に帰る。',8:'速さと引き換えに、何を渡してきたのか。',10:'何度でも、帰り道を選ぶ。'};
 
 const BRANCHES=['推進','動力','通信','自動化'];
@@ -177,6 +201,14 @@ const ACHIEVEMENTS=[
   ['lit8','星座','上位の星を8つすべて灯す',s=>s.lit.length>=8],
   ['l100','残光を集める','残光を合計100集める',s=>s.lTotal>=100],
   ['rm3','見知った道','航路の記憶を3段にする',s=>(s.ag.rm||0)>=3],
+  ['voy','旅立ち','さらに遠くへ出る',s=>s.voy],
+  ['g1','知らない色','隣の銀河に着く',s=>s.found>=1],
+  ['g2','銀河の群れ','銀河群に着く',s=>s.found>=2],
+  ['g3','宇宙の網','大規模構造に着く',s=>s.found>=3],
+  ['g4','はじまりの光','宇宙の果てに着く',s=>s.found>=4],
+  ['rd1','引き直す','航路を引き直す',s=>s.tTotal>=1],
+  ['t100','航跡を集める','航跡を合計100集める',s=>s.tTotal>=100],
+  ['vs5','速い船','航海の速さを5段にする',s=>(s.tg.vs||0)>=5],
   ['fork','道を選ぶ','分岐のスキルを覚える',s=>s.skills.some(id=>/[ABab]$/.test(id))],
   ['k5','節目の星','枝の最後のスキルを覚える',s=>s.skills.some(id=>['p5','e5','c5'].includes(id))],
   ['reg2','星雲帯','星雲帯に入る',s=>s.dist>=100],

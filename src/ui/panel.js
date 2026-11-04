@@ -18,11 +18,11 @@ function renderPanel(force){
   tabs.forEach(b=>{b.setAttribute('aria-selected',b.dataset.t===curTab);b.classList.toggle('locked',tabLocked(b.dataset.t));});
   if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else renderLog();
 }
-function devVisible(i){return S.dev[i]>0||S.maxStage>=DEVICES[i].unlock;}
+function devVisible(i){return devOpen(i);}
 function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}
 function renderDrive(force){
-  const order=[0,1,2,3,ANCHOR,4,5,6,7].sort((a,b)=>DEVICES[a].unlock-DEVICES[b].unlock);
-  const visible=order.filter(devVisible);const nextLocked=order.find(i=>!devVisible(i));
+  const order=DEVICES.map((_,i)=>i).sort((a,b)=>(DEVICES[a].find||0)-(DEVICES[b].find||0)||DEVICES[a].unlock-DEVICES[b].unlock);
+  const visible=order.filter(devVisible);const nextLocked=order.find(i=>!devVisible(i)&&(!DEVICES[i].find||S.voy));
   const key=visible.join()+'|'+nextLocked+'|'+buyMode+'|'+S.tier.join()+'|'+DEVICES.map((_,i)=>{const n=tierNext(i);return n&&S.dev[i]>=n.need?1:0;}).join('')+'|'+S.skills.filter(x=>x[0]==='a').join()+'|'+S.auto.join()+'|'+S.autoTier;
   if(force||pbody.dataset.k!==key){pbody.dataset.k=key;pbody.innerHTML='';devUI=[];
     const h=document.createElement('div');h.className='phead';h.innerHTML='<span class="lab">DEVICES</span><span class="seg"><button data-m="1">×1</button><button data-m="10">×10</button><button data-m="max">MAX</button></span>';pbody.appendChild(h);
@@ -30,7 +30,7 @@ function renderDrive(force){
     if(has('aT')){const w=document.createElement('div');w.className='ws';w.innerHTML='<div class="row" style="padding:0"><span>TIERの自動化</span><button class="auto" id="aTier"'+(S.autoTier?' data-on':'')+'>'+(S.autoTier?'自動':'手動')+'</button></div>';pbody.appendChild(w);w.querySelector('#aTier').onclick=()=>{S.autoTier=!S.autoTier;renderPanel(true);};}
     visible.forEach(i=>{const d=DEVICES[i],w=document.createElement('div');w.className='dv';
       let trait=d.trait;if(d.spawn)trait+='<br>'+d.spawn.why+'：'+DEVICES[d.spawn.to].name+' 毎分+<span class="spn"></span>台';
-      w.innerHTML='<div class="dvRow"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"></svg><div style="flex:1;min-width:0"><div class="dvName"><span class="nw">'+d.name+'</span>'+(i!==ANCHOR?'<span class="tierR'+(TIERFX&&TIERFX.i===i&&Date.now()-TIERFX.t<1500?' tierNew':'')+'" style="color:'+rgb(mix(COLORS[d.col].rgb,G,1-A[d.col]),0.95)+'">TIER '+ROMAN[S.tier[i]]+'</span>':'')+'<span class="dvCnt nw"></span><span class="badge rg" style="display:none"></span></div><div class="dvOut"></div></div>'+(has('a'+i)?'<button class="auto" data-a="'+i+'">'+autoLabel(i)+'</button>':'')+'<button class="buy"></button></div><div class="dvTrait">'+trait+'</div><div class="upg"></div>'+(i===ANCHOR?'':'<div class="tk"></div>');pbody.appendChild(w);
+      w.innerHTML='<div class="dvRow"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"></svg><div style="flex:1;min-width:0"><div class="dvName"><span class="nw">'+d.name+'</span>'+(i!==ANCHOR?'<span class="tierR'+(TIERFX&&TIERFX.i===i&&Date.now()-TIERFX.t<1500?' tierNew':'')+'" style="color:'+rgb(mix(colRGB(d.col),G,1-A[d.col]),0.95)+'">TIER '+ROMAN[S.tier[i]]+'</span>':'')+'<span class="dvCnt nw"></span><span class="badge rg" style="display:none"></span></div><div class="dvOut"></div></div>'+(has('a'+i)?'<button class="auto" data-a="'+i+'">'+autoLabel(i)+'</button>':'')+'<button class="buy"></button></div><div class="dvTrait">'+trait+'</div><div class="upg"></div>'+(i===ANCHOR?'':'<div class="tk"></div>');pbody.appendChild(w);
       const ab=w.querySelector('.auto');if(ab&&S.auto[i])ab.setAttribute('data-on','');if(ab)ab.onclick=()=>{S.auto[i]=S.auto[i]?0:1;renderPanel(true);};
       const svgE=w.querySelector('svg');
       const em=emblem(svgE,d.emb),ticks=[];const tk=w.querySelector('.tk');if(tk)for(let k=1;k<=100;k++){const t=document.createElement('i');t.big=(k===25||k===50||k===100);t.style.height=(t.big?9:4)+'px';tk.appendChild(t);ticks.push(t);}
@@ -40,9 +40,9 @@ function renderDrive(force){
         w.addEventListener('pointermove',e=>{if(!act)return;const ddx=e.clientX-sx,ddy=e.clientY-sy;if(!drag){if(Math.abs(ddx)>10&&Math.abs(ddx)>Math.abs(ddy)*1.3){const tnow=tierNext(i);if(!(tnow&&S.dev[i]>=tnow.need&&S.E>=tnow.cost)){act=false;return;}drag=true;}else if(Math.abs(ddy)>10){act=false;return;}}if(drag){if(!w.hasPointerCapture(e.pointerId))try{w.setPointerCapture(e.pointerId);}catch(_){}dx=Math.max(0,Math.min(110,ddx));w.style.transform='translateX('+dx+'px)';const ready=dx>56&&S.dev[i]>=tn.need&&S.E>=tn.cost;w.classList.toggle('swReady',ready);}});
         const end=()=>{if(!act)return;act=false;w.style.transition='transform .3s cubic-bezier(.2,.8,.3,1.2)';w.style.transform='';setTimeout(()=>{w.style.transition='';},320);w.classList.remove('swReady');if(drag&&dx>56){const before=S.tier[i];tierUp(i);if(S.tier[i]===before){w.animate&&w.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(5px)'},{transform:'translateX(0)'}],{duration:300});}else renderPanel(true);}else if(drag&&dx>20)toast('もう少し右まで引いて離す');};
         w.addEventListener('pointerup',end);w.addEventListener('pointercancel',end);}
-      const bt=w.querySelector('.buy');bt.addEventListener('click',()=>{if(buyDevice(i,buyMode)){const r=bt.getBoundingClientRect();for(let k=0;k<10;k++){const a=-1.57+R(-1,1),v=R(0.5,1.7);P.push({x:r.left+r.width/2,y:r.top,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:COLORS[d.col].rgb,r:R(0.8,1.8),gr:A[d.col]<0.5,dr:0.02});}updateDrive();}});
+      const bt=w.querySelector('.buy');bt.addEventListener('click',()=>{if(buyDevice(i,buyMode)){const r=bt.getBoundingClientRect();for(let k=0;k<10;k++){const a=-1.57+R(-1,1),v=R(0.5,1.7);P.push({x:r.left+r.width/2,y:r.top,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:colRGB(d.col),r:R(0.8,1.8),gr:A[d.col]<0.5,dr:0.02});}updateDrive();}});
       devUI.push({i,el:w,hint:w.querySelector('.tierHint'),em,ticks,cnt:w.querySelector('.dvCnt'),out:w.querySelector('.dvOut'),bt,rg:w.querySelector('.rg'),spn:w.querySelector('.spn'),upBtns});});
-    if(nextLocked!=null){const d=DEVICES[nextLocked],w=document.createElement('div');w.className='dv dvLocked';w.innerHTML='<div class="dvRow"><svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="11.5" fill="none" stroke="#fff" stroke-width=".6" stroke-dasharray="2 3"/></svg><div style="flex:1"><div class="dvName">？？？</div><div class="dvOut">'+speedText(d.unlock)+'で現れる</div></div></div>';pbody.appendChild(w);}
+    if(nextLocked!=null){const d=DEVICES[nextLocked],w=document.createElement('div');w.className='dv dvLocked';w.innerHTML='<div class="dvRow"><svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="11.5" fill="none" stroke="#fff" stroke-width=".6" stroke-dasharray="2 3"/></svg><div style="flex:1"><div class="dvName">？？？</div><div class="dvOut">'+(d.find?(S.found<d.find?DEST[d.find-1].name+'に着くと現れる':speedText(d.unlock)+'で現れる'):speedText(d.unlock)+'で現れる')+'</div></div></div>';pbody.appendChild(w);}
   }
   updateDrive();paintDeviceColors();
 }
@@ -52,9 +52,9 @@ function updateDrive(){const gm=globalMult();devUI.forEach(u=>{const i=u.i,k=buy
   u.bt.textContent=(buyMode==='1'?'':'×'+k+' ')+fmt(c);u.bt.disabled=c>S.E;
   const rm=i===ANCHOR?1:regionMult(i);if(rm!==1){u.rg.style.display='';u.rg.textContent='区域 ×'+rm;}else u.rg.style.display='none';
   if(u.spn){const sp=DEVICES[i].spawn;u.spn.textContent=(S.dev[i]*sp.rate).toFixed(1);}
-  u.upBtns.forEach(([b,up])=>b.disabled=S.E<up.cost);if(u.hint){const tn=tierNext(u.i),cnt=!!(tn&&S.dev[u.i]>=tn.need),can=cnt&&S.E>=tn.cost;u.hint.classList.toggle('can',can);u.hint.style.display=cnt?'':'none';const sw=u.hint.querySelector('.swp');if(sw)sw.style.display=can?'':'none';const dc=DEVICES[u.i].col,cc=mix(COLORS[dc].rgb,G,1-A[dc]);if(!u.el.dataset.sweep)u.el.style.background=can?'linear-gradient(90deg,'+rgb(cc,0.16)+','+rgb(cc,0.02)+')':'';u.el.style.boxShadow=cnt?'inset 2px 0 0 '+rgb(cc,can?0.9:0.5):'';}});
+  u.upBtns.forEach(([b,up])=>b.disabled=S.E<up.cost);if(u.hint){const tn=tierNext(u.i),cnt=!!(tn&&S.dev[u.i]>=tn.need),can=cnt&&S.E>=tn.cost;u.hint.classList.toggle('can',can);u.hint.style.display=cnt?'':'none';const sw=u.hint.querySelector('.swp');if(sw)sw.style.display=can?'':'none';const dc=DEVICES[u.i].col,cc=mix(colRGB(dc),G,1-A[dc]);if(!u.el.dataset.sweep)u.el.style.background=can?'linear-gradient(90deg,'+rgb(cc,0.16)+','+rgb(cc,0.02)+')':'';u.el.style.boxShadow=cnt?'inset 2px 0 0 '+rgb(cc,can?0.9:0.5):'';}});
 }
-function paintDeviceColors(){devUI.forEach(u=>{const d=DEVICES[u.i],a=A[d.col],base=mix(d.col===5?[230,232,240]:COLORS[d.col].rgb,G,1-a),col=rgb(devGlow>0.05?mix(base,[255,255,255],devGlow*0.5):base,1);u.em.parts.forEach(p=>p.setAttribute('stroke',col));u.em.core.setAttribute('fill',col);
+function paintDeviceColors(){devUI.forEach(u=>{const d=DEVICES[u.i],a=A[d.col],base=mix(d.col===5?[230,232,240]:colRGB(d.col),G,1-a),col=rgb(devGlow>0.05?mix(base,[255,255,255],devGlow*0.5):base,1);u.em.parts.forEach(p=>p.setAttribute('stroke',col));u.em.core.setAttribute('fill',col);
   if(!u.ticks.length)return;const n=S.dev[u.i],scale=n>=100?2:1;for(let k=0;k<100;k++){const t=u.ticks[k];t.style.background=(k+1)*scale<=n?col:(t.big?'rgba(255,255,255,.3)':'rgba(255,255,255,.12)');}});}
 function renderBoost(){const s=S.stage,nx=s+1,c=nx<=MAX_STAGE?accelCost(nx):0,cap=batteryCap(),blocked=false,dil=s>=DILATION_STAGE,g=stageGamma(s);
   let h='<div class="phead"><span class="lab">'+(dil?'SHIP TIME':'VELOCITY')+'</span></div>';
@@ -91,13 +91,26 @@ function renderReset(){const g=wGain(),lg=lGain();let h='<div class="phead"><spa
   '<div class="note">緊急停止すると、エネルギー、速度、装置、改良、蓄電がなくなる。進んだ距離と、故郷で過ぎた年月は戻らない。停止のあと星図が開き、歪みで新しいスキルを覚えられる。</div>'+
   '<button class="act" id="rGo"'+(S.stage<BRAKE_STAGE||g<1?' disabled':'')+'>緊急停止する</button>'+(S.stage<BRAKE_STAGE?'<div class="note">光速の90%に達すると使える。</div>':'')+
   '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>';
+  if(S.voy){const tgn=tGain(),n=nextDest();
+    h+='<div class="phead" style="margin-top:22px"><span class="lab">VOYAGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+
+    '<div class="row"><span>引き直すと得る航跡</span><span class="big">'+fmt(tgn)+'</span></div>'+
+    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">この航海で進んだ距離</span><span class="num">'+lyText(S.vdist)+' 光年</span></div>'+
+    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の目的地</span><span class="num">'+(n?n.name+'（'+lyText(n.ly)+' 光年）':'もう、ない')+'</span></div>'+
+    '<div class="note">航路を引き直すと、故郷から航海をやり直す。距離と①の中身、歪みとスキルはなくなる。航跡、見つけた色と装置、残光とその強化は残る。航海では緊急停止とスキル選びが自動になり、1万光年ごとに残光が入る（1回 '+fmt(lPer())+'）。</div>'+
+    '<button class="act" id="vrGo"'+(tgn<1?' disabled':'')+'>航路を引き直す</button>'+
+    '<div class="phead" style="margin-top:18px"><span class="lab">WAKE</span></div>';
+    TRAIL.forEach(a=>{const l=tg(a.id),n2=trailNext(a.id),pips=a.max?Array.from({length:a.max},(_,k)=>k<l?'●':'○').join(''):'Lv '+l;
+      h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+a.name+'　<span class="num" style="font-size:11px;letter-spacing:.2em;color:var(--ink-dim)">'+pips+'</span></div>'+
+      '<div class="dvTrait">'+(l?'いま：'+a.text(l)+(n2?'<br>':''):'')+(n2?'次：'+n2.text:'')+'</div></div>'+
+      (n2?'<button class="buy" data-t="'+a.id+'"'+(S.T<n2.cost?' disabled':'')+'>航跡 '+fmt(n2.cost)+'</button>':'')+'</div></div>';});}
+  if(!S.voy&&canVoyage())h+='<div class="phead" style="margin-top:22px"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';
   if(S.cleared||S.restarts>0||S.L>0){
-    h+='<div class="phead" style="margin-top:22px"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+
+    h+=(S.voy?'':'<div class="phead" style="margin-top:22px"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる残光</span><span class="big">'+fmt(lg)+'</span></div>'+
     '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、残光は残る。</div>'+
     '<button class="act" id="rsGo"'+(lg<1?' disabled':'')+'>再出発する</button>'+(!S.cleared?'<div class="note">故郷に着くと使える。</div>':'')+
-    '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの再出発</span><span class="num">'+S.restarts+' 回</span></div>'+
-    '<div class="phead" style="margin-top:18px"><span class="lab">AFTERGLOW</span></div>';
+    '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの再出発</span><span class="num">'+S.restarts+' 回</span></div>')+
+    '<div class="phead" style="margin-top:18px"><span class="lab">AFTERGLOW</span>'+(S.voy?'<span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span>':'')+'</div>';
     AFTERGLOW.forEach(a=>{const l=glow(a.id),n=glowNext(a.id),pips=a.max?Array.from({length:a.max},(_,k)=>k<l?'●':'○').join(''):'Lv '+l;
       h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+a.name+'　<span class="num" style="font-size:11px;letter-spacing:.2em;color:var(--ink-dim)">'+pips+'</span></div>'+
       '<div class="dvTrait">'+(l?'いま：'+a.text(l)+(n?'<br>':''):'')+(n?'次：'+n.text:'')+'</div></div>'+
@@ -106,6 +119,9 @@ function renderReset(){const g=wGain(),lg=lGain();let h='<div class="phead"><spa
   pbody.dataset.k='';pbody.innerHTML=h;
   pbody.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{if(buyGlow(b.dataset.g)){fla=Math.max(fla,0.1);renderPanel(true);}});
   document.getElementById('rGo').onclick=()=>confirmBox('緊急停止','歪みを '+fmt(g)+' 得て、速度0からやり直す。距離と年月はそのまま残る。このあとスキルを選べる。',()=>{startBrake(g);});
+  pbody.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(buyTrail(b.dataset.t)){fla=Math.max(fla,0.1);renderPanel(true);}});
+  const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、残光は残る。',()=>{startBrake(0);BRK.vr=true;});
+  const fg=document.getElementById('farGo');if(fg)fg.onclick=()=>confirmBox('さらに遠くへ','故郷を出発点に、隣の銀河へ航海に出る。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星は残る。',()=>{goFarther();});
   const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','残光を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、残光は残る。',()=>{startBrake(0);BRK.rs=true;});}
 let logMode='log';
 function renderLog(){pbody.dataset.k='';let h='<div class="phead"><span class="lab">LOG</span><span class="seg"><button data-m="log">日誌</button><button data-m="ach">実績 '+S.ach.length+'/'+ACHIEVEMENTS.length+'</button></span></div>';

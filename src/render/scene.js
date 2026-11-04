@@ -6,7 +6,7 @@ const cv=document.getElementById('cv'),cx=cv.getContext('2d');
 let CW=0,CH=0,DPR=1,FR={x:0,y:0,w:0,h:0},RC={x:0,y:0};
 const PW=300,HY=318;   // 情景の座標系（幅300、窓の下端=378）
 const G=[196,198,204];
-const A=COLORS.map(()=>1),TG=COLORS.map(()=>1),RV=COLORS.map(()=>1),POP=COLORS.map(()=>0);
+const A=COLORS.map(()=>1).concat(NEW_COLORS.map(()=>1)),TG=COLORS.map(()=>1),RV=COLORS.map(()=>1),POP=COLORS.map(()=>0);   // A[7〜] は見つけた色。いつも1
 let T=0,fla=0,stk=0,BB=0,CONV=0,FREEZE=false,CRACK=null,HOMEA=null,ACC=null,RCS=1,ZOOM=1,SPDF=1,ROT=0,ROTV=0,BVC=-1,BRK=null,RST=null,NEWSK=[],STILL=false,TRIP=[],MET=null,BLOOM=null,LANDED=false,HEARD=null;
 const P=[],SP=[],STARS=[],FLY=[],FX=[],RIP=[],POPS=[],GLOWB=[];
 function resize(){DPR=Math.min(2,window.devicePixelRatio||1);CW=innerWidth;CH=innerHeight;cv.width=CW*DPR;cv.height=CH*DPR;cx.setTransform(DPR,0,0,DPR,0,0);measure();}

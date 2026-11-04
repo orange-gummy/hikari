@@ -3,7 +3,7 @@
 //         node tools/balance_bot.js --loops 3    （故郷に着いたら再出発して、さらに3周する。残光は安い順に使う）
 //         node tools/balance_bot.js --days A     （放置込みで1週間。A＝1日3回×15分（8時・13時・21時）、B＝1日1回×30分（21時）。
 //                                                   遊んでいない間は放置の上限まで進む。着いたらすぐ再出発する）
-//         --week 10 で日数を変えられる（既定は7日）
+//         --week 10 で日数を変えられる（既定は7日）。上位の星が8つ灯ったあと着くと、③の航海に出る
 const fs=require('fs'),path=require('path');
 const CORE_FILES=['data','state','economy','story'];
 let core=CORE_FILES.map(f=>fs.readFileSync(path.join(__dirname,'..','src',f+'.js'),'utf8')).join('\n');
@@ -23,7 +23,7 @@ const DAYS=${JSON.stringify(DAYS)},LOOPS=${LOOPS},WEEK=${WEEK},SCHED=${JSON.stri
 function stamp(){return DAYS?(t/86400).toFixed(2):(t/60).toFixed(1);}   // 日数モードは日、ふだんは分
 const LOG=[],RLOG=[];
 const PATH=['p1','e1','c1','p2','e2','c2','p3','e3','c3','pB','pA','eA','eB','cB','cA','p5','e5','c5','pS','eC','cL','pI','eR','cM','pW'];
-function best(){let b=null;const nxt=S.stage<MAX_STAGE?accelCost(S.stage+1):1e300;for(let i=0;i<8;i++){if(!(S.dev[i]>0||S.maxStage>=DEVICES[i].unlock))continue;const c=devCost(i,1);if(c>S.E||c>0.12*nxt)continue;const P0=prodRate();S.dev[i]++;const P1=prodRate();S.dev[i]--;const r=(P1-P0)/c;if(!b||r>b.r)b={i,r};}return b;}
+function best(){let b=null;const nxt=S.stage<MAX_STAGE?accelCost(S.stage+1):1e300;for(const i of PRODI){if(!devOpen(i))continue;const c=devCost(i,1);if(c>S.E||c>0.12*nxt)continue;const P0=prodRate();S.dev[i]++;const P1=prodRate();S.dev[i]--;const r=(P1-P0)/c;if(!b||r>b.r)b={i,r};}return b;}
 let lastP=0;
 // 画面を触っている1秒
 function act(){
@@ -32,8 +32,9 @@ function act(){
   let g=true;while(g){g=false;
     if(S.stage<MAX_STAGE&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
     const nxt=S.stage<MAX_STAGE?accelCost(S.stage+1):1e300;
-    for(let i=0;i<8;i++){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
+    for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
     const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
+  if(S.voy){if(voyStopReady()&&t-lastP>20){LOG.push([stamp(),'prest',wGain()]);prestige(false);lastP=t;}return;}   // ③では自動の停止とスキル選び
   const w=wGain();if(S.stage>=BRAKE_STAGE&&w>=Math.max(5,1.6*(S.W+skillSpent()))&&t-lastP>90){prestige(false);lastP=t;LOG.push([stamp(),'prest',w]);for(const id of PATH)buySkill(id);}
 }
 // 放置（ゲームの offline() と同じく、上限までを200刻みで進める）
@@ -43,11 +44,20 @@ let loopStart=0;
 function pri(x){return x[1].cost*(x[0]==='rm'?0.4:x[0][0]==='*'?0.7:1);}   // 航路の記憶を優先し、次に星
 function arrive(){
   RLOG.push('周'+(S.restarts+1)+' '+(DAYS?((t-loopStart)/3600).toFixed(1)+'時間（'+(t/86400).toFixed(2)+'日目に到着）':((t-loopStart)/60).toFixed(1)+'分')+' 停止'+S.prestiges+' 色 '+LOSES.join(' '));
-  LOSES.length=0;S.cleared=true;rebirth();done=false;lastP=t;loopStart=t;
+  LOSES.length=0;S.cleared=true;done=false;lastP=t;loopStart=t;
+  if(canVoyage()){startVoyage();voyDay=(t/86400).toFixed(2)+'日目';}else rebirth();
+  spendL();
+}
+function spendL(){
   let b=true;while(b){b=false;const c=AFTERGLOW.map(a=>[a.id,glowNext(a.id)]).concat(SKILLS.filter(k=>k.glow&&!S.lit.includes(k.id)).map(k=>['*'+k.id,{cost:k.glow}])).filter(x=>x[1]&&x[1].cost<=S.L).sort((x,y)=>pri(x)-pri(y));if(c.length){if(c[0][0][0]==='*')lightStar(c[0][0].slice(1));else buyGlow(c[0][0]);b=true;}}
   if(S.lit.length>=8&&!litDay)litDay=(t/86400).toFixed(2)+'日目';
 }
-let litDay=null;
+let litDay=null,voyDay=null;const FOUND=[],REDRAW=[];
+// ③：残光と航跡を使い、航跡が今までの合計以上たまるなら航路を引き直す
+function voyManage(){if(!S.voy)return;spendL();
+  while(FOUND.length<S.found)FOUND.push(DEST[FOUND.length].name+' '+(t/86400).toFixed(2)+'日目');
+  const g=tGain();if(g>=Math.max(3,S.tTotal)){redraw();REDRAW.push((t/86400).toFixed(2)+'日目 +'+g);lastP=t;}
+  let b=true;while(b){b=false;const c=TRAIL.map(a=>[a.id,trailNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.T).sort((x,y)=>x[1].cost*(x[0]==='vs'?0.5:1)-y[1].cost*(y[0]==='vs'?0.5:1));if(c.length){buyTrail(c[0][0]);b=true;}}}
 function summary(){if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
 
 if(!DAYS){
@@ -64,13 +74,14 @@ if(!DAYS){
   for(let d=0;d<WEEK;d++){for(const [h,m] of SCHED[DAYS]){
     const st=d*86400+h*3600;t=st;idle(st-lastEnd);if(done)arrive();
     for(let k=0;k<m*60;k++){act();t++;played++;if(done)arrive();}
-    lastEnd=t;if(argv.includes('--verbose'))console.log('  '+(t/86400).toFixed(2)+'日 '+(S.restarts+1)+'周目 段階'+S.stage+' 年'+S.years.toFixed(1)+' 距離'+Math.round(S.dist));
-  }DL.push((d+1)+'日目の終わり：'+(S.restarts+1)+'周目 段階'+S.stage+' 年'+Math.round(S.years)+' 距離'+Math.round(S.dist)+' 停止'+S.prestiges+' 失った色'+(S.lost+(S.greyLost?1:0)));}
+    voyManage();lastEnd=t;if(argv.includes('--verbose'))console.log('  '+(t/86400).toFixed(2)+'日 '+(S.restarts+1)+'周目 段階'+S.stage+' 年'+S.years.toFixed(1)+' 距離'+Math.round(S.dist));
+  }DL.push((d+1)+'日目の終わり：'+(S.voy?'航海 距離'+fmtN(S.vdist)+' 見つけた'+S.found+' 航跡'+S.tTotal+' ':'')+(S.restarts+1)+'周目 段階'+S.stage+' 年'+Math.round(S.years)+' 距離'+Math.round(S.dist)+' 停止'+S.prestiges+' 失った色'+(S.lost+(S.greyLost?1:0)));}
   for(const l of DL)console.log(l);
   console.log('遊び方 '+DAYS+'：'+WEEK+'日で画面を触った時間 '+(played/3600).toFixed(1)+'時間');
   for(const r of RLOG)console.log(r);
   console.log('いまの周回 '+(S.restarts+1)+'周目 段階'+S.stage+' 距離'+Math.round(S.dist)+'光年 停止'+S.prestiges+' 色 '+LOSES.join(' '));
   summary();
+  if(S.voy||voyDay){console.log('航海に出た日',voyDay);console.log('目的地',FOUND.join('、')||'まだ');console.log('引き直し',REDRAW.length+'回 '+REDRAW.slice(0,12).join('、'));console.log('航跡の強化',JSON.stringify(S.tg),'残り航跡',S.T,'いちばん遠く',fmtN(S.vbest)+'光年');}
 }
 `;
 eval(stub+core+loop);

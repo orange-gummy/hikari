@@ -6,11 +6,21 @@ function aurBand(i,o,a,rv){if(a<=0.01||rv<=0.01)return;const t=T*0.012+i*1.7,edg
   for(let x=0;x<=CW;x+=3){const fade=cl((edge-x)/50);if(fade<=0)break;const y=base+(Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*30)*sy,cur=0.55+0.45*Math.sin(x*0.09+T*0.02+i)*Math.sin(x*0.031-T*0.013),h=(40+18*Math.sin(x*0.02+t*1.3))*sy,al=0.16*a*fade*cur;
    const g=cx.createLinearGradient(0,y-h,0,y+h*0.35);g.addColorStop(0,rgb(o.rgb,0));g.addColorStop(0.55,rgb(o.rgb,al*0.55));g.addColorStop(0.85,rgb(o.rgb,al));g.addColorStop(1,rgb(o.rgb,0));cx.fillStyle=g;cx.fillRect(x,y-h,3.2,h*1.35);}}
 let devGlow=0;
+/* ③の航海：窓を横切る地平線の光の帯（自分たちの銀河を外から見る）。光の点を一度だけ描いておき、毎フレーム重ねる */
+let BAND=null;
+function bandCanvas(w,h){if(BAND&&BAND.w===w&&BAND.h===h)return BAND.c;const c=document.createElement('canvas');c.width=Math.ceil(w*DPR);c.height=Math.ceil(h*DPR);const x=c.getContext('2d');x.scale(DPR,DPR);
+  let seed=11;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  const dot=(px,py,r,col,a)=>{const g=x.createRadialGradient(px,py,0,px,py,r*3);g.addColorStop(0,'rgba('+col+','+a+')');g.addColorStop(1,'rgba('+col+',0)');x.fillStyle=g;x.beginPath();x.arc(px,py,r*3,0,6.283);x.fill();};
+  const y0=h*0.36,n=Math.round(1600*w/420);
+  for(let i=0;i<n;i++){const u=rnd(),xx=u*w,wd=Math.exp(-Math.pow((u-0.62)*3.2,2)),yy=y0+(rnd()-0.5)*(10+38*wd)-(u-0.5)*22,k=Math.abs(rnd()-0.5);dot(xx,yy,0.35+rnd()*0.6,k<0.2?'255,236,215':'200,180,255',(0.15+0.55*wd)*rnd());}
+  const g=x.createRadialGradient(w*0.62,y0-3,0,w*0.62,y0-3,60);g.addColorStop(0,'rgba(255,236,220,.22)');g.addColorStop(1,'rgba(255,236,220,0)');x.fillStyle=g;x.fillRect(0,0,w,h);
+  BAND={c,w,h};return c;}
+function drawBand(){if(!S.voy||LANDED||HOMEA||FR.w<=0)return;const c=bandCanvas(FR.w,FR.h);cx.save();cx.globalAlpha=0.85;cx.drawImage(c,FR.x,FR.y+Math.sin(T*0.002)*2,FR.w,FR.h);cx.restore();}
 function frame(){requestAnimationFrame(frame);if(FREEZE)return;const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();}finally{FR=f0;}}
 function frameInner(){
   if(!STILL)T++;for(let i=0;i<7;i++){A[i]+=(TG[i]-A[i])*(TG[i]?0.03:0.022);if(TG[i])RV[i]=Math.min(1,RV[i]+0.012);POP[i]*=0.93;}BB*=0.993;
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
-  cx.clearRect(0,0,CW,CH);
+  cx.clearRect(0,0,CW,CH);drawBand();
   if(!LANDED)for(let i=0;i<5;i++){const o=COLORS[i];if(o.nx==null)continue;const a=A[i],c=mix(o.rgb,G,1-a);for(let j=0;j<3;j++){const bx=o.nx*CW+Math.sin(T*0.004+j*2.1+i)*40,by=o.ny*CH+Math.cos(T*0.0033+j*1.7+i)*34;blob(bx,by,o.nr*sc*(0.7+0.2*j),c,0.12*(0.08+0.92*a));}}
   for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null)aurBand(i,o,A[i],RV[i]);}
   // stars
@@ -85,13 +95,13 @@ function drawBrk(){const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B
     if(t===B0){frameEl.classList.remove('shakeL');fla=low?0.03:0.08;if(!low){frameEl.style.setProperty('--sh','7px');frameEl.classList.remove('shake');void frameEl.offsetWidth;frameEl.classList.add('shake');const ap=document.getElementById('app');ap.classList.remove('lurch');void ap.offsetWidth;ap.classList.add('lurch');}}
     if(!low&&t%40===10&&p<0.7){frameEl.style.setProperty('--sh',(5*(1-p)).toFixed(1)+'px');frameEl.classList.remove('shake');void frameEl.offsetWidth;frameEl.classList.add('shake');}
     const fr=stageBeta(b.st)*Math.pow(1-p,2.2),h=document.getElementById('hV');h.textContent=fr>=0.01?(fr*100).toFixed(fr>0.9?2:1)+'% c':Math.round(fr*C_KMS).toLocaleString('ja-JP')+' km/s';}
-  if(t===B1){stk=0;BVC=0;for(const sg of SEG)sg.style.opacity='';if(b.rs)rebirth();else prestige(false);paintSpeed();renderPanel(true);fla=low?0.06:0.14;
+  if(t===B1){stk=0;BVC=0;for(const sg of SEG)sg.style.opacity='';if(b.rs)rebirth();else if(b.vr)redraw();else prestige(false);paintSpeed();renderPanel(true);fla=low?0.06:0.14;
     if(!low){frameEl.style.setProperty('--sh','3px');frameEl.classList.remove('shake');void frameEl.offsetWidth;frameEl.classList.add('shake');}}
   if(t>=B1&&t<S1){const q=(t-B1)/(S1-B1);SPDF=-0.5*Math.sin(Math.PI*q)*Math.exp(-2*q)*amp;ROTV=-1.2*Math.sin(Math.PI*q)*Math.exp(-2*q);}
   if(t===S1){SPDF=0;ROTV=0;STILL=true;document.getElementById('app').classList.add('rstDim');}
   if(t>S1)SPDF=0;
   if(t<S1){ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');}
-  if(t>=S2){SPDF=0;STILL=false;frameEl.classList.remove('shakeL');document.getElementById('block').style.display='none';BRK=null;if(b.rs)startRestart(true);else openSkill(true,b.g);}}
+  if(t>=S2){SPDF=0;STILL=false;frameEl.classList.remove('shakeL');document.getElementById('block').style.display='none';BRK=null;if(b.rs)startRestart(true);else if(b.vr||b.auto)startRestart();else openSkill(true,b.g);}}
 const CH_T=65;
 function drawAcc(){const a=ACC;a.t++;const low=fxLow,lv=a.lvl,n=nines(lv),t=a.t,dur=162,amp=low?0.45:1;
   if(n>0){const i=n-1,an=-1.5708+(i+0.5)/12*6.283,ax=RC.x+Math.cos(an)*74*RCS,ay=RC.y+Math.sin(an)*74*RCS,c=mix(COLORS[i%6].rgb,G,1-A[i%6]),g=t<CH_T?t/CH_T:Math.max(0,1-(t-CH_T)/70);blob(ax,ay,(16+lv)*(0.5+g),c,0.8*g);SEG[i].setAttribute('stroke-width',(2.2+3*g).toFixed(2));}
