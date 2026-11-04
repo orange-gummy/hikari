@@ -10,7 +10,7 @@
 :root[data-theme="dark"]{--bg:#04050c}
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;margin:0}
-html{touch-action:pan-x pan-y}   /* ダブルタップとピンチで画面を拡大させない（星図の拡大は skills.js で独自に処理） */
+html,*{touch-action:pan-x pan-y}   /* ダブルタップとピンチで画面を拡大させない。touch-action は受け継がれず、スクロールする枠ごとに効き直すので全部に付ける（星図の拡大は skills.js で独自に処理） */
 body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-weight:300;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
 button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);outline-offset:2px;border-radius:6px}
@@ -47,7 +47,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #rInfo{position:absolute;left:0;right:0;top:22px;display:flex;justify-content:space-between;font-size:11px;color:var(--ink-dim)}
 #rInfo b{font-weight:400;color:var(--ink)}
 /* frame */
-#frame{position:relative;margin:2px 12px 8px;border:0.5px solid rgba(255,255,255,.16);border-radius:18px;overflow:hidden;cursor:pointer;touch-action:manipulation}
+#frame{position:relative;margin:2px 12px 8px;border:0.5px solid rgba(255,255,255,.16);border-radius:18px;overflow:hidden;cursor:pointer;touch-action:none}
 #frame.hintTap{animation:tapHint 1.6s ease-in-out infinite}
 @keyframes tapHint{0%,100%{border-color:rgba(255,255,255,.16)}50%{border-color:rgba(255,255,255,.6)}}
 .brk{position:absolute;width:14px;height:14px;border:0 solid rgba(236,238,242,.55);pointer-events:none}
@@ -191,7 +191,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 .modal.on{display:flex}
 .mbox{width:min(360px,100%);background:rgba(6,7,16,.97);border:0.5px solid var(--line);border-radius:18px;padding:20px}
 .mbox h2{font-family:var(--log);font-weight:500;font-size:18px;letter-spacing:.08em;margin:0 0 14px;color:var(--ink-strong)}
-.mbox textarea{width:100%;height:90px;background:rgba(255,255,255,.04);border:0.5px solid var(--line);border-radius:10px;color:var(--ink);font-family:var(--num);font-size:11px;padding:8px;resize:none}
+.mbox textarea{width:100%;height:90px;background:rgba(255,255,255,.04);border:0.5px solid var(--line);border-radius:10px;color:var(--ink);font-family:var(--num);font-size:16px;padding:8px;resize:none}   /* 16px 未満だと iPhone で入力のときに拡大される */
 #block{position:fixed;inset:0;z-index:8;display:none}
 #ending{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(to bottom,#7fb1ea 0%,#b8d4f1 45%,#f2dcc0 100%);opacity:0;transition:opacity 4s;color:#1d2a3c}
 #ending.on{display:flex}

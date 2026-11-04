@@ -53,4 +53,9 @@ function boot(){const had=load();initScene();resize();applyLoadedVisuals();S.reg
 boot();
 // iPhone は viewport と touch-action だけではピンチの拡大を止められないため
 ['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+// 2本指で動かしたら拡大させない（星図だけは自前で拡大する）。PC の Ctrl＋ホイール・トラックパッドのピンチ・Ctrl＋＋／−も止める
+const inMap=e=>!!(e.target&&e.target.closest&&e.target.closest('#skMap'));
+document.addEventListener('touchmove',e=>{if(e.touches.length>1&&!inMap(e))e.preventDefault();},{passive:false});
+document.addEventListener('wheel',e=>{if(e.ctrlKey&&!inMap(e))e.preventDefault();},{passive:false});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['+','-','=','0',';','_'].includes(e.key))e.preventDefault();});
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
