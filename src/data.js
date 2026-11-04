@@ -4,6 +4,7 @@
    ===================================================================== */
 const SAVE_KEY='hikari_save';
 const SAVE_VERSION=6;
+const ACH_BONUS=0.05;   // 実績1つにつき、すべての生産 +5%（足し算。どの層でリセットしても消えない）
 const SECONDS_PER_YEAR=3.156e7;
 const SHIP_K=33;              // 現実1秒あたりの船内秒
 const GOAL_LY=10000;
@@ -97,14 +98,14 @@ const SKILLS=[
   {id:'aT',br:3,step:9,name:'自動化：TIER',desc:'全装置のTIERを、上げられるようになり次第、自動で上げる',cost:512},
   {id:'aR',br:3,step:10,name:'自動化：放出',desc:'蓄電池が預けた額の4倍に育ったら自動で放出する',cost:1024},
   // 残光で灯す上位の星（glow＝灯すのに要る残光。灯した星は周回の最初から覚えている。歪みでは覚えない）
-  {id:'pR',br:0,step:8,name:'余韻',desc:'緊急停止のあと、停止したときの速度の半分の段階から始まる',cost:0,glow:10},
-  {id:'pL',br:0,step:9,name:'光の帆',desc:'速度の段階1つにつき、生産 +10%',cost:0,glow:20},
-  {id:'eL',br:1,step:7,name:'残光炉',desc:'これまでに得た残光1つにつき、生産 +5%',cost:0,glow:10},
-  {id:'eM',br:1,step:8,name:'蓄えの記憶',desc:'緊急停止しても、蓄電池の中身が半分残る',cost:0,glow:20},
-  {id:'c7',br:2,step:9,name:'長い眠り III',desc:'放置の上限 72時間',cost:0,glow:10},
-  {id:'cG',br:2,step:10,name:'帰郷の信号',desc:'色を一つ失うたびに、30秒間 生産×10',cost:0,glow:20},
-  {id:'a8',br:3,step:11,name:'自動化：時間の錨',desc:'時間の錨を、買えるエネルギーが溜まると自動で買う',cost:0,glow:10},
-  {id:'aM',br:3,step:12,name:'自動化：星図',desc:'歪みが溜まると、前の周回で覚えた順にスキルを自動で覚える',cost:0,glow:20}
+  {id:'pR',br:0,step:8,name:'余韻',desc:'緊急停止のあと、停止したときの速度の半分の段階から始まる',cost:0,glow:20},
+  {id:'pL',br:0,step:9,name:'光の帆',desc:'速度の段階1つにつき、生産 +10%',cost:0,glow:40},
+  {id:'eL',br:1,step:7,name:'残光炉',desc:'これまでに得た残光1つにつき、生産 +5%',cost:0,glow:20},
+  {id:'eM',br:1,step:8,name:'蓄えの記憶',desc:'緊急停止しても、蓄電池の中身が半分残る',cost:0,glow:40},
+  {id:'c7',br:2,step:9,name:'長い眠り III',desc:'放置の上限 72時間',cost:0,glow:20},
+  {id:'cG',br:2,step:10,name:'帰郷の信号',desc:'色を一つ失うたびに、30秒間 生産×10',cost:0,glow:40},
+  {id:'a8',br:3,step:11,name:'自動化：時間の錨',desc:'時間の錨を、買えるエネルギーが溜まると自動で買う',cost:0,glow:20},
+  {id:'aM',br:3,step:12,name:'自動化：星図',desc:'歪みが溜まると、前の周回で覚えた順にスキルを自動で覚える',cost:0,glow:40}
 ];
 /* 再出発（第二層）：故郷に着いたあと、もう一度遠い宙域から船を出す（強くてニューゲーム） */
 const RESTART_BASE=30;   // 1回着くごとの残光。再出発の回数1回につき+10%
@@ -168,6 +169,14 @@ const ACHIEVEMENTS=[
   ['w100','歪みを集める','歪みを合計100集める',s=>s.wTotal>=100],
   ['rs1','もう一度、最初から','再出発する',s=>s.restarts>=1],
   ['rs3','繰り返す','再出発を3回する',s=>s.restarts>=3],
+  ['home','空の色','故郷に初めて着く',s=>s.cleared||s.restarts>=1],
+  ['rs5','五度目の帰り道','再出発を5回する',s=>s.restarts>=5],
+  ['rs10','何度でも','再出発を10回する',s=>s.restarts>=10],
+  ['fast','帰り道を覚えた','出発から1日以内に故郷に着く',s=>s.cleared&&s.loopTime<86400],
+  ['lit1','灯す','残光で上位の星を灯す',s=>s.lit.length>=1],
+  ['lit8','星座','上位の星を8つすべて灯す',s=>s.lit.length>=8],
+  ['l100','残光を集める','残光を合計100集める',s=>s.lTotal>=100],
+  ['rm3','見知った道','航路の記憶を3段にする',s=>(s.ag.rm||0)>=3],
   ['fork','道を選ぶ','分岐のスキルを覚える',s=>s.skills.some(id=>/[ABab]$/.test(id))],
   ['k5','節目の星','枝の最後のスキルを覚える',s=>s.skills.some(id=>['p5','e5','c5'].includes(id))],
   ['reg2','星雲帯','星雲帯に入る',s=>s.dist>=100],

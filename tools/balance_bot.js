@@ -28,7 +28,7 @@ let lastP=0;
 // 画面を触っている1秒
 function act(){
   tick(1);const P=prodRate();if(P<2000||t%10<3){S.E+=tapGain()*2;S.Erun+=tapGain()*2;S.pulse=10;}
-  checkStory();
+  checkStory();if(t%5===0)achCheck();
   let g=true;while(g){g=false;
     if(S.stage<MAX_STAGE&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
     const nxt=S.stage<MAX_STAGE?accelCost(S.stage+1):1e300;
@@ -37,7 +37,7 @@ function act(){
   const w=wGain();if(S.stage>=BRAKE_STAGE&&w>=Math.max(5,1.6*(S.W+skillSpent()))&&t-lastP>90){prestige(false);lastP=t;LOG.push([stamp(),'prest',w]);for(const id of PATH)buySkill(id);}
 }
 // 放置（ゲームの offline() と同じく、上限までを200刻みで進める）
-function idle(sec){if(sec<30||done)return;const tt=Math.min(sec,offlineCap()),mul=has('cB')?2:1;for(let k=0;k<200&&!done;k++){tick(tt/200,mul);checkStory();}}
+function idle(sec){if(sec<30||done)return;const tt=Math.min(sec,offlineCap()),mul=has('cB')?2:1;for(let k=0;k<200&&!done;k++){tick(tt/200,mul);checkStory();achCheck();}}
 // 着いたら再出発し、残光を安い順に強化と星に使う
 let loopStart=0;
 function pri(x){return x[1].cost*(x[0]==='rm'?0.4:x[0][0]==='*'?0.7:1);}   // 航路の記憶を優先し、次に星
@@ -45,8 +45,10 @@ function arrive(){
   RLOG.push('周'+(S.restarts+1)+' '+(DAYS?((t-loopStart)/3600).toFixed(1)+'時間（'+(t/86400).toFixed(2)+'日目に到着）':((t-loopStart)/60).toFixed(1)+'分')+' 停止'+S.prestiges+' 色 '+LOSES.join(' '));
   LOSES.length=0;S.cleared=true;rebirth();done=false;lastP=t;loopStart=t;
   let b=true;while(b){b=false;const c=AFTERGLOW.map(a=>[a.id,glowNext(a.id)]).concat(SKILLS.filter(k=>k.glow&&!S.lit.includes(k.id)).map(k=>['*'+k.id,{cost:k.glow}])).filter(x=>x[1]&&x[1].cost<=S.L).sort((x,y)=>pri(x)-pri(y));if(c.length){if(c[0][0][0]==='*')lightStar(c[0][0].slice(1));else buyGlow(c[0][0]);b=true;}}
+  if(S.lit.length>=8&&!litDay)litDay=(t/86400).toFixed(2)+'日目';
 }
-function summary(){console.log('afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
+let litDay=null;
+function summary(){if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
 
 if(!DAYS){
   for(;;){const t0=t;

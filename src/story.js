@@ -2,6 +2,7 @@
 /* =====================================================================
    STORY ― 日誌、色の喪失、区域
    ===================================================================== */
+function achCheck(){const got=[];for(const a of ACHIEVEMENTS)if(!S.ach.includes(a[0])&&a[3](S)){S.ach.push(a[0]);got.push(a);}return got;}   // 新しく取った実績を返す
 function story(key,text,color){if(key&&S.flags[key])return;if(key)S.flags[key]=1;logLine(text,color==null?-1:color);}
 function logLine(text,color){S.log.push({y:Math.floor(S.years),t:text,c:color});if(S.log.length>200)S.log.shift();subtitle(text);if(typeof curTab!=='undefined'&&curTab==='log')renderPanel(true);}
 function checkStory(){

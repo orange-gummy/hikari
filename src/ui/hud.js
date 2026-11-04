@@ -66,7 +66,7 @@ function unitPop(u){const e=document.getElementById('unitPop');e.textContent=u;e
 let subT=[];
 function subtitle(t){subT.forEach(clearTimeout);subT=[];const box=document.getElementById('sub'),st=document.getElementById('subT');st.innerHTML='';const sp=[...t].map(ch=>{const s=document.createElement('span');s.textContent=ch;s.style.opacity='0';st.appendChild(s);return s;});box.style.opacity='1';sp.forEach((s,k)=>subT.push(setTimeout(()=>{s.style.opacity='1';},120+k*60)));subT.push(setTimeout(()=>{box.style.opacity='0';},120+sp.length*60+3200));}
 function toast(html){const t=document.createElement('div');t.className='toast';t.innerHTML=html;document.getElementById('toasts').appendChild(t);requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='translateY(0)';});setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),600);},3000);}
-function checkAch(){ACHIEVEMENTS.forEach(a=>{if(!S.ach.includes(a[0])&&a[3](S)){S.ach.push(a[0]);toast('実績　<b>'+a[1]+'</b>');}});}
+function checkAch(){for(const a of achCheck())toast('実績　<b>'+a[1]+'</b>　生産 ×'+achMult().toFixed(2));}
 function hudPop(text){const r=document.getElementById('yr').getBoundingClientRect();POPS.push({x:r.right-30,y:r.bottom+38,t:0,s:text});}
 /* タップ */
 let lastTapAt=performance.now();
