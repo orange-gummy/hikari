@@ -91,7 +91,7 @@ function drawBrk(){const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B
   if(t===S1){SPDF=0;ROTV=0;STILL=true;document.getElementById('app').classList.add('rstDim');}
   if(t>S1)SPDF=0;
   if(t<S1){ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');}
-  if(t>=S2){SPDF=0;STILL=false;frameEl.classList.remove('shakeL');document.getElementById('block').style.display='none';BRK=null;if(b.rs)startRestart(true);else if(b.auto)startRestart();else openSkill(true,b.g);}}
+  if(t>=S2){SPDF=0;STILL=false;frameEl.classList.remove('shakeL');document.getElementById('block').style.display='none';BRK=null;if(b.rs)startRestart(true);else openSkill(true,b.g);}}
 const CH_T=65;
 function drawAcc(){const a=ACC;a.t++;const low=fxLow,lv=a.lvl,n=nines(lv),t=a.t,dur=162,amp=low?0.45:1;
   if(n>0){const i=n-1,an=-1.5708+(i+0.5)/12*6.283,ax=RC.x+Math.cos(an)*74*RCS,ay=RC.y+Math.sin(an)*74*RCS,c=mix(COLORS[i%6].rgb,G,1-A[i%6]),g=t<CH_T?t/CH_T:Math.max(0,1-(t-CH_T)/70);blob(ax,ay,(16+lv)*(0.5+g),c,0.8*g);SEG[i].setAttribute('stroke-width',(2.2+3*g).toFixed(2));}
