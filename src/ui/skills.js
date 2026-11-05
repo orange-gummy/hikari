@@ -77,7 +77,7 @@ function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.
   const lt=document.getElementById('skLight');if(lt)lt.onclick=()=>{if(lightStar(k.id)){FXQ.milestone=true;renderSkill();}};
   const b=document.getElementById('skBuy');if(b)b.onclick=()=>{buySkill(k.id);if(has(k.id))selSkill=nextSkillAfter(k.id);renderSkill();};
   const re=document.getElementById('skRe');if(re)re.onclick=()=>{S.W+=skillSpent();S.skills=[];NEWSK=[];renderSkill();};
-  const g=document.getElementById('skGo');if(g)g.onclick=closeSkill;}
+  const g=document.getElementById('skGo');if(g)g.onclick=()=>confirmBox('帆を張る',(S.W>=1?'歪みが '+fmt(S.W)+' 残っている。':'')+'星図を閉じて、出航する。',closeSkill);}
 function withSkill(id,f){const had=has(id);if(!had)S.skills.push(id);const v=f();if(!had)S.skills.pop();return v;}
 function skillCompare(k){if(has(k.id))return '';const rows=[];const P0=prodRate(),P1=withSkill(k.id,prodRate);if(Math.abs(P1-P0)>P0*1e-6)rows.push(['生産',fmt(P0)+' → '+fmt(P1)+' / 秒']);
   const id=k.id;

@@ -119,8 +119,8 @@ function drawAcc(){const a=ACC;a.t++;const low=fxLow,lv=a.lvl,n=nines(lv),t=a.t,
   if(t>CH_T+dur+6){ZOOM=1;SPDF=1;ROTV=0;stk=0;ROT=Math.round(ROT/5)*5;TKG.setAttribute('transform','rotate('+ROT+' 88 88)');if(n>0)SEG[n-1].setAttribute('stroke-width','2.2');ACC=null;accEndAt=Date.now();}}
 function mkCrack(){const br=[];for(let j=0;j<9;j++){let a=j/9*6.283+R(-0.2,0.2),x=RC.x,y=RC.y;const pts=[[x,y]];for(let k=0;k<26;k++){a+=R(-0.35,0.35);x+=Math.cos(a)*R(8,16);y+=Math.sin(a)*R(8,16);pts.push([x,y]);}br.push(pts);}CRACK={t:0,br};}
 
-function drawHome(){const h=HOMEA;h.t++;const D=500;
-  if(!h.L){h.L=[];for(let i=0;i<18;i++){const pf=[];for(let k=0;k<14;k++){const a=R(0,6.283),d=Math.sqrt(Math.random())*1.6;pf.push({x:Math.cos(a)*d,y:Math.sin(a)*d*0.7,r:R(0.35,0.9)});}h.L.push({s:i*22+R(-6,6),pf});}}
+function drawHome(){const h=HOMEA;h.t++;const D=380;   // 雲を抜けるまで（約6秒）
+  if(!h.L){h.L=[];for(let i=0;i<18;i++){const pf=[];for(let k=0;k<14;k++){const a=R(0,6.283),d=Math.sqrt(Math.random())*1.6;pf.push({x:Math.cos(a)*d,y:Math.sin(a)*d*0.7,r:R(0.35,0.9)});}h.L.push({s:i*17+R(-5,5),pf});}}
   const cxp=CW/2,cyp=CH*0.45,base=Math.max(CW,CH)*0.5,gp=cl(h.t/D),col=mix([182,187,198],G,0.3);
   cx.fillStyle='rgba(19,21,30,'+ei(cl(h.t/45)).toFixed(3)+')';cx.fillRect(0,0,CW,CH);
   let fog=0;const vis=h.L.map(L=>{const age=h.t-L.s,dur=140-75*gp;return{L,p:age/dur};}).filter(o=>o.p>0&&o.p<1).sort((a,b)=>a.p-b.p);
