@@ -103,8 +103,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #tabs button{font-family:var(--label);font-size:11px;letter-spacing:.08em;color:var(--ink-dim);padding:6px 8px;white-space:nowrap;border-radius:12px;border:0.5px solid transparent}
 #tabs button[aria-selected="true"]{color:var(--ink-strong);border-color:rgba(255,255,255,.35)}
 #tabs button.locked{opacity:.25;pointer-events:none}
-#tabs button.hint{animation:tabHint 1.4s ease-in-out infinite}
-@keyframes tabHint{0%,100%{border-color:rgba(255,255,255,.1);color:var(--ink-dim)}50%{border-color:rgba(255,255,255,.7);color:var(--ink-strong)}}
+#tabs button.hint{border-color:rgba(255,214,170,.55);color:var(--ink-strong);box-shadow:0 0 10px rgba(255,200,140,.18);transition:border-color .6s,color .6s,box-shadow .6s}   /* 目標が指すタブ。点滅はさせず、静かに光らせる */
 .phead{display:flex;justify-content:space-between;align-items:center;margin:2px 0 4px}
 .seg{display:flex;gap:2px}
 .seg button{font-family:var(--label);font-size:11px;letter-spacing:.1em;color:var(--ink-dim);padding:2px 8px;border-radius:10px;border:0.5px solid transparent}
