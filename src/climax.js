@@ -11,8 +11,10 @@ function startClimax(){climax=true;CLT.forEach(clearTimeout);CLT=[];document.get
     ct(()=>{HEARD={t:0};SND.play('hear');STILL=false;logLine(LINES.hear,-1);document.getElementById('app').classList.add('landed');
       ct(()=>{logLine(LINES.home,-1);HOMEA={t:0};document.getElementById('app').classList.add('landed');},2200);},2000);}},50);}
 function homeColors(){LANDED=true;HOMEA=null;document.getElementById('app').classList.add('landed');const rw=document.getElementById('ringWrap');rw.style.transition='opacity 1.5s';rw.style.opacity='0';GAP=2400;   /* 色が戻る間隔。短いと情景が何枚も重なる */ct(()=>{for(let i=6;i>=0;i--)queueVisual(()=>visualBack(i));const w=ci(()=>{if(!VQ.length&&!vqTimer){clearInterval(w);GAP=3700;logLine(LINES.all,-1);ct(()=>landing(),3800);}},300);},1200);}
-function landing(){SND.play('land');logLine(LINES.land,-1);if(!PREVIEW){S.cleared=true;S.dist=GOAL_LY;save();}const e=document.getElementById('ending');e.classList.add('on');requestAnimationFrame(()=>{e.style.opacity='1';});
-  END.push(setTimeout(()=>{document.getElementById('endLine').style.opacity='1';endShown=performance.now();},3500));END.push(setTimeout(showTitle,13000));}
+function landing(){SND.play('land');logLine(LINES.land,-1);if(!PREVIEW){S.cleared=true;S.dist=GOAL_LY;save();}const e=document.getElementById('ending');
+  /* 「着いた。」を読む間（3.5秒）を置いてから空に溶け、空が満ちてから「空は、こんな色だった。」 */
+  END.push(setTimeout(()=>{e.classList.add('on');requestAnimationFrame(()=>{e.style.opacity='1';});},3500));
+  END.push(setTimeout(()=>{document.getElementById('endLine').style.opacity='1';endShown=performance.now();},3500+5000));END.push(setTimeout(showTitle,3500+14500));}
 let END=[],endShown=0;
 function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';paintTitle();document.getElementById('title').classList.add('on');}
 // 「空は、こんな色だった。」はタップで飛ばせる（文字が出てから）
