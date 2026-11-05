@@ -12,12 +12,13 @@ function openSkill(pick,gained){skillPick=!!pick;skillOpen=true;PANX=0;PANY=0;PA
   if(pick&&gained){const w=document.getElementById('skW'),to=S.W,from=Math.max(0,to-gained),t0=performance.now()+500;lastWShown=S.W;const step=()=>{const p=Math.min(1,Math.max(0,(performance.now()-t0)/1300)),q=1-Math.pow(1-p,3);w.textContent='歪み '+fmt(Math.round(from+(to-from)*q));if(p<1&&skillOpen)requestAnimationFrame(step);else if(skillOpen){w.textContent='歪み '+fmt(S.W);paintWm();}};w.textContent='歪み '+fmt(from);requestAnimationFrame(step);}}
 function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if(wasPick)startRestart();document.getElementById('skillOv').classList.remove('on');renderPanel(true);}
 tabs.forEach(b=>b.addEventListener('click',()=>{if(b.dataset.t==='skill'){openSkill(false);return;}curTab=b.dataset.t;renderPanel(true);}));
-function tabHidden(t){return (t==='glow'&&!(S.cleared||S.restarts>0||S.lTotal>0))||(t==='voy'&&!(S.voy||canVoyage()));}   // 層が開くまでタブごと出さない
-function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='battery'&&S.maxStage<BATTERY_STAGE);}
+function paintTabs(){tabs.forEach(b=>{b.classList.toggle('locked',tabLocked(b.dataset.t));b.style.display=tabHidden(b.dataset.t)?'none':'';});document.getElementById('tr2').style.display=['reset','glow','voy'].every(tabHidden)?'none':'';}
+function tabHidden(t){return (t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='glow'&&!(S.cleared||S.restarts>0||S.lTotal>0))||(t==='voy'&&!(S.voy||canVoyage()));}   // 層が開くまでタブごと出さない
+function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&S.maxStage<BATTERY_STAGE);}
 let devUI=[],TIERFX=null;
 function renderPanel(force){
   if(tabHidden(curTab))curTab='drive';
-  tabs.forEach(b=>{b.setAttribute('aria-selected',b.dataset.t===curTab);b.classList.toggle('locked',tabLocked(b.dataset.t));b.style.display=tabHidden(b.dataset.t)?'none':'';});
+  tabs.forEach(b=>b.setAttribute('aria-selected',b.dataset.t===curTab));paintTabs();
   if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow')renderGlow();else if(curTab==='voy')renderVoy();else renderLog();
 }
 function devVisible(i){return devOpen(i);}
@@ -96,8 +97,30 @@ function renderReset(){const g=wGain();let h='<div class="phead"><span class="la
   '<div class="row"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>';
   pbody.dataset.k='';pbody.innerHTML=h;
   document.getElementById('rGo').onclick=()=>confirmBox('緊急停止','歪みを '+fmt(g)+' 得て、速度0からやり直す。距離と年月はそのまま残る。このあとスキルを選べる。',()=>{startBrake(g);});}
-/* ② 再出発と残光（AFTERGLOW タブ） */
-function renderGlow(){const lg=lGain();let h='';
+/* ② 再出発と残光（AFTERGLOW タブ）。強化は「残照の地平」：日が沈んだあとの地平線に、強化ごとの光の筋が段に応じて空へ伸びる */
+let glowSel='rm',GLOWFX=null;
+function glowHorizon(){const W=360,H=210,hz=150,n=AFTERGLOW.length,xs=AFTERGLOW.map((_,i)=>W*(i+0.5)/n);
+  let v='<svg class="gHz" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="残光の強化"><defs><linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgb(60,40,90)" stop-opacity="0"/><stop offset=".6" stop-color="rgb(150,80,90)" stop-opacity=".12"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity=".32"/></linearGradient>'+
+    '<radialGradient id="gSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgb(255,150,90)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity="0"/></radialGradient>'+
+    '<linearGradient id="gRay" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".85"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></linearGradient>'+
+    '<linearGradient id="gEdge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".18" stop-color="#fff"/><stop offset=".82" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="gFade"><rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#gEdge)"/></mask>'+
+    '<radialGradient id="gDot"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".6"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></radialGradient></defs>'+
+    '<g mask="url(#gFade)"><rect x="0" y="'+(hz-130)+'" width="'+W+'" height="130" fill="url(#gSky)"/><rect x="0" y="'+(hz-60)+'" width="'+W+'" height="'+(H-hz+60)+'" fill="url(#gSun)"/></g>'+
+    '<line x1="6" y1="'+hz+'" x2="'+(W-6)+'" y2="'+hz+'" stroke="rgb(255,200,150)" stroke-opacity=".5" stroke-width=".8"/>';
+  AFTERGLOW.forEach((a,i)=>{const l=glow(a.id),x=xs[i],sel=a.id===glowSel,steps=Math.min(l,6),h=18+steps*18+(l>6?Math.min(12,Math.log2(l-5)*4):0),fx=GLOWFX&&GLOWFX.id===a.id&&Date.now()-GLOWFX.t<1200;
+    v+='<g data-gs="'+a.id+'" style="cursor:pointer"><rect x="'+(x-W/n/2)+'" y="0" width="'+(W/n)+'" height="'+H+'" fill="transparent"/>'+
+      '<rect x="'+(x-(sel?1:0.7))+'" y="'+(hz-h)+'" width="'+(sel?2:1.4)+'" height="'+h+'" fill="url(#gRay)" opacity="'+(sel?1:0.65)+'"/>'+
+      '<circle cx="'+x+'" cy="'+hz+'" r="12" fill="url(#gDot)"'+(fx?' class="gPop"':'')+'/><circle cx="'+x+'" cy="'+hz+'" r="3" fill="rgb(255,226,190)"/>';
+    for(let k=1;k<=steps;k++)v+='<circle cx="'+x+'" cy="'+(hz-k*18)+'" r="1.4" fill="rgb(255,214,170)" opacity=".8"/>';
+    if(sel)v+='<circle cx="'+x+'" cy="'+hz+'" r="9" fill="none" stroke="rgb(255,214,170)" stroke-opacity=".8" stroke-width=".8"/>';
+    v+='<text x="'+x+'" y="'+(hz+24)+'" text-anchor="middle" font-size="11" fill="'+(sel?'#eceef2':'rgba(236,238,242,.6)')+'">'+a.name+'</text><text x="'+x+'" y="'+(hz+40)+'" text-anchor="middle" font-size="10" fill="rgba(236,238,242,.45)" font-family="Jura,sans-serif">Lv '+l+(a.max?' / '+a.max:'')+'</text></g>';});
+  v+='</svg>';
+  const a=AFTERGLOW.find(x=>x.id===glowSel)||AFTERGLOW[0],l=glow(a.id),nx=glowNext(a.id);
+  v+='<div class="gDet"><div class="row" style="padding:0"><span style="font-size:14px">'+a.name+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">Lv '+l+'</span></div>'+
+    '<div class="note" style="margin:4px 0 2px">'+(l?'いま：'+a.text(l)+'<br>':'')+(nx?'次：'+nx.text:'これ以上は灯せない。')+'</div>'+
+    (nx?'<button class="act" id="gBuy"'+(S.L<nx.cost?' disabled':'')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">灯す　残光 '+fmt(nx.cost)+'</button>':'')+'</div>';
+  return v;}
+function renderGlow(){const lg=lGain();const key='g|'+[fmt(S.L),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
   if(S.cleared||S.restarts>0||S.L>0){
     h+=(S.voy?'':'<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる残光</span><span class="big">'+fmt(lg)+'</span></div>'+
@@ -105,13 +128,11 @@ function renderGlow(){const lg=lGain();let h='';
     '<button class="act" id="rsGo"'+(lg<1?' disabled':'')+'>再出発する</button>'+(!S.cleared?'<div class="note">故郷に着くと使える。</div>':'')+
     '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの再出発</span><span class="num">'+S.restarts+' 回</span></div>')+
     (S.voy?'<div class="phead"><span class="lab">AFTERGLOW</span>':'<div class="phead" style="margin-top:18px"><span class="lab">AFTERGLOW</span>')+(S.voy?'<span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span>':'')+'</div>';
-    AFTERGLOW.forEach(a=>{const l=glow(a.id),n=glowNext(a.id),pips=a.max?Array.from({length:a.max},(_,k)=>k<l?'●':'○').join(''):'Lv '+l;
-      h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+a.name+'　<span class="num" style="font-size:11px;letter-spacing:.2em;color:var(--ink-dim)">'+pips+'</span></div>'+
-      '<div class="dvTrait">'+(l?'いま：'+a.text(l)+(n?'<br>':''):'')+(n?'次：'+n.text:'')+'</div></div>'+
-      (n?'<button class="buy" data-g="'+a.id+'"'+(S.L<n.cost?' disabled':'')+'>残光 '+n.cost+'</button>':'')+'</div></div>';});
+    h+=glowHorizon();
   }
-  pbody.dataset.k='';pbody.innerHTML=h;
-  pbody.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{if(buyGlow(b.dataset.g)){fla=Math.max(fla,0.1);renderPanel(true);}});
+  pbody.dataset.k=key;pbody.innerHTML=h;
+  pbody.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;pbody.dataset.k='';renderGlow();});
+  const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){fla=Math.max(fla,0.1);GLOWFX={id:glowSel,t:Date.now()};pbody.dataset.k='';renderGlow();}};
   const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','残光を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、残光は残る。',()=>{startBrake(0);BRK.rs=true;});}
 /* ③ さらに遠くへ（VOYAGE タブ） */
 function renderVoy(){let h='';
