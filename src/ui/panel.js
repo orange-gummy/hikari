@@ -40,7 +40,7 @@ function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}
 function renderDrive(force){
   const order=DEVICES.map((_,i)=>i).sort((a,b)=>(DEVICES[a].find||0)-(DEVICES[b].find||0)||DEVICES[a].unlock-DEVICES[b].unlock);
   const visible=order.filter(devVisible);const nextLocked=order.find(i=>!devVisible(i)&&(!DEVICES[i].find||S.voy));
-  const key=visible.join()+'|'+nextLocked+'|'+buyMode+'|'+S.tier.join()+'|'+DEVICES.map((_,i)=>{const n=tierNext(i);return n&&S.dev[i]>=n.need?1:0;}).join('')+'|'+S.skills.filter(x=>x[0]==='a').join()+'|'+S.auto.join()+'|'+S.autoTier;
+  const key=visible.join()+'|'+nextLocked+'|'+buyMode+'|'+S.skills.filter(x=>x[0]==='a').join()+'|'+S.auto.join()+'|'+S.autoTier;
   if(force||pbody.dataset.k!==key){pbody.dataset.k=key;pbody.innerHTML='';devUI=[];
     const h=document.createElement('div');h.className='phead';h.innerHTML='<span class="lab">DEVICES</span><span class="seg"><button data-m="1">×1</button><button data-m="10">×10</button><button data-m="max">MAX</button></span>';pbody.appendChild(h);
     h.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.m===buyMode);b.addEventListener('click',()=>{buyMode=b.dataset.m;renderPanel(true);});});
@@ -51,10 +51,10 @@ function renderDrive(force){
       const ab=w.querySelector('.auto');if(ab&&S.auto[i])ab.setAttribute('data-on','');if(ab)ab.onclick=()=>{S.auto[i]=S.auto[i]?0:1;renderPanel(true);};
       const svgE=w.querySelector('svg');
       const em=emblem(svgE,d.emb),ticks=[];const tk=w.querySelector('.tk');if(tk)for(let k=1;k<=100;k++){const t=document.createElement('i');t.big=(k===25||k===50||k===100);t.style.height=(t.big?9:4)+'px';tk.appendChild(t);ticks.push(t);}
-      const ug=w.querySelector('.upg');const upBtns=[];const tn=i===ANCHOR?null:tierNext(i);let hint=null;if(tn){hint=document.createElement('div');hint.className='tierHint';const ok=S.dev[i]>=tn.need;hint.dataset.ok=ok?'1':'';hint.style.display='none';hint.innerHTML='<span class="nw swp">右へスワイプ<span class="arr">››</span></span> <span class="nw">TIER '+ROMAN[tn.t]+'（'+(tn.t===3?'相乗：'+SYN[i]:'生産×'+(has('e5')?2.5:2))+'）</span> <span class="nw num">必要 '+fmt(tn.cost)+'</span>';ug.appendChild(hint);
+      const ug=w.querySelector('.upg');const upBtns=[];const tn=i===ANCHOR?null:tierNext(i);let hint=null;if(tn){hint=document.createElement('div');hint.className='tierHint';const ok=S.dev[i]>=tn.need;hint.dataset.ok=ok?'1':'';hint.style.display='none';hint.innerHTML=tierHintHTML(i,tn);ug.appendChild(hint);
         let sx=0,sy=0,dx=0,drag=false,act=false;w.style.touchAction='pan-y';
         w.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;sx=e.clientX;sy=e.clientY;dx=0;act=true;drag=false;});
-        w.addEventListener('pointermove',e=>{if(!act)return;const ddx=e.clientX-sx,ddy=e.clientY-sy;if(!drag){if(Math.abs(ddx)>10&&Math.abs(ddx)>Math.abs(ddy)*1.3){const tnow=tierNext(i);if(!(tnow&&S.dev[i]>=tnow.need&&S.E>=tnow.cost)){act=false;return;}drag=true;}else if(Math.abs(ddy)>10){act=false;return;}}if(drag){if(!w.hasPointerCapture(e.pointerId))try{w.setPointerCapture(e.pointerId);}catch(_){}dx=Math.max(0,Math.min(110,ddx));w.style.transform='translateX('+dx+'px)';const ready=dx>56&&S.dev[i]>=tn.need&&S.E>=tn.cost;w.classList.toggle('swReady',ready);}});
+        w.addEventListener('pointermove',e=>{if(!act)return;const ddx=e.clientX-sx,ddy=e.clientY-sy;if(!drag){if(Math.abs(ddx)>10&&Math.abs(ddx)>Math.abs(ddy)*1.3){const tnow=tierNext(i);if(!(tnow&&S.dev[i]>=tnow.need&&S.E>=tnow.cost)){act=false;return;}drag=true;}else if(Math.abs(ddy)>10){act=false;return;}}if(drag){if(!w.hasPointerCapture(e.pointerId))try{w.setPointerCapture(e.pointerId);}catch(_){}dx=Math.max(0,Math.min(110,ddx));w.style.transform='translateX('+dx+'px)';const tq=tierNext(i),ready=!!tq&&dx>56&&S.dev[i]>=tq.need&&S.E>=tq.cost;w.classList.toggle('swReady',ready);}});
         const end=()=>{if(!act)return;act=false;w.style.transition='transform .3s cubic-bezier(.2,.8,.3,1.2)';w.style.transform='';setTimeout(()=>{w.style.transition='';},320);w.classList.remove('swReady');if(drag&&dx>56){const before=S.tier[i];tierUp(i);if(S.tier[i]===before){w.animate&&w.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(5px)'},{transform:'translateX(0)'}],{duration:300});}else renderPanel(true);}else if(drag&&dx>20)toast('もう少し右まで引いて離す');};
         w.addEventListener('pointerup',end);w.addEventListener('pointercancel',end);}
       const bt=w.querySelector('.buy');bt.addEventListener('click',()=>{if(buyDevice(i,buyMode)){const r=bt.getBoundingClientRect();for(let k=0;k<10;k++){const a=-1.57+R(-1,1),v=R(0.5,1.7);P.push({x:r.left+r.width/2,y:r.top,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:colRGB(d.col),r:R(0.8,1.8),gr:A[d.col]<0.5,dr:0.02});}updateDrive();}});
@@ -63,6 +63,10 @@ function renderDrive(force){
   }
   updateDrive();paintDeviceColors();
 }
+function tierHintHTML(i,tn){return '<span class="nw swp">右へスワイプ<span class="arr">››</span></span> <span class="nw">TIER '+ROMAN[tn.t]+'（'+(tn.t===3&&SYN[i]?'相乗：'+SYN[i]:'生産×'+(has('e5')?2.5:2))+'）</span> <span class="nw num">必要 '+fmt(tn.cost)+'</span>';}
+// TIER が上がったら、その行の表示だけ書き換える（一覧ごと作り直すと、自動で上がるたびにちらつく）
+function refreshTier(i){const u=devUI.find(x=>x.i===i);if(!u)return;const r=u.el.querySelector('.tierR');if(r){r.textContent='TIER '+ROMAN[S.tier[i]];r.classList.remove('tierNew');void r.offsetWidth;r.classList.add('tierNew');}
+  if(u.hint){const tn=tierNext(i);if(tn)u.hint.innerHTML=tierHintHTML(i,tn);else{u.hint.remove();u.hint=null;}}}
 function autoLabel(i){return S.auto[i]?'自動':'手動';}
 function updateDrive(){const gm=globalMult();devUI.forEach(u=>{const i=u.i,k=buyMode==='max'?Math.max(1,devMax(i)):+buyMode,c=devCost(i,k);u.cnt.textContent=String(S.dev[i]).padStart(3,'0');
   if(i===ANCHOR)u.out.textContent='故郷の時間 −'+Math.round(anchorCut()*100)+'%';else{const tm=traitMult(i);u.out.textContent='+'+fmt(devRateRaw(i)*gm)+' / 秒'+(tm>1.001?'　個性 ×'+tm.toFixed(2):'');}
