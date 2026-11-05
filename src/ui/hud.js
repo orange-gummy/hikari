@@ -75,7 +75,10 @@ function goal(){const s=S.stage,nx=s+1;
   if(nx<=MAX_STAGE){const c=accelCost(nx),rest=S.E<c?'（あと'+fmt(c-S.E)+'）':'';return[(nx>DILATION_STAGE?'時間の進み /'+fmtG(stageGamma(nx))+' まで加速する':speedText(nx)+'まで加速する')+rest,S.E>=c&&!(has('aA')&&S.autoAcc)?'boost':null,false];}   // 自動加速中は BOOST を光らせない（たまった瞬間に加速されて一瞬だけ光るため）
   return['故郷まで あと'+Math.ceil(Math.max(0,GOAL_LY-S.dist)).toLocaleString('ja-JP')+'光年',null,false];}
 let lastGoal='';
-function paintGoal(){const gEl=document.getElementById('goal'),hide=!!(BRK||RST||skillOpen||climax);gEl.style.opacity=hide?'0':'';if(hide){tabs.forEach(b=>setCls(b,'hint',false));frameEl.classList.remove('hintTap');return;}const [t,tab,tap]=goal();if(t!==lastGoal){lastGoal=t;document.getElementById('goalT').textContent=t;}tabs.forEach(b=>setCls(b,'hint',!!tab&&curTab!==tab&&(b.dataset.t===tab||(b.dataset.l&&b.dataset.l===layerOf(tab)&&curLayer!==b.dataset.l))));setCls(frameEl,'hintTap',!!tap);}
+// 光らせるタブ：一度光ったら3秒は消さない（自動購入でエネルギーが加速の値段をまたぐたびに、点いたり消えたりしていた）
+let hintTab=null,hintAt=0;
+function hintLatch(t){const now=performance.now();if(t){hintTab=t;hintAt=now;return t;}if(hintTab&&now-hintAt<3000)return hintTab;hintTab=null;return null;}
+function paintGoal(){const gEl=document.getElementById('goal'),hide=!!(BRK||RST||skillOpen||climax);gEl.style.opacity=hide?'0':'';if(hide){tabs.forEach(b=>setCls(b,'hint',false));frameEl.classList.remove('hintTap');return;}const [t,tab0,tap]=goal();const tab=hintLatch(tab0);if(t!==lastGoal){lastGoal=t;document.getElementById('goalT').textContent=t;}tabs.forEach(b=>setCls(b,'hint',!!tab&&curTab!==tab&&(b.dataset.t===tab||(b.dataset.l&&b.dataset.l===layerOf(tab)&&curLayer!==b.dataset.l&&tab!=='boost'))));/* 加速の案内は、別の層を見ているときは層のボタンを光らせない */setCls(frameEl,'hintTap',!!tap);}
 /* HUD */
 let lastUnit=0;
 function paintHUD(){const p=fmtParts(S.E);document.getElementById('eV').textContent=p[0];document.getElementById('eU').textContent=p[1];const L=(p[0]+p[1]).length;document.getElementById('spdV').style.fontSize=(L<=6?28:L<=9?23:19)+'px';document.getElementById('rate').textContent='+'+fmt(prodRate())+' / 秒'+(S.stage>=DILATION_STAGE?'（×'+fmtG(stageGamma(S.stage))+'）':'')+(S.over>0?'　過負荷 ×'+S.overMul.toFixed(1):'');
