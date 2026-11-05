@@ -25,7 +25,10 @@ function openSkill(pick,gained){skillPick=!!pick;skillOpen=true;PANX=0;PANY=0;PA
   requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.remove('fadeIn')));setTimeout(()=>ov.classList.remove('intro'),2400);
   if(pick&&gained){const w=document.getElementById('skW'),to=S.W,from=Math.max(0,to-gained),t0=performance.now()+500;lastWShown=S.W;const step=()=>{const p=Math.min(1,Math.max(0,(performance.now()-t0)/1300)),q=1-Math.pow(1-p,3);w.textContent='歪み '+fmt(Math.round(from+(to-from)*q));if(p<1&&skillOpen)requestAnimationFrame(step);else if(skillOpen){w.textContent='歪み '+fmt(S.W);paintWm();}};w.textContent='歪み '+fmt(from);requestAnimationFrame(step);}}
 function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if(wasPick)startRestart();document.getElementById('skillOv').classList.remove('on');renderPanel(true);}
-function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){b.setAttribute('aria-selected',curTab!=='log'&&b.dataset.l===curLayer);return;}b.setAttribute('aria-selected',b.dataset.t===curTab);b.classList.toggle('locked',tabLocked(b.dataset.t));});}
+// 変わったときだけ書き込む（同じ値でも書くたびに、iPhone では文字が描き直されて明るさがちらつく）
+function setSel(b,v){const s=v?'true':'false';if(b.getAttribute('aria-selected')!==s)b.setAttribute('aria-selected',s);}
+function setCls(b,c,v){if(b.classList.contains(c)!==!!v)b.classList.toggle(c,!!v);}
+function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){setSel(b,curTab!=='log'&&b.dataset.l===curLayer);return;}setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
 function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;return (t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&S.maxStage<BATTERY_STAGE);}
 let devUI=[],TIERFX=null;
