@@ -52,7 +52,7 @@ function skPanBind(svg){const pts=new Map();let last=null;const unit=()=>skBBox(
   const up=e=>{pts.delete(e.pointerId);if(pts.size<2)last=null;};svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);svg.addEventListener('pointerleave',up);
   svg.addEventListener('wheel',e=>{e.preventDefault();PANS=Math.min(2.6,Math.max(0.7,PANS*Math.exp(-e.deltaY*0.0015)));skPanApply();},{passive:false});
   svg.addEventListener('dblclick',e=>{if(e.target.closest&&e.target.closest('.node'))return;PANX=0;PANY=0;PANS=1;skPanApply();});}
-function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.W;document.getElementById('skW').textContent='歪み '+fmt(S.W);paintWm();
+function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.W;document.getElementById('skW').textContent='歪み '+fmt(S.W);paintWm();document.getElementById('skX').style.display=skillPick?'none':'';
   document.getElementById('skTitle').textContent=skillPick?'新しく覚える星を選ぶ':'覚えているスキル';
   const VB=skBBox();let h='<div id="skMapWrap"><svg id="skMap" preserveAspectRatio="xMidYMid meet" viewBox="'+VB.x.toFixed(1)+' '+VB.y.toFixed(1)+' '+VB.w.toFixed(1)+' '+VB.h.toFixed(1)+'" role="group" aria-label="スキルの星図"><g id="skPan" transform="'+skPanT()+'">'+skBg();
   SKILLS.filter(skVis).forEach(k=>{const [x,y]=skillPos(k),[px,py]=prereqPos(k),c=BR_COL[k.br],own=has(k.id),av=skillAvailable(k);if(k.step===4){SKILLS.filter(z=>z.br===k.br&&z.step===3).forEach(z=>{const [zx,zy]=skillPos(z),o=has(z.id)&&own;h+='<line x1="'+zx+'" y1="'+zy+'" x2="'+x+'" y2="'+y+'" stroke="'+rgb(c,o?0.8:0.22)+'" stroke-width="1" '+(o?'':'stroke-dasharray="2 3"')+'/>';});return;}
@@ -94,3 +94,7 @@ function skillCompare(k){if(has(k.id))return '';const rows=[];if(!k.glow&&k.cost
   if(id==='cB')rows.push(['時間の錨の効果','−'+Math.round(anchorCut()*100)+'% → −'+Math.round(withSkill(id,anchorCut)*100)+'%']);
   if(id==='c5')rows.push(['停止後に持ち越す','0 → '+fmt(S.peakP*60)]);
   return rows.map(r=>'<div class="row"><span class="note" style="margin:0">'+r[0]+'</span><span class="num">'+r[1]+'</span></div>').join('');}
+
+// 見るだけで開いた星図は × か Esc で閉じる（緊急停止のあとは「帆を張る」で閉じる）
+document.getElementById('skX').onclick=()=>{if(!skillPick)closeSkill();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&skillOpen&&!skillPick&&!document.querySelector('.modal.on'))closeSkill();});
