@@ -67,6 +67,7 @@ function emblem(svg,kind){const parts=[];const add=(t,a)=>parts.push(el(t,Object
 /* 目標 */
 function goal(){const s=S.stage,nx=s+1;
   if(S.cleared)return[canVoyage()?'GALAXYで、さらに遠くへ':'STARで、もう一度船を出す',canVoyage()?'voy':'restart',false];
+  if(S.chal&&CHAL[S.chal])return['挑戦中「'+CHAL[S.chal].name+'」　'+CHAL[S.chal].gtext,null,false];
   if(S.voy&&S.stage>=MAX_STAGE){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];
   if(S.dev[0]===0)return['DRIVEで太陽帆を買う','drive',false];
@@ -101,4 +102,4 @@ function checkAch(){for(const a of achCheck())toast('実績　<b>'+a[1]+'</b>　
 function hudPop(text){const r=document.getElementById('yr').getBoundingClientRect();POPS.push({x:r.right-30,y:r.bottom+38,t:0,s:text});}
 /* タップ */
 let lastTapAt=performance.now();
-frameEl.addEventListener('pointerdown',ev=>{if(climax)return;const x=ev.clientX,y=ev.clientY;if(MET&&Math.hypot(x-MET.x,y-MET.y)<46){catchMeteor();}const now=performance.now(),charged=has('cC')&&now-lastTapAt>10000;lastTapAt=now;let g=tapGain();if(charged)g*=20;S.E+=g;S.Erun+=g;S.taps++;S.pulse=has('cA')?20:10;POPS.push({x,y:y-10,t:0,s:(charged?'×20 ':'')+'+'+fmt(g)});if(charged){fla=Math.max(fla,0.1);for(let i=0;i<30;i++){const a=Math.random()*6.283,v=R(1,3.2);P.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:[255,236,200],r:R(1,2),dr:0.02});}}for(let i=0;i<20;i++){const k=i%5,a=Math.random()*6.283,v=R(0.2,1.1);P.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-0.15,l:1,c:COLORS[k].rgb,r:R(0.8,2),gr:A[k]<0.5,dr:0.012});}});
+frameEl.addEventListener('pointerdown',ev=>{if(climax)return;if(S.chal==='c7'){if(!window._c7t||Date.now()-window._c7t>4000){toast('チャレンジ「触れない」の間は、窓に触れられない');window._c7t=Date.now();}return;}const x=ev.clientX,y=ev.clientY;if(MET&&Math.hypot(x-MET.x,y-MET.y)<46){catchMeteor();}const now=performance.now(),charged=has('cC')&&now-lastTapAt>10000;lastTapAt=now;let g=tapGain();if(charged)g*=20;S.E+=g;S.Erun+=g;S.taps++;S.pulse=has('cA')?20:10;POPS.push({x,y:y-10,t:0,s:(charged?'×20 ':'')+'+'+fmt(g)});if(charged){fla=Math.max(fla,0.1);for(let i=0;i<30;i++){const a=Math.random()*6.283,v=R(1,3.2);P.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:[255,236,200],r:R(1,2),dr:0.02});}}for(let i=0;i<20;i++){const k=i%5,a=Math.random()*6.283,v=R(0.2,1.1);P.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-0.15,l:1,c:COLORS[k].rgb,r:R(0.8,2),gr:A[k]<0.5,dr:0.012});}});

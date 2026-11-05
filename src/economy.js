@@ -60,9 +60,9 @@ function offlineCap(){return (has('c7')?72:has('c3')?24:has('c1')?8:2)*3600;}
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return Math.min(0.6,0.03*S.dev[ANCHOR]*(has('cB')?1.5:1));}
-function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR;}
+function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR*(S.chal==='cG'?10:1);}
 function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
-function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&&i>ANCHOR))||S.auto[i]===0)continue;if(!devOpen(i))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
+function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&&i>ANCHOR))||S.auto[i]===0)continue;if(!devOpen(i)||chalBlocksDevice(i))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
 function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 
 function tick(dt,offMul){
@@ -72,13 +72,14 @@ function tick(dt,offMul){
   for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
   const dy=yearsPerSec()*dt;S.years+=dy;
   if(S.voy)voyAdvance(dy*Math.max(stageBeta(S.stage),0.02)*voyMult());
-  else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy*Math.max(stageBeta(S.stage),0.02));}
+  else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy/(S.chal==='cG'?10:1)*Math.max(stageBeta(S.stage),0.02));}
   if(S.battery>0)S.battery=Math.min(batteryCap(),S.battery*Math.pow(1+batteryRate(),dy));
   S.runTime+=dt;if(!S.cleared)S.loopTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.battery>0&&S.batDep>0&&batGrowth()>=4)release();if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);if(S.sig>0)S.sig=Math.max(0,S.sig-dt);autoLearn();
 }
 function devOpen(i){const d=DEVICES[i];if(d.find&&S.found<d.find)return false;return S.dev[i]>0||S.maxStage>=d.unlock;}
+function chalBlocksDevice(i){return (S.chal==='pL'&&i!==0)||(S.chal==='a8'&&i===ANCHOR);}
 function buyDevice(i,mode){
-  if(!devOpen(i))return;
+  if(!devOpen(i)||chalBlocksDevice(i))return;
   const k=mode==='max'?devMax(i):mode==='10'?10:1;if(k<1)return;
   const c=devCost(i,k);if(c>S.E)return;
   const first=S.dev[i]===0,before=S.dev[i];
@@ -101,10 +102,11 @@ function accelerate(){
 }
 function skillSpent(){return S.skills.reduce((a,id)=>a+SKILLS.find(k=>k.id===id).cost,0);}
 function prestige(respec){
+  if(S.chal==='pR')return;   // チャレンジ「止まらない」
   const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
   const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage/2):0,keep=has('eM')?0.5:0;
   if(respec){S.W+=skillSpent();S.skills=[];}
-  S.W+=g;S.wTotal+=g;S.prestiges++;S.E=carry;S.Erun=0;S.dev=DEVICES.map(()=>0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
+  S.W+=g;S.wTotal+=g;S.prestiges++;S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   story('prest1',LINES.prest1);FXQ.prestige=true;voyLearn();
 }
 /* 再出発（第二層） */
@@ -119,6 +121,11 @@ function resetRun(){   // 再出発・航海の開始・航路の引き直しで
   S.E=0;S.Erun=0;S.dev=DEVICES.map(()=>0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=0;S.maxStage=0;S.battery=0;S.batDep=0;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   S.prevSkills=S.skills.slice();S.loopTime=0;S.W=0;S.skills=[];S.prestiges=0;S.sig=0;S.years=0;S.dist=0;S.region=0;S.sling=0;S.coast=0;S.crit=0;
 }
+/* ② チャレンジ：上位の星を灯す */
+function canChallenge(){return !S.voy&&(S.cleared||S.restarts>0);}
+function startChallenge(id){if(!canChallenge()||!CHAL[id]||S.lit.includes(id))return false;resetRun();S.chal=id;if(id==='c7')S.dev[0]=1;FXQ.chal=id;return true;}
+function quitChallenge(){S.chal=null;}
+function chalCheck(){if(!S.chal)return;const id=S.chal,g=CHAL[id].goal;if((g.stage&&S.maxStage>=g.stage)||(g.home&&S.dist>=GOAL_LY)){S.chal=null;if(!S.lit.includes(id))S.lit.push(id);const k=SKILLS.find(x=>x.id===id);logLine(k.name+'が灯った。',-1);FXQ.chalDone=id;}}
 /* ③ さらに遠くへ（航跡） */
 function tg(id){return S.tg[id]||0;}
 function voyMult(){return VOY_BASE*Math.pow(2.7,tg('vs'));}
@@ -139,13 +146,12 @@ function voyLearn(){if(!S.voy)return;for(const id of S.prevSkills){if(has(id))co
   let go=true;while(go){go=false;const c=SKILLS.filter(k=>skillAvailable(k)&&S.W>=k.cost).sort((a,b)=>a.cost-b.cost)[0];if(c){S.W-=c.cost;S.skills.push(c.id);go=true;}}}
 function glowNext(id){const a=AFTERGLOW.find(x=>x.id===id),l=glow(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyGlow(id){const n=glowNext(id);if(!n||S.L<n.cost)return false;S.L-=n.cost;S.ag[id]=n.l+1;return true;}
-function lightStar(id){const k=SKILLS.find(x=>x.id===id);if(!k||!k.glow||S.lit.includes(id)||S.L<k.glow)return false;S.L-=k.glow;S.lit.push(id);return true;}
 function starLit(k){return !k.glow||S.lit.includes(k.id);}
 function autoLearn(){if(!has('aM'))return;for(const id of S.prevSkills){if(has(id))continue;const k=SKILLS.find(x=>x.id===id);if(!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);}}
 function skillAvailable(k){if(has(k.id)||k.glow)return false;
   if(k.step===0)return true;return SKILLS.some(x=>x.br===k.br&&x.step===k.step-1&&has(x.id));}
-function buySkill(id){const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
-function deposit(f){const room=batteryCap()-S.battery;const a=Math.min(room,S.E*(f||1));if(a<=0)return;S.E-=a;S.battery+=a;S.batDep+=a;S.deposited=true;}
+function buySkill(id){if(S.chal==='aM')return;const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
+function deposit(f){if(S.chal==='eM')return;const room=batteryCap()-S.battery;const a=Math.min(room,S.E*(f||1));if(a<=0)return;S.E-=a;S.battery+=a;S.batDep+=a;S.deposited=true;}
 function batGrowth(){return S.batDep>0?S.battery/S.batDep:1;}
 function overMulFor(b){const g=Math.max(1,batGrowth());return Math.min(10,1+3*Math.log2(g))*(has('eB')?1.5:1);}
 function release(){if(S.battery<=0)return 0;const b=S.battery,m=overMulFor(b);S.E+=b;S.Erun+=Math.max(0,b-S.batDep);S.battery=0;S.batDep=0;S.over=has('eB')?45:30;S.overMul=m;S.released=true;FXQ.release=b;return m;}
