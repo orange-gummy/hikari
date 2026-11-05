@@ -66,12 +66,12 @@ function emblem(svg,kind){const parts=[];const add=(t,a)=>parts.push(el(t,Object
   const core=el('circle',{cx:13,cy:13,r:2.4},svg);return{parts,core};}
 /* 目標 */
 function goal(){const s=S.stage,nx=s+1;
-  if(S.cleared)return[canVoyage()?'VOYAGEで、さらに遠くへ':'AFTERGLOWで、もう一度船を出す',canVoyage()?'voy':'glow',false];
-  if(S.voy&&S.stage>=MAX_STAGE){const g=tGain();return[g>=Math.max(3,S.tTotal)?'VOYAGEで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
+  if(S.cleared)return[canVoyage()?'GALAXYで、さらに遠くへ':'STARで、もう一度船を出す',canVoyage()?'voy':'glow',false];
+  if(S.voy&&S.stage>=MAX_STAGE){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];
   if(S.dev[0]===0)return['DRIVEで太陽帆を買う','drive',false];
   if(S.maxStage===0)return['BOOSTで秒速10kmまで加速する'+(S.E<accelCost(1)?'（あと'+fmt(accelCost(1)-S.E)+'）':''),S.E>=accelCost(1)?'boost':null,false];
-  if(S.maxStage>=BRAKE_STAGE&&S.prestiges===0&&S.restarts===0&&wGain()>=5)return['STOPで緊急停止して、歪みを得る','reset',false];
+  if(S.maxStage>=BRAKE_STAGE&&S.prestiges===0&&S.restarts===0&&wGain()>=5)return['HOMEで緊急停止して、歪みを得る','reset',false];
   if(nx<=MAX_STAGE){const c=accelCost(nx),rest=S.E<c?'（あと'+fmt(c-S.E)+'）':'';return[(nx>DILATION_STAGE?'時間の進み /'+fmtG(stageGamma(nx))+' まで加速する':speedText(nx)+'まで加速する')+rest,S.E>=c?'boost':null,false];}
   return['故郷まで あと'+Math.ceil(Math.max(0,GOAL_LY-S.dist)).toLocaleString('ja-JP')+'光年',null,false];}
 let lastGoal='';

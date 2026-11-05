@@ -1,6 +1,6 @@
 'use strict';
 /* =====================================================================
-   UI ― パネル（DRIVE・BOOST・BATTERY・STOP・AFTERGLOW・VOYAGE・LOG）
+   UI ― パネル（上の段 DRIVE・BOOST・BATTERY・LOG、下の段は層 HOME・STAR・GALAXY（のちに UNIVERSE・LIGHT））
    ===================================================================== */
 /* タブ */
 let curTab='drive',buyMode='1';
@@ -97,7 +97,7 @@ function renderReset(){const g=wGain();let h='<div class="phead"><span class="la
   '<div class="row"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>';
   pbody.dataset.k='';pbody.innerHTML=h;
   document.getElementById('rGo').onclick=()=>confirmBox('緊急停止','歪みを '+fmt(g)+' 得て、速度0からやり直す。距離と年月はそのまま残る。このあとスキルを選べる。',()=>{startBrake(g);});}
-/* ② 再出発と残光（AFTERGLOW タブ）。強化は「残照の地平」：日が沈んだあとの地平線に、強化ごとの光の筋が段に応じて空へ伸びる */
+/* ② 再出発と残光（STAR タブ）。強化は「残照の地平」：日が沈んだあとの地平線に、強化ごとの光の筋が段に応じて空へ伸びる */
 let glowSel='rm',GLOWFX=null;
 function glowHorizon(){const W=360,H=210,hz=150,n=AFTERGLOW.length,xs=AFTERGLOW.map((_,i)=>W*(i+0.5)/n);
   let v='<svg class="gHz" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="残光の強化"><defs><linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgb(60,40,90)" stop-opacity="0"/><stop offset=".6" stop-color="rgb(150,80,90)" stop-opacity=".12"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity=".32"/></linearGradient>'+
@@ -134,7 +134,7 @@ function renderGlow(){const lg=lGain();const key='g|'+[fmt(S.L),S.restarts,S.cle
   pbody.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;pbody.dataset.k='';renderGlow();});
   const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){fla=Math.max(fla,0.1);GLOWFX={id:glowSel,t:Date.now()};pbody.dataset.k='';renderGlow();}};
   const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','残光を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、残光は残る。',()=>{startBrake(0);BRK.rs=true;});}
-/* ③ さらに遠くへ（VOYAGE タブ） */
+/* ③ さらに遠くへ（GALAXY タブ） */
 function renderVoy(){let h='';
   if(!S.voy&&canVoyage())h+='<div class="phead"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';
   if(S.voy){const tgn=tGain(),n=nextDest();
