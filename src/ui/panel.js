@@ -9,7 +9,7 @@ let skillOpen=false,lastWShown=-1;
 function openSkill(pick,gained){skillPick=!!pick;skillOpen=true;PANX=0;PANY=0;PANS=1;const ov=document.getElementById('skillOv');ov.classList.add('on','intro','fadeIn');renderSkill();
   const box=document.getElementById('skBody');box.querySelectorAll('#skPan > line').forEach((l,i)=>l.style.animationDelay=(0.2+i*0.035).toFixed(2)+'s');box.querySelectorAll('.node').forEach(n=>{const k=SKILLS.find(z=>z.id===n.dataset.id);n.style.animationDelay=(0.35+k.step*0.14+k.br*0.05).toFixed(2)+'s';});
   requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.remove('fadeIn')));setTimeout(()=>ov.classList.remove('intro'),2400);
-  if(pick&&gained){const w=document.getElementById('skW'),to=S.W,from=Math.max(0,to-gained),t0=performance.now()+500;lastWShown=S.W;const step=()=>{const p=Math.min(1,Math.max(0,(performance.now()-t0)/1300)),q=1-Math.pow(1-p,3);w.textContent='歪み '+fmt(Math.round(from+(to-from)*q));if(p<1&&skillOpen)requestAnimationFrame(step);else if(skillOpen)w.textContent='歪み '+fmt(S.W);};w.textContent='歪み '+fmt(from);requestAnimationFrame(step);}}
+  if(pick&&gained){const w=document.getElementById('skW'),to=S.W,from=Math.max(0,to-gained),t0=performance.now()+500;lastWShown=S.W;const step=()=>{const p=Math.min(1,Math.max(0,(performance.now()-t0)/1300)),q=1-Math.pow(1-p,3);w.textContent='歪み '+fmt(Math.round(from+(to-from)*q));if(p<1&&skillOpen)requestAnimationFrame(step);else if(skillOpen){w.textContent='歪み '+fmt(S.W);paintWm();}};w.textContent='歪み '+fmt(from);requestAnimationFrame(step);}}
 function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if(wasPick)startRestart();document.getElementById('skillOv').classList.remove('on');renderPanel(true);}
 tabs.forEach(b=>b.addEventListener('click',()=>{if(b.dataset.t==='skill'){openSkill(false);return;}curTab=b.dataset.t;renderPanel(true);}));
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='battery'&&S.maxStage<BATTERY_STAGE);}
@@ -90,13 +90,14 @@ function renderBattery(){const cap=batteryCap();let h='';
 function renderReset(){const g=wGain(),lg=lGain();let h='<div class="phead"><span class="lab">EMERGENCY STOP</span></div><div class="row"><span>得られる歪み</span><span class="big">'+fmt(g)+'</span></div>'+
   '<div class="note">緊急停止すると、エネルギー、速度、装置、改良、蓄電がなくなる。進んだ距離と、故郷で過ぎた年月は戻らない。停止のあと星図が開き、歪みで新しいスキルを覚えられる。</div>'+
   '<button class="act" id="rGo"'+(S.stage<BRAKE_STAGE||g<1?' disabled':'')+'>緊急停止する</button>'+(S.stage<BRAKE_STAGE?'<div class="note">光速の90%に達すると使える。</div>':'')+
-  '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>';
+  '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">持っている歪み '+fmt(S.W)+'（使わずにいると1つにつき生産+1%）</span><span class="num">×'+fmtG(wMult())+'</span></div>'+
+  '<div class="row"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>';
   if(S.voy){const tgn=tGain(),n=nextDest();
     h+='<div class="phead" style="margin-top:22px"><span class="lab">VOYAGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+
     '<div class="row"><span>引き直すと得る航跡</span><span class="big">'+fmt(tgn)+'</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">この航海で進んだ距離</span><span class="num">'+lyText(S.vdist)+' 光年</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の目的地</span><span class="num">'+(n?n.name+'（'+lyText(n.ly)+' 光年）':'もう、ない')+'</span></div>'+
-    '<div class="note">航路を引き直すと、故郷から航海をやり直す。距離と①の中身、歪みとスキルはなくなる。航跡、見つけた色と装置、残光とその強化は残る。航海では緊急停止とスキル選びが自動になり、1万光年ごとに残光が入る（1回 '+fmt(lPer())+'）。</div>'+
+    '<div class="note">航路を引き直すと、故郷から航海をやり直す。距離と①の中身、歪みとスキルはなくなる。航跡、見つけた色と装置、残光とその強化は残る。航海では緊急停止とスキル選びが自動になり、進んだ距離が2倍になるたびに（1万・2万・4万光年…）残光が入る（1回 '+fmt(lPer())+'）。</div>'+
     '<button class="act" id="vrGo"'+(tgn<1?' disabled':'')+'>航路を引き直す</button>'+
     '<div class="phead" style="margin-top:18px"><span class="lab">WAKE</span></div>';
     TRAIL.forEach(a=>{const l=tg(a.id),n2=trailNext(a.id),pips=a.max?Array.from({length:a.max},(_,k)=>k<l?'●':'○').join(''):'Lv '+l;

@@ -52,7 +52,7 @@ function skPanBind(svg){const pts=new Map();let last=null;const unit=()=>skBBox(
   const up=e=>{pts.delete(e.pointerId);if(pts.size<2)last=null;};svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);svg.addEventListener('pointerleave',up);
   svg.addEventListener('wheel',e=>{e.preventDefault();PANS=Math.min(2.6,Math.max(0.7,PANS*Math.exp(-e.deltaY*0.0015)));skPanApply();},{passive:false});
   svg.addEventListener('dblclick',e=>{if(e.target.closest&&e.target.closest('.node'))return;PANX=0;PANY=0;PANS=1;skPanApply();});}
-function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.W;document.getElementById('skW').textContent='歪み '+fmt(S.W);
+function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.W;document.getElementById('skW').textContent='歪み '+fmt(S.W);paintWm();
   document.getElementById('skTitle').textContent=skillPick?'新しく覚える星を選ぶ':'覚えているスキル';
   const VB=skBBox();let h='<div id="skMapWrap"><svg id="skMap" preserveAspectRatio="xMidYMid meet" viewBox="'+VB.x.toFixed(1)+' '+VB.y.toFixed(1)+' '+VB.w.toFixed(1)+' '+VB.h.toFixed(1)+'" role="group" aria-label="スキルの星図"><g id="skPan" transform="'+skPanT()+'">'+skBg();
   SKILLS.filter(skVis).forEach(k=>{const [x,y]=skillPos(k),[px,py]=prereqPos(k),c=BR_COL[k.br],own=has(k.id),av=skillAvailable(k);if(k.step===4){SKILLS.filter(z=>z.br===k.br&&z.step===3).forEach(z=>{const [zx,zy]=skillPos(z),o=has(z.id)&&own;h+='<line x1="'+zx+'" y1="'+zy+'" x2="'+x+'" y2="'+y+'" stroke="'+rgb(c,o?0.8:0.22)+'" stroke-width="1" '+(o?'':'stroke-dasharray="2 3"')+'/>';});return;}
@@ -70,7 +70,7 @@ function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.
   const own=has(k.id),av=skillAvailable(k),c=BR_COL[k.br],sib=k.fork&&SKILLS.some(z=>z.br===k.br&&z.step===k.step&&z.id!==k.id&&has(z.id));
   let act='';if(!starLit(k))act='<button class="act" id="skLight"'+(S.L<k.glow?' disabled':'')+'>灯す　残光 '+k.glow+'</button><div class="note">残光で灯すと、周回の最初から効き、再出発しても消えない（残光 '+fmt(S.L)+'）。</div>';else if(own)act='<div class="note">'+(k.glow?'残光で灯した。周回しても消えない。':'習得済み')+'</div>';else if(!skillPick)act='<div class="note">スキルは緊急停止のときに覚えられる。</div>';else if(av)act='<button class="act" id="skBuy"'+(S.W<k.cost?' disabled':'')+'>覚える　歪み '+k.cost+'</button>';else act='<div class="note">'+(sib?'もう一方の道を選んでいる。振り直すと選び直せる。':'手前の星を先に覚える。')+'</div>';
   h+='<div class="skd" style="border-color:'+rgb(c,0.45)+'"><div class="row" style="padding:0"><h3>'+k.name+'</h3><span class="meta">'+BRANCHES[k.br]+(k.fork?' ・ 分岐':' ・ '+(k.step+1)+'段目')+'</span></div><div class="note" style="margin:3px 0 4px;color:var(--ink)">'+k.desc+'</div>'+skillCompare(k)+act+'</div>';
-  h+=skillPick?'<div class="duo" style="max-width:640px"><button class="act" id="skRe"'+(S.skills.length?'':' disabled')+'>振り直す</button><button class="act" id="skGo">帆を張る</button></div>':'<div class="note" style="text-align:center;margin:4px 0 0">塗りつぶし＝習得済み　光る輪＝覚えられる　点線＝歪みが足りない　灰色＝まだ先'+(S.lTotal>0?'　小さな光＝残光で灯せる':'')+'</div>';
+  h+=skillPick?'<div class="duo" style="max-width:640px"><button class="act" id="skRe"'+(S.skills.length?'':' disabled')+'>振り直す</button><button class="act" id="skGo">帆を張る</button></div>':'<div class="note" style="text-align:center;margin:4px 0 0">歪みは使わずに持っていると、1つにつき生産+1%。<br>塗りつぶし＝習得済み　光る輪＝覚えられる　点線＝歪みが足りない　灰色＝まだ先'+(S.lTotal>0?'　小さな光＝残光で灯せる':'')+'</div>';
   box.innerHTML=h;
   const svgEl=document.getElementById('skMap');if(svgEl)skPanBind(svgEl);
   box.querySelectorAll('.node').forEach(n=>{const go=()=>{if(skMoved){skMoved=false;return;}const id=n.dataset.id,now=Date.now();if(skillPick&&lastTap.id===id&&now-lastTap.t<380){buySkill(id);lastTap={id:null,t:0};if(has(id)){selSkill=nextSkillAfter(id);renderSkill();return;}}else lastTap={id,t:now};selSkill=id;renderSkill();};n.addEventListener('click',go);n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
@@ -79,7 +79,8 @@ function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.
   const re=document.getElementById('skRe');if(re)re.onclick=()=>{S.W+=skillSpent();S.skills=[];NEWSK=[];renderSkill();};
   const g=document.getElementById('skGo');if(g)g.onclick=()=>confirmBox('帆を張る',(S.W>=1?'歪みが '+fmt(S.W)+' 残っている。':'')+'星図を閉じて、出航する。',closeSkill);}
 function withSkill(id,f){const had=has(id);if(!had)S.skills.push(id);const v=f();if(!had)S.skills.pop();return v;}
-function skillCompare(k){if(has(k.id))return '';const rows=[];const P0=prodRate(),P1=withSkill(k.id,prodRate);if(Math.abs(P1-P0)>P0*1e-6)rows.push(['生産',fmt(P0)+' → '+fmt(P1)+' / 秒']);
+function paintWm(){document.getElementById('skWm').textContent='生産 ×'+fmtG(wMult());}   // 使わずに持っている歪みの倍率
+function skillCompare(k){if(has(k.id))return '';const rows=[];if(!k.glow&&k.cost>0)rows.push(['持っている歪みの倍率','×'+fmtG(wMult())+' → ×'+fmtG(1+0.01*Math.max(0,S.W-k.cost))]);const P0=prodRate(),P1=withSkill(k.id,prodRate);if(Math.abs(P1-P0)>P0*1e-6)rows.push(['生産',fmt(P0)+' → '+fmt(P1)+' / 秒']);
   const id=k.id;
   if(id==='p1'||id==='p2'){const n=Math.min(S.stage+1,MAX_STAGE);rows.push(['次の加速',fmt(accelCost(n))+' → '+fmt(withSkill(id,()=>accelCost(n)))]);}
   if(id==='p3')rows.push(['故郷の時間',fmtY(yearsPerSec())+' → '+fmtY(withSkill(id,yearsPerSec))+' 年/秒']);

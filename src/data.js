@@ -125,8 +125,8 @@ const SKILLS=[
 const DEST=[{name:'隣の銀河',ly:2.5e6},{name:'銀河群',ly:3e7},{name:'大規模構造',ly:5e8},{name:'宇宙の果て',ly:4.65e10}];
 const VOY_BASE=30;        // 航海の距離の伸びの基準倍率
 const TRAIL=[  // 航跡の強化
-  {id:'vs',name:'航海の速さ',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で進む距離 ×'+fmtN(Math.pow(2.5,l))},
-  {id:'ls',name:'残光の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'1万光年ごとに入る残光 ×'+Math.pow(2,l)},
+  {id:'vs',name:'航海の速さ',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で進む距離 ×'+fmtN(Math.pow(2.7,l))},
+  {id:'ls',name:'残光の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'航海で入る残光 ×'+Math.pow(2,l)},
   {id:'ps',name:'先回り',max:5,cost:l=>10*Math.pow(3,l),text:l=>'航路を引き直したあと、段階'+(2*l)+'から始まる'}
 ];
 function fmtN(n){return n<1e4?String(Math.round(n)):n.toExponential(1).replace('+','');}

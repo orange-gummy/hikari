@@ -39,7 +39,8 @@ function traitMult(i){const n=S.dev;switch(i){
 function fissionBonus(){return 1+Math.min(1,0.005*S.dev[1]);}
 function devBase(i){if(i===ANCHOR)return 0;return DEVICES[i].prod*S.dev[i]*milMult(S.dev[i])*upgA(i)*synMult(i)*regionMult(i);}
 function devRateRaw(i){return devBase(i)*traitMult(i);}
-function globalMult(){return stageGamma(S.stage)*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*(1+0.01*S.W)*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+0.1*S.stage:1)*(has('eL')?1+0.05*S.lTotal:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
+function wMult(){return 1+0.01*S.W;}   // 使わずに持っている歪み1つにつき生産+1%
+function globalMult(){return stageGamma(S.stage)*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+0.1*S.stage:1)*(has('eL')?1+0.05*S.lTotal:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
 function achMult(){return 1+ACH_BONUS*S.ach.length;}
 function resonant(){const c={};for(const i of PRODI){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
@@ -120,12 +121,13 @@ function resetRun(){   // 再出発・航海の開始・航路の引き直しで
 }
 /* ③ さらに遠くへ（航跡） */
 function tg(id){return S.tg[id]||0;}
-function voyMult(){return VOY_BASE*Math.pow(2.5,tg('vs'));}
+function voyMult(){return VOY_BASE*Math.pow(2.7,tg('vs'));}
 function canVoyage(){return !S.voy&&S.cleared&&S.lit.length>=SKILLS.filter(k=>k.glow).length;}
-function lPer(){return Math.floor(RESTART_BASE*(1+0.1*S.restarts))*Math.pow(2,tg('ls'));}   // 1万光年ごとに入る残光
+function voyDoublings(d){return d>=1e4?Math.floor(Math.log2(d/1e4))+1:0;}   // 1万光年、2万、4万…と、距離が2倍になるたびに1回
+function lPer(){return Math.floor(RESTART_BASE*(1+0.1*S.restarts))*Math.pow(2,tg('ls'));}   // 距離が2倍になるたびに入る残光
 function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdist=0;S.vL=0;story('voy',VOY_LINES.start);FXQ.voyage=true;return true;}
 function voyAdvance(d){S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;
-  const n=Math.floor(S.vdist/1e4);if(n>S.vL){const g=(n-S.vL)*lPer();S.L+=g;S.lTotal+=g;S.vL=n;}
+  const n=voyDoublings(S.vdist);if(n>S.vL){const g=(n-S.vL)*lPer();S.L+=g;S.lTotal+=g;S.vL=n;}
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)):0;}
 function redraw(){const g=tGain();if(g<1)return 0;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
