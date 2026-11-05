@@ -200,7 +200,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 .mbox textarea{width:100%;height:90px;background:rgba(255,255,255,.04);border:0.5px solid var(--line);border-radius:10px;color:var(--ink);font-family:var(--num);font-size:16px;padding:8px;resize:none}   /* 16px 未満だと iPhone で入力のときに拡大される */
 #block{position:fixed;inset:0;z-index:8;display:none}
 #ending{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(to bottom,#7fb1ea 0%,#b8d4f1 45%,#f2dcc0 100%);opacity:0;transition:opacity 4s;color:#1d2a3c}
-#ending.on{display:flex}
+#ending.on{display:flex;cursor:pointer}
 #endLine{font-family:var(--log);font-size:18px;letter-spacing:.12em;margin-top:0;opacity:0;transition:opacity 3s}
 #title{position:fixed;inset:0;z-index:11;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg)}
 #title.on{display:flex}
