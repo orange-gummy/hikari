@@ -10,7 +10,7 @@ function buildLayout(B,L,R0,FO){const pos={};const nArm=4;
     SKILLS.filter(k=>k.br===br).forEach(k=>{const [t,r]=pts[k.step];let x=r*Math.cos(t),y=r*Math.sin(t);if(k.fork){const tx=-r*Math.sin(t)+B*Math.cos(t),ty=r*Math.cos(t)+B*Math.sin(t),tl=Math.hypot(tx,ty),nx=-ty/tl,ny=tx/tl;x+=nx*FO*k.fork;y+=ny*FO*k.fork;}pos[k.id]=[180+x,176+y];});}
   return pos;}
 function skillPos(k){if(!LAYOUT)LAYOUT=buildLayout(46,44,52,22);return LAYOUT[k.id];}
-function skVis(k){return !k.glow||S.lTotal>0||S.lit.length>0;}  // 残光の星は、初めて故郷に着いてから見える
+function skVis(k){return !k.glow;}  // 残光で灯す上位の星は星図には出さない（STAR の UNLOCK に「残光の星座」として置く）
 function skBBox(){let x0=180,x1=180,y0=176,y1=176;SKILLS.filter(skVis).forEach(k=>{const [x,y]=skillPos(k);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);});const m=22;return{x:x0-m,y:y0-m,w:x1-x0+2*m,h:y1-y0+2*m};}
 function prereqPos(k){if(k.step===0)return[180,176];const prev=SKILLS.filter(x=>x.br===k.br&&x.step===k.step-1);let p=prev.find(x=>has(x.id))||prev[0];return skillPos(p);}
 const SK_ICON={
@@ -66,11 +66,11 @@ function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.
      '<circle cx="'+x+'" cy="'+y+'" r="20" fill="transparent"/></g>';});
   {const ks=SKILLS.find(z=>z.id===selSkill);if(ks){const [sx,sy]=skillPos(ks),w=ks.name.length*11.5+16,lx2=Math.max(VB.x+2,Math.min(VB.x+VB.w-2-w,sx-w/2)),ly2=sy+(sy<60?18:-36);h+='<g pointer-events="none"><rect x="'+lx2+'" y="'+ly2+'" width="'+w+'" height="20" rx="10" fill="#05060e" stroke="'+rgb(BR_COL[ks.br],0.6)+'" stroke-width=".8"/><text x="'+(lx2+w/2)+'" y="'+(ly2+14)+'" text-anchor="middle" font-size="11.5" fill="#f6f7fb" font-family="Murecho,sans-serif">'+ks.name+'</text></g>';}}
   h+='</g></svg></div>';
-  const k=SKILLS.find(x=>x.id===selSkill)||SKILLS.find(x=>skillAvailable(x))||SKILLS[0];selSkill=k.id;
+  const k=SKILLS.find(x=>x.id===selSkill&&!x.glow)||SKILLS.find(x=>skillAvailable(x))||SKILLS[0];selSkill=k.id;
   const own=has(k.id),av=skillAvailable(k),c=BR_COL[k.br],sib=k.fork&&SKILLS.some(z=>z.br===k.br&&z.step===k.step&&z.id!==k.id&&has(z.id));
   let act='';if(!starLit(k))act='<button class="act" id="skLight"'+(S.L<k.glow?' disabled':'')+'>灯す　残光 '+k.glow+'</button><div class="note">残光で灯すと、周回の最初から効き、再出発しても消えない（残光 '+fmt(S.L)+'）。</div>';else if(own)act='<div class="note">'+(k.glow?'残光で灯した。周回しても消えない。':'習得済み')+'</div>';else if(!skillPick)act='<div class="note">スキルは緊急停止のときに覚えられる。</div>';else if(av)act='<button class="act" id="skBuy"'+(S.W<k.cost?' disabled':'')+'>覚える　歪み '+k.cost+'</button>';else act='<div class="note">'+(sib?'もう一方の道を選んでいる。振り直すと選び直せる。':'手前の星を先に覚える。')+'</div>';
   h+='<div class="skd" style="border-color:'+rgb(c,0.45)+'"><div class="row" style="padding:0"><h3>'+k.name+'</h3><span class="meta">'+BRANCHES[k.br]+(k.fork?' ・ 分岐':' ・ '+(k.step+1)+'段目')+'</span></div><div class="note" style="margin:3px 0 4px;color:var(--ink)">'+k.desc+'</div>'+skillCompare(k)+act+'</div>';
-  h+=skillPick?'<div class="duo" style="max-width:640px"><button class="act" id="skRe"'+(S.skills.length?'':' disabled')+'>振り直す</button><button class="act" id="skGo">帆を張る</button></div>':'<div class="note" style="text-align:center;margin:4px 0 0">歪みは使わずに持っていると、1つにつき生産+1%。<br>塗りつぶし＝習得済み　光る輪＝覚えられる　点線＝歪みが足りない　灰色＝まだ先'+(S.lTotal>0?'　小さな光＝残光で灯せる':'')+'</div>';
+  h+=skillPick?'<div class="duo" style="max-width:640px"><button class="act" id="skRe"'+(S.skills.length?'':' disabled')+'>振り直す</button><button class="act" id="skGo">帆を張る</button></div>':'<div class="note" style="text-align:center;margin:4px 0 0">歪みは使わずに持っていると、1つにつき生産+1%。<br>塗りつぶし＝習得済み　光る輪＝覚えられる　点線＝歪みが足りない　灰色＝まだ先</div>';
   box.innerHTML=h;
   const svgEl=document.getElementById('skMap');if(svgEl)skPanBind(svgEl);
   box.querySelectorAll('.node').forEach(n=>{const go=()=>{if(skMoved){skMoved=false;return;}const id=n.dataset.id,now=Date.now();if(skillPick&&lastTap.id===id&&now-lastTap.t<380){buySkill(id);lastTap={id:null,t:0};if(has(id)){selSkill=nextSkillAfter(id);renderSkill();return;}}else lastTap={id,t:now};selSkill=id;renderSkill();};n.addEventListener('click',go);n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
