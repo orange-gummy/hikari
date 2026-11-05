@@ -26,7 +26,7 @@ document.getElementById('tAgain').onclick=()=>{if(PREVIEW||!S.cleared)return;doc
 // ③ さらに遠くへ：着いたあとの故郷から、長い航海に出る
 function goFarther(){if(!canVoyage())return;if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();startVoyage();applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}
 document.getElementById('tFar').onclick=()=>{if(!PREVIEW)goFarther();};
-document.getElementById('tNew').onclick=()=>{S=freshState();applyLoadedVisuals();save();document.getElementById('tBack').onclick();renderPanel(true);prologue();};
+document.getElementById('tNew').onclick=()=>confirmBox('最初から遊ぶ','すべての進行が消える。残光、灯した星、実績も残らない。',()=>{S=freshState();applyLoadedVisuals();save();document.getElementById('tBack').onclick();renderPanel(true);prologue();});
 // 2回目以降の到着は、演出を飛ばしてタイトルへ進める
 function skipClimax(){if(!climax)return;CLT.forEach(id=>{clearTimeout(id);clearInterval(id);});CLT=[];VQ.length=0;if(vqTimer){clearTimeout(vqTimer);vqTimer=null;}
   HOMEA=null;HEARD=null;STILL=false;SPDF=0;GAP=3700;LANDED=true;document.getElementById('app').classList.add('landed');document.getElementById('ringWrap').style.opacity='0';
