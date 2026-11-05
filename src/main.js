@@ -27,7 +27,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.prestige){FXQ.prestige=false;if(!BRK){stk=60;fla=0.25;}}
   if(FXQ.region){FXQ.region=false;fla=Math.max(fla,0.12);if(curTab==='drive')renderDrive(true);}
   if(S.stage!==lastStage){lastStage=S.stage;paintSpeed();if(curTab==='drive')renderDrive(false);}
-  paintHUD();rollHV();acc+=dt;if(acc>0.25){acc=0;paintGoal();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();else if(!panelHold&&curTab==='glow')renderGlow();else if(!panelHold&&curTab==='voy')renderVoy();}
+  paintHUD();rollHV();acc+=dt;if(acc>0.25){acc=0;paintGoal();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();else if(!panelHold&&(curTab==='glow'||curTab==='restart'))renderGlow();else if(!panelHold&&(curTab==='voy'||curTab==='wake'))renderVoy();}
   secAcc+=dt;if(secAcc>1){secAcc=0;checkAch();renderPanelTabsOnly();if(skillOpen&&S.W!==lastWShown)renderSkill();}
   saveAcc+=dt;if(saveAcc>10){saveAcc=0;save();}
 }

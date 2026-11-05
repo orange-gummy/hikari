@@ -4,22 +4,36 @@
    ===================================================================== */
 /* タブ */
 let curTab='drive',buyMode='1';
-const tabs=[...document.querySelectorAll('#tabs button')];
+/* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
+const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','skill','reset']},{id:'star',name:'STAR',tabs:['restart','glow','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']}];
+const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'BATTERY',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'AFTERGLOW',stars:'STARS',voy:'VOYAGE',wake:'WAKE',log:'LOG'};
+const lastTab={home:'drive',star:'restart',galaxy:'voy'};let curLayer='home',tabs=[],tabKey='';
+function layerOpen(id){return id==='home'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||canVoyage()));}
+function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}
+function tabClick(t){if(t==='skill'){openSkill(false);return;}if(t==='stars'){const k=SKILLS.find(z=>z.glow&&!S.lit.includes(z.id))||SKILLS.find(z=>z.glow);selSkill=k.id;openSkill(false);return;}curTab=t;renderPanel(true);}
+function buildTabs(){const open=LAYERS.filter(L=>layerOpen(L.id)),multi=open.length>1||!tabHidden('reset');   // 緊急停止が開いたら2段（下に HOME と LOG）
+  const sub=(multi?LAYERS.find(L=>L.id===curLayer).tabs:LAYERS[0].tabs.concat(['log'])).filter(t=>!tabHidden(t));
+  const key=sub.join()+'|'+(multi?open.map(L=>L.id).join():'');if(key===tabKey)return;tabKey=key;
+  const mk=(t,cls,label)=>'<button data-t="'+t+'"'+(cls?' class="'+cls+'"':'')+' role="tab">'+label+'</button>';
+  document.getElementById('tr1').innerHTML=sub.map(t=>mk(t,'',TAB_NAME[t])).join('');
+  const r2=document.getElementById('tr2');r2.innerHTML=multi?open.map(L=>'<button data-l="'+L.id+'" role="tab"><i></i>'+L.name+'</button>').join('')+mk('log','','LOG'):'';r2.style.display=multi?'':'none';
+  tabs=[...document.querySelectorAll('#tabs button')];
+  tabs.forEach(b=>b.addEventListener('click',()=>{if(b.dataset.l){curTab=lastTab[b.dataset.l];curLayer=b.dataset.l;renderPanel(true);return;}tabClick(b.dataset.t);}));}
 let skillOpen=false,lastWShown=-1;
 function openSkill(pick,gained){skillPick=!!pick;skillOpen=true;PANX=0;PANY=0;PANS=1;const ov=document.getElementById('skillOv');ov.classList.add('on','intro','fadeIn');renderSkill();
   const box=document.getElementById('skBody');box.querySelectorAll('#skPan > line').forEach((l,i)=>l.style.animationDelay=(0.2+i*0.035).toFixed(2)+'s');box.querySelectorAll('.node').forEach(n=>{const k=SKILLS.find(z=>z.id===n.dataset.id);n.style.animationDelay=(0.35+k.step*0.14+k.br*0.05).toFixed(2)+'s';});
   requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.remove('fadeIn')));setTimeout(()=>ov.classList.remove('intro'),2400);
   if(pick&&gained){const w=document.getElementById('skW'),to=S.W,from=Math.max(0,to-gained),t0=performance.now()+500;lastWShown=S.W;const step=()=>{const p=Math.min(1,Math.max(0,(performance.now()-t0)/1300)),q=1-Math.pow(1-p,3);w.textContent='歪み '+fmt(Math.round(from+(to-from)*q));if(p<1&&skillOpen)requestAnimationFrame(step);else if(skillOpen){w.textContent='歪み '+fmt(S.W);paintWm();}};w.textContent='歪み '+fmt(from);requestAnimationFrame(step);}}
 function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if(wasPick)startRestart();document.getElementById('skillOv').classList.remove('on');renderPanel(true);}
-tabs.forEach(b=>b.addEventListener('click',()=>{if(b.dataset.t==='skill'){openSkill(false);return;}curTab=b.dataset.t;renderPanel(true);}));
-function paintTabs(){tabs.forEach(b=>{b.classList.toggle('locked',tabLocked(b.dataset.t));b.style.display=tabHidden(b.dataset.t)?'none':'';});document.getElementById('tr2').style.display=['reset','glow','voy'].every(tabHidden)?'none':'';}
-function tabHidden(t){return (t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='glow'&&!(S.cleared||S.restarts>0||S.lTotal>0))||(t==='voy'&&!(S.voy||canVoyage()));}   // 層が開くまでタブごと出さない
+function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){b.setAttribute('aria-selected',curTab!=='log'&&b.dataset.l===curLayer);return;}b.setAttribute('aria-selected',b.dataset.t===curTab);b.classList.toggle('locked',tabLocked(b.dataset.t));});}
+function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;return (t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&S.maxStage<BATTERY_STAGE);}
 let devUI=[],TIERFX=null;
 function renderPanel(force){
-  if(tabHidden(curTab))curTab='drive';
-  tabs.forEach(b=>b.setAttribute('aria-selected',b.dataset.t===curTab));paintTabs();
-  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow')renderGlow();else if(curTab==='voy')renderVoy();else renderLog();
+  if(curTab!=='log'&&tabHidden(curTab))curTab='drive';
+  if(curTab!=='log'){curLayer=layerOf(curTab)||'home';lastTab[curLayer]=curTab;}
+  paintTabs();
+  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='voy'||curTab==='wake')renderVoy();else renderLog();
 }
 function devVisible(i){return devOpen(i);}
 function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}
@@ -120,31 +134,31 @@ function glowHorizon(){const W=360,H=210,hz=150,n=AFTERGLOW.length,xs=AFTERGLOW.
     '<div class="note" style="margin:4px 0 2px">'+(l?'いま：'+a.text(l)+'<br>':'')+(nx?'次：'+nx.text:'これ以上は灯せない。')+'</div>'+
     (nx?'<button class="act" id="gBuy"'+(S.L<nx.cost?' disabled':'')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">灯す　残光 '+fmt(nx.cost)+'</button>':'')+'</div>';
   return v;}
-function renderGlow(){const lg=lGain();const key='g|'+[fmt(S.L),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
-  if(S.cleared||S.restarts>0||S.L>0){
-    h+=(S.voy?'':'<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+
+function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[fmt(S.L),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
+  if(part==='restart'){
+    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。残光は、進んだ距離が2倍になるたびに入ってくる。</div>';
+    else h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる残光</span><span class="big">'+fmt(lg)+'</span></div>'+
     '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、残光は残る。</div>'+
     '<button class="act" id="rsGo"'+(lg<1?' disabled':'')+'>再出発する</button>'+(!S.cleared?'<div class="note">故郷に着くと使える。</div>':'')+
-    '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの再出発</span><span class="num">'+S.restarts+' 回</span></div>')+
-    (S.voy?'<div class="phead"><span class="lab">AFTERGLOW</span>':'<div class="phead" style="margin-top:18px"><span class="lab">AFTERGLOW</span>')+(S.voy?'<span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span>':'')+'</div>';
-    h+=glowHorizon();
-  }
+    '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの再出発</span><span class="num">'+S.restarts+' 回</span></div>';}
+  else h+='<div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+glowHorizon();
   pbody.dataset.k=key;pbody.innerHTML=h;
   pbody.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;pbody.dataset.k='';renderGlow();});
   const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){fla=Math.max(fla,0.1);GLOWFX={id:glowSel,t:Date.now()};pbody.dataset.k='';renderGlow();}};
   const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','残光を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、残光は残る。',()=>{startBrake(0);BRK.rs=true;});}
 /* ③ さらに遠くへ（GALAXY タブ） */
-function renderVoy(){let h='';
-  if(!S.voy&&canVoyage())h+='<div class="phead"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';
-  if(S.voy){const tgn=tGain(),n=nextDest();
+function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
+  if(part==='voy'&&!S.voy&&canVoyage())h+='<div class="phead"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';
+  if(part==='wake')h+='<div class="phead"><span class="lab">WAKE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+(S.voy?'':'<div class="note">航海に出ると、航跡で航海を強くできる。</div>');
+  if(part==='voy'&&S.voy){const tgn=tGain(),n=nextDest();
     h+='<div class="phead"><span class="lab">VOYAGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+
     '<div class="row"><span>引き直すと得る航跡</span><span class="big">'+fmt(tgn)+'</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">この航海で進んだ距離</span><span class="num">'+lyText(S.vdist)+' 光年</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の目的地</span><span class="num">'+(n?n.name+'（'+lyText(n.ly)+' 光年）':'もう、ない')+'</span></div>'+
     '<div class="note">航路を引き直すと、故郷から航海をやり直す。距離と①の中身、歪みとスキルはなくなる。航跡、見つけた色と装置、残光とその強化は残る。航海では緊急停止とスキル選びが自動になり、進んだ距離が2倍になるたびに（1万・2万・4万光年…）残光が入る（1回 '+fmt(lPer())+'）。</div>'+
-    '<button class="act" id="vrGo"'+(tgn<1?' disabled':'')+'>航路を引き直す</button>'+
-    '<div class="phead" style="margin-top:18px"><span class="lab">WAKE</span></div>';
+    '<button class="act" id="vrGo"'+(tgn<1?' disabled':'')+'>航路を引き直す</button>';}
+  if(part==='wake'&&S.voy){
     TRAIL.forEach(a=>{const l=tg(a.id),n2=trailNext(a.id),pips=a.max?Array.from({length:a.max},(_,k)=>k<l?'●':'○').join(''):'Lv '+l;
       h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+a.name+'　<span class="num" style="font-size:11px;letter-spacing:.2em;color:var(--ink-dim)">'+pips+'</span></div>'+
       '<div class="dvTrait">'+(l?'いま：'+a.text(l)+(n2?'<br>':''):'')+(n2?'次：'+n2.text:'')+'</div></div>'+

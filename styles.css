@@ -95,6 +95,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #pbody::-webkit-scrollbar{display:none}
 #tabs{display:flex;flex-direction:column;padding:6px 14px 10px;border-top:0.5px solid var(--line-soft)}
 #tabs .tr{display:flex;justify-content:space-between}
+#tr1{justify-content:space-around!important}
+#tabs #tr1 button{padding:6px 5px;letter-spacing:.05em}
 #tr2{justify-content:center!important;gap:6px;border-top:0.5px solid var(--line-soft);margin-top:4px;padding-top:4px}   /* 下の段は層（開くたびに増える） */
 #tr2 button{font-size:10px}
 #tr2 button i{display:inline-block;width:3px;height:3px;border-radius:50%;background:rgba(255,200,140,.8);margin-right:6px;vertical-align:middle}
