@@ -66,20 +66,21 @@ function emblem(svg,kind){const parts=[];const add=(t,a)=>parts.push(el(t,Object
   const core=el('circle',{cx:13,cy:13,r:2.4},svg);return{parts,core};}
 /* 目標 */
 function goal(){const s=S.stage,nx=s+1;
-  if(S.cleared)return[canVoyage()?'RESETで、さらに遠くへ':'故郷に着いた',canVoyage()?'reset':null,false];
-  if(S.voy&&S.stage>=MAX_STAGE){const g=tGain();return[g>=Math.max(3,S.tTotal)?'RESETで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'reset':null,false];}
+  if(S.cleared)return[canVoyage()?'VOYAGEで、さらに遠くへ':'AFTERGLOWで、もう一度船を出す',canVoyage()?'voy':'glow',false];
+  if(S.voy&&S.stage>=MAX_STAGE){const g=tGain();return[g>=Math.max(3,S.tTotal)?'VOYAGEで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];
   if(S.dev[0]===0)return['DRIVEで太陽帆を買う','drive',false];
   if(S.maxStage===0)return['BOOSTで秒速10kmまで加速する'+(S.E<accelCost(1)?'（あと'+fmt(accelCost(1)-S.E)+'）':''),S.E>=accelCost(1)?'boost':null,false];
-  if(S.maxStage>=BRAKE_STAGE&&S.prestiges===0&&S.restarts===0&&wGain()>=5)return['RESETで緊急停止して、歪みを得る','reset',false];
+  if(S.maxStage>=BRAKE_STAGE&&S.prestiges===0&&S.restarts===0&&wGain()>=5)return['STOPで緊急停止して、歪みを得る','reset',false];
   if(nx<=MAX_STAGE){const c=accelCost(nx),rest=S.E<c?'（あと'+fmt(c-S.E)+'）':'';return[(nx>DILATION_STAGE?'時間の進み /'+fmtG(stageGamma(nx))+' まで加速する':speedText(nx)+'まで加速する')+rest,S.E>=c?'boost':null,false];}
   return['故郷まで あと'+Math.ceil(Math.max(0,GOAL_LY-S.dist)).toLocaleString('ja-JP')+'光年',null,false];}
 let lastGoal='';
-function paintGoal(){const gEl=document.getElementById('goal'),hide=!!(BRK||RST||skillOpen||climax);gEl.style.opacity=hide?'0':'';if(hide){tabs.forEach(b=>b.classList.remove('hint'));frameEl.classList.remove('hintTap');return;}const [t,tab,tap]=goal();if(t!==lastGoal){lastGoal=t;document.getElementById('goalT').textContent=t;}tabs.forEach(b=>b.classList.toggle('hint',b.dataset.t===tab&&curTab!==tab));frameEl.classList.toggle('hintTap',!!tap);}
+function paintTabsMany(){const n=tabs.filter(b=>b.style.display!=='none').length;document.getElementById('tabs').classList.toggle('many',n>=6);}
+function paintGoal(){paintTabsMany();const gEl=document.getElementById('goal'),hide=!!(BRK||RST||skillOpen||climax);gEl.style.opacity=hide?'0':'';if(hide){tabs.forEach(b=>b.classList.remove('hint'));frameEl.classList.remove('hintTap');return;}const [t,tab,tap]=goal();if(t!==lastGoal){lastGoal=t;document.getElementById('goalT').textContent=t;}tabs.forEach(b=>b.classList.toggle('hint',b.dataset.t===tab&&curTab!==tab));frameEl.classList.toggle('hintTap',!!tap);}
 /* HUD */
 let lastUnit=0;
 function paintHUD(){const p=fmtParts(S.E);document.getElementById('eV').textContent=p[0];document.getElementById('eU').textContent=p[1];const L=(p[0]+p[1]).length;document.getElementById('spdV').style.fontSize=(L<=6?28:L<=9?23:19)+'px';document.getElementById('rate').textContent='+'+fmt(prodRate())+' / 秒'+(S.stage>=DILATION_STAGE?'（×'+fmtG(stageGamma(S.stage))+'）':'')+(S.over>0?'　過負荷 ×'+S.overMul.toFixed(1):'');
-  if(S.voy){document.getElementById('hrLab').textContent='VOYAGE';document.getElementById('yrU0').textContent='航跡 ';document.getElementById('yrU').textContent='';document.getElementById('yr').textContent=fmt(S.T);const g=tGain();document.getElementById('yrRate').textContent=g>0?'引き直し +'+fmt(g):'';
+  if(S.voy){document.getElementById('hrLab').textContent='VOYAGE';document.getElementById('yrU0').textContent='航跡 ';document.getElementById('yrU').textContent='';document.getElementById('yr').textContent=fmt(S.T);document.getElementById('yrRate').textContent='';   // 引き直しで得る航跡は VOYAGE タブに出す
     const n=nextDest(),m=document.getElementById('mem');m.textContent=n?'次の色 '+lyText(Math.max(0,n.ly-S.vdist))+'光年':'すべての色を見つけた';m.style.color='rgba(214,190,255,.9)';}
   else{document.getElementById('hrLab').textContent='HOME';document.getElementById('yrU0').textContent='';document.getElementById('yrU').textContent=' 年';
   document.getElementById('yr').textContent=Math.floor(S.years).toLocaleString('ja-JP');{const yr=yearsPerSec()*timeMult;document.getElementById('yrRate').textContent=yr<0.01?'+'+fmtY(yr*86400)+' 年/日':'+'+fmtY(yr)+' 年/秒';}
