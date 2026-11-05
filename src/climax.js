@@ -23,10 +23,11 @@ document.getElementById('ending').addEventListener('pointerup',()=>{if(!END.leng
 let PREVIEW=null;
 document.getElementById('sEnd').onclick=()=>{document.getElementById('mSet').classList.remove('on');PREVIEW={log:S.log.length,flags:Object.assign({},S.flags)};startClimax();};
 document.getElementById('tBack').onclick=()=>{if(PREVIEW){S.log.length=PREVIEW.log;S.flags=PREVIEW.flags;PREVIEW=null;setTimeout(()=>{applyLoadedVisuals();renderPanel(true);},0);}document.getElementById('title').classList.remove('on');const e=document.getElementById('ending');e.classList.remove('on');e.style.opacity='0';document.getElementById('block').style.display='none';document.getElementById('panel').style.opacity='1';climax=false;HOMEA=null;LANDED=false;HEARD=null;fla=0;SPDF=1;STILL=false;BLOOM=null;GAP=3700;document.getElementById('app').classList.remove('landed');document.getElementById('ringWrap').style.opacity='';};
-function paintTitle(){const f=document.getElementById('tFar');f.style.display=!PREVIEW&&canVoyage()?'':'none';const b=document.getElementById('tAgain');b.disabled=!!PREVIEW||!S.cleared;b.textContent=PREVIEW||!S.cleared?'もう一度、船を出す':'もう一度、船を出す　残光 +'+fmt(lGain());}
+function paintTitle(){document.getElementById('tBack').style.display=PREVIEW?'':'none';const f=document.getElementById('tFar');f.style.display=!PREVIEW&&canVoyage()?'':'none';const b=document.getElementById('tAgain');b.disabled=!!PREVIEW||!S.cleared;b.textContent=PREVIEW||!S.cleared?'もう一度、船を出す':'もう一度、船を出す　残光 +'+fmt(lGain());}
 document.getElementById('tAgain').onclick=()=>{if(PREVIEW||!S.cleared)return;document.getElementById('tBack').onclick();rebirth();applyLoadedVisuals();for(let i=0;i<7;i++){A[i]=0.4;}curTab='drive';renderPanel(true);paintGoal();save();startRestart(true);};
 // ③ さらに遠くへ：着いたあとの故郷から、長い航海に出る
 function goFarther(){if(!canVoyage())return;if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();startVoyage();applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}
+document.getElementById('tGear').onclick=()=>document.getElementById('gear').onclick();
 document.getElementById('tFar').onclick=()=>{if(!PREVIEW)goFarther();};
 document.getElementById('tNew').onclick=()=>confirmBox('最初から遊ぶ','すべての進行が消える。残光、灯した星、実績も残らない。',()=>{S=freshState();applyLoadedVisuals();save();document.getElementById('tBack').onclick();renderPanel(true);prologue();});
 // 2回目以降の到着は、演出を飛ばしてタイトルへ進める
