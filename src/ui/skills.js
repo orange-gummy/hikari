@@ -73,8 +73,8 @@ function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.
   h+=skillPick?'<div class="duo" style="max-width:640px"><button class="act" id="skRe"'+(S.skills.length?'':' disabled')+'>振り直す</button><button class="act" id="skGo">帆を張る</button></div>':'<div class="note" style="text-align:center;margin:4px 0 0">歪みは使わずに持っていると、1つにつき生産+1%。<br>塗りつぶし＝習得済み　光る輪＝覚えられる　点線＝歪みが足りない　灰色＝まだ先</div>';
   box.innerHTML=h;
   const svgEl=document.getElementById('skMap');if(svgEl)skPanBind(svgEl);
-  box.querySelectorAll('.node').forEach(n=>{const go=()=>{if(skMoved){skMoved=false;return;}const id=n.dataset.id,now=Date.now();if(skillPick&&lastTap.id===id&&now-lastTap.t<380){buySkill(id);lastTap={id:null,t:0};if(has(id)){selSkill=nextSkillAfter(id);renderSkill();return;}}else lastTap={id,t:now};selSkill=id;renderSkill();};n.addEventListener('click',go);n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
-  const b=document.getElementById('skBuy');if(b)b.onclick=()=>{buySkill(k.id);if(has(k.id))selSkill=nextSkillAfter(k.id);renderSkill();};
+  box.querySelectorAll('.node').forEach(n=>{const go=()=>{if(skMoved){skMoved=false;return;}const id=n.dataset.id,now=Date.now();if(skillPick&&lastTap.id===id&&now-lastTap.t<380){buySkill(id);lastTap={id:null,t:0};if(has(id)){SND.play('learn',SKILLS.find(z=>z.id===id).br);selSkill=nextSkillAfter(id);renderSkill();return;}}else lastTap={id,t:now};selSkill=id;renderSkill();};n.addEventListener('click',go);n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
+  const b=document.getElementById('skBuy');if(b)b.onclick=()=>{buySkill(k.id);if(has(k.id)){SND.play('learn',k.br);}if(has(k.id))selSkill=nextSkillAfter(k.id);renderSkill();};
   const re=document.getElementById('skRe');if(re)re.onclick=()=>{S.W+=skillSpent();S.skills=[];NEWSK=[];renderSkill();};
   const g=document.getElementById('skGo');if(g)g.onclick=()=>confirmBox('帆を張る',(S.W>=1?'歪みが '+fmt(S.W)+' 残っている。':'')+'星図を閉じて、出航する。',closeSkill);}
 function withSkill(id,f){const had=has(id);if(!had)S.skills.push(id);const v=f();if(!had)S.skills.pop();return v;}

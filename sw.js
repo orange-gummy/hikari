@@ -8,7 +8,7 @@ const CACHE='hikari-v2';
 const FONT_CACHE='hikari-fonts-v1';
 // 初回の訪問でオフラインに備える分。index.html の読み込みを変えたらここも合わせる（漏れても、一度読めば保存される）
 const FILES=['./','index.html','styles.css','manifest.webmanifest',
-  'src/data.js','src/state.js','src/economy.js','src/story.js','src/render/scene.js','src/render/sky.js',
+  'src/data.js','src/state.js','src/economy.js','src/story.js','src/sound.js','src/render/scene.js','src/render/sky.js',
   'src/ui/common.js','src/ui/hud.js','src/ui/panel.js','src/ui/skills.js','src/ui/settings.js','src/climax.js','src/main.js',
   'icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png','icons/favicon-32.png'];
 

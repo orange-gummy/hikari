@@ -59,7 +59,9 @@ const SND=(()=>{
     hear:()=>{COLOR_HZ.forEach((f,k)=>tone(f/2,{at:k*0.35,a:2.0,d:5.0,g:0.035}));},
     land:()=>{[146.8,220,293.7,370,440,587.3].forEach((f,k)=>tone(f,{at:k*0.06,a:0.8,d:6,g:0.05}));bell(1174.7,{at:0.6,d:4,g:0.05});}
   };
-  function play(name,arg){if(!on||!ac||!SOUNDS[name])return;try{SOUNDS[name](arg);}catch(e){}}
+  // 自動で続けて起きるもの（加速・TIER・節目）は間を空けて鳴らす
+  const GAP={accel:1.2,tier:0.6,milestone:0.5,buy:0.06,tap:0.04,learn:0.15,lose:1,back:1},last={};
+  function play(name,arg){if(!on||vol<=0||!ac||!SOUNDS[name]||document.hidden)return;const t=ac.currentTime;if(GAP[name]&&last[name]!=null&&t-last[name]<GAP[name])return;last[name]=t;try{SOUNDS[name](arg);}catch(e){}}
   function setVolume(v){vol=v;if(master)master.gain.value=v;}
   function setOn(v){on=!!v;}
   return {unlock,play,setVolume,setOn,get on(){return on;},get volume(){return vol;},COLOR_HZ};

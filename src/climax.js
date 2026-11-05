@@ -8,10 +8,10 @@ let CLT=[];const ct=(f,ms)=>{const id=setTimeout(f,ms);CLT.push(id);return id;},
 function startClimax(){climax=true;CLT.forEach(clearTimeout);CLT=[];document.getElementById('skipC').style.display=S.restarts>0&&!PREVIEW?'':'none';document.getElementById('block').style.display='block';VQ.length=0;if(vqTimer){clearTimeout(vqTimer);vqTimer=null;}
   for(let i=0;i<7;i++){TG[i]=0;}story(null,LINES.arrive);if(typeof skillOpen!=='undefined'&&skillOpen)closeSkill();
   const t0=Date.now();const dec=ci(()=>{const p=cl((Date.now()-t0)/2600);SPDF=1-ei(p);if(p>=1){clearInterval(dec);SPDF=0;STILL=true;document.getElementById('panel').style.opacity='.2';
-    ct(()=>{HEARD={t:0};STILL=false;logLine(LINES.hear,-1);document.getElementById('app').classList.add('landed');
+    ct(()=>{HEARD={t:0};SND.play('hear');STILL=false;logLine(LINES.hear,-1);document.getElementById('app').classList.add('landed');
       ct(()=>{logLine(LINES.home,-1);HOMEA={t:0};document.getElementById('app').classList.add('landed');},2200);},2000);}},50);}
 function homeColors(){LANDED=true;HOMEA=null;document.getElementById('app').classList.add('landed');const rw=document.getElementById('ringWrap');rw.style.transition='opacity 1.5s';rw.style.opacity='0';GAP=2400;   /* 色が戻る間隔。短いと情景が何枚も重なる */ct(()=>{for(let i=6;i>=0;i--)queueVisual(()=>visualBack(i));const w=ci(()=>{if(!VQ.length&&!vqTimer){clearInterval(w);GAP=3700;logLine(LINES.all,-1);ct(()=>landing(),3800);}},300);},1200);}
-function landing(){logLine(LINES.land,-1);if(!PREVIEW){S.cleared=true;S.dist=GOAL_LY;save();}const e=document.getElementById('ending');e.classList.add('on');requestAnimationFrame(()=>{e.style.opacity='1';});
+function landing(){SND.play('land');logLine(LINES.land,-1);if(!PREVIEW){S.cleared=true;S.dist=GOAL_LY;save();}const e=document.getElementById('ending');e.classList.add('on');requestAnimationFrame(()=>{e.style.opacity='1';});
   END.push(setTimeout(()=>{document.getElementById('endLine').style.opacity='1';endShown=performance.now();},3500));END.push(setTimeout(showTitle,13000));}
 let END=[],endShown=0;
 function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';paintTitle();document.getElementById('title').classList.add('on');}

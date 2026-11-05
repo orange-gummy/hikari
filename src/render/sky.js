@@ -74,7 +74,7 @@ function drawMeteor(){if(LANDED||HOMEA){MET=null;return;}if(!MET){if(typeof has=
   const m=MET;m.t++;m.x+=m.vx;m.y+=m.vy;if(m.t>m.d){MET=null;return;}const tl=Math.hypot(m.vx,m.vy)*14,ux=m.vx/Math.hypot(m.vx,m.vy),uy=m.vy/Math.hypot(m.vx,m.vy),c=mix([255,236,200],G,1-A[3]*0.6);
   const g=cx.createLinearGradient(m.x,m.y,m.x-ux*tl,m.y-uy*tl);g.addColorStop(0,rgb(c,0.95));g.addColorStop(1,rgb(c,0));cx.strokeStyle=g;cx.lineWidth=2;cx.beginPath();cx.moveTo(m.x,m.y);cx.lineTo(m.x-ux*tl,m.y-uy*tl);cx.stroke();blob(m.x,m.y,18,c,0.55);cx.beginPath();cx.arc(m.x,m.y,2.2,0,6.283);cx.fillStyle='#fffaf0';cx.fill();}
 function catchMeteor(){const m=MET;MET=null;const g=prodRate()*300;S.E+=g;S.Erun+=g;fla=Math.max(fla,0.14);POPS.push({x:m.x,y:m.y-14,t:0,s:'流れ星 +'+fmt(g)});for(let k=0;k<50;k++){const a=Math.random()*6.283,v=R(0.8,4);P.push({x:m.x,y:m.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:k%3?[255,236,200]:mix(COLORS[k%6].rgb,G,1-A[k%6]),r:R(0.8,2.2),dr:0.016});}}
-function startRestart(rs,quiet){RST={t:0,rs:!!rs,quiet:!!quiet};if(!quiet){curTab='drive';document.getElementById('app').classList.add('rstDim');}renderPanel(true);document.getElementById('block').style.display='block';}   // quiet＝航海中の自動の停止：見ているタブはそのまま、画面も暗くしない
+function startRestart(rs,quiet){RST={t:0,rs:!!rs,quiet:!!quiet};if(!quiet)SND.play('resail');if(!quiet){curTab='drive';document.getElementById('app').classList.add('rstDim');}renderPanel(true);document.getElementById('block').style.display='block';}   // quiet＝航海中の自動の停止：見ているタブはそのまま、画面も暗くしない
 function drawRst(){const r=RST;r.t++;const t=r.t;
   if(t<30){SPDF=0;}
   if(t>=30&&t<90){const p=(t-30)/60,pulse=Math.pow(Math.max(0,Math.sin(p*Math.PI*2)),2),warm=mix([255,236,200],G,1-A[0]*0.5);blob(RC.x,RC.y,30+60*pulse,warm,0.55*pulse+0.08);blob(RC.x,RC.y,8+6*pulse,[255,250,240],0.9*(0.3+0.7*pulse));ROTV=2*p;}
@@ -84,7 +84,7 @@ function drawRst(){const r=RST;r.t++;const t=r.t;
   if(t>=80){const p=cl((t-80)/70);SPDF=ei(p);ROTV=2*(1-p);}
   ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');
   if(t>=150){SPDF=1;ROTV=0;ROT=Math.round(ROT/5)*5;TKG.setAttribute('transform','rotate('+ROT+' 88 88)');NEWSK=[];document.getElementById('block').style.display='none';RST=null;}}
-function startBrake(g){NEWSK=[];BRK={t:0,g,lit:nines(S.stage)};document.getElementById('block').style.display='block';}
+function startBrake(g,auto){NEWSK=[];BRK={t:0,g,lit:nines(S.stage),auto:!!auto};SND.play(auto?'milestone':'brake');document.getElementById('block').style.display='block';}
 function drawBrk(){const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B1=180,S1=215,S2=335;
   if(b.t===1){b.st=S.stage;b.bv0=BVC;b.sp0=3+b.lit*0.25;}
   const red=t<B1?(t<B0?0.5+0.5*Math.sin(t*0.5):1-(t-B0)/(B1-B0)):0;
