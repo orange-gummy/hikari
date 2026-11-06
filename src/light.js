@@ -29,9 +29,9 @@ function renderLight(){const done=S.lightDone,ready=canLight(),c=lightCost(),key
 /* 終わりの場面 */
 let LIGHTFX=null;
 const LFX_CV=document.createElement('canvas');LFX_CV.id='lightFx';LFX_CV.setAttribute('aria-hidden','true');document.body.appendChild(LFX_CV);const lfx=LFX_CV.getContext('2d');
-const LFX_HIDE=['#tabs','#pbody','#goal','#sub','#toasts','#route','#hudL','#cons','#hudR','#gear','#ringWrap','#frame'];
+const LFX_HIDE=['#tabs','#pbody','#goal','#sub','#toasts','#route','#hudL','#cons','#hudR','#pset','#ringWrap','#frame'];
 // ほどける順番（フレーム）と、粒を出す部品
-const LFX_STEPS=[[120,['#tabs button'],'#tabs'],[165,['#pbody > *'],'#pbody'],[215,['#goal','#sub'],null],[250,['#route'],'#route'],[290,['#hudL > *','#cons','#hudR > *','#gear'],null],[345,['#ringWrap'],'#ringWrap'],[400,['#frame'],'#frame']];
+const LFX_STEPS=[[120,['#tabs button'],'#tabs'],[165,['#pbody > *'],'#pbody'],[215,['#goal','#sub'],null],[250,['#route'],'#route'],[290,['#hudL > *','#cons','#hudR > *'],null],[345,['#ringWrap'],'#ringWrap'],[400,['#frame'],'#frame']];
 function startLightEnd(replay){if(LIGHTFX)return;const w=innerWidth,h=innerHeight;LFX_CV.width=Math.round(w*DPR);LFX_CV.height=Math.round(h*DPR);lfx.setTransform(DPR,0,0,DPR,0,0);
   LIGHTFX={t:0,P:[],replay,w,h,canTap:false,closing:0};SND.play('lightEnd');document.getElementById('block').style.display='block';LFX_CV.style.display='block';LFX_CV.style.pointerEvents='none';
   if(typeof skillOpen!=='undefined'&&skillOpen)closeSkill();}

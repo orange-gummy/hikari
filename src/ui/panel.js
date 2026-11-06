@@ -5,18 +5,18 @@
 /* タブ */
 let curTab='drive',buyMode='1';
 /* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
-const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','skill','reset']},{id:'star',name:'STAR',tabs:['restart','glow','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']}];
-const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'BATTERY',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG'};
-const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light'};let curLayer='home',tabs=[],tabKey='';
-function layerOpen(id){return id==='home'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(law('lc')>=10||S.lightDone));}
+const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','skill','reset']},{id:'star',name:'STAR',tabs:['restart','glow','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','set']}];
+const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'BATTERY',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',set:'SETTING'};
+const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
+function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(law('lc')>=10||S.lightDone));}
 function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}
 function tabClick(t){if(t==='skill'){openSkill(false);return;}curTab=t;renderPanel(true);}
-function buildTabs(){const open=LAYERS.filter(L=>layerOpen(L.id)),multi=open.length>1||!tabHidden('reset');   // 緊急停止が開いたら2段（下に HOME と LOG）
-  const sub=(multi?LAYERS.find(L=>L.id===curLayer).tabs:LAYERS[0].tabs.concat(['log'])).filter(t=>!tabHidden(t));
-  const key=sub.join()+'|'+(multi?open.map(L=>L.id).join():'');if(key===tabKey)return;tabKey=key;
+function buildTabs(){const open=LAYERS.filter(L=>layerOpen(L.id));   // 上の段に層（HOME〜LIGHT と ETC）、下の段にその層の中のタブ
+  const sub=LAYERS.find(L=>L.id===curLayer).tabs.filter(t=>!tabHidden(t));
+  const key=sub.join()+'|'+open.map(L=>L.id).join();if(key===tabKey)return;tabKey=key;
   const mk=(t,cls,label)=>'<button data-t="'+t+'"'+(cls?' class="'+cls+'"':'')+' role="tab">'+label+'</button>';
   document.getElementById('tr1').innerHTML=sub.map(t=>mk(t,'',TAB_NAME[t])).join('');
-  const r2=document.getElementById('tr2');r2.innerHTML=multi?open.map(L=>'<button data-l="'+L.id+'" role="tab"><i></i>'+L.name+'</button>').join('')+mk('log','','LOG'):'';r2.style.display=multi?'':'none';r2.classList.toggle('many',open.length>=5);
+  const r2=document.getElementById('tr2');r2.innerHTML=open.map(L=>'<button data-l="'+L.id+'" role="tab"><i></i>'+L.name+'</button>').join('');r2.classList.toggle('many',open.length>=6);
   tabs=[...document.querySelectorAll('#tabs button')];
   tabs.forEach(b=>b.addEventListener('click',()=>{SND.play('tab');if(b.dataset.l){curTab=lastTab[b.dataset.l];curLayer=b.dataset.l;renderPanel(true);return;}tabClick(b.dataset.t);}));}
 let skillOpen=false,lastWShown=-1;
@@ -28,15 +28,16 @@ function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if
 // 変わったときだけ書き込む（同じ値でも書くたびに、iPhone では文字が描き直されて明るさがちらつく）
 function setSel(b,v){const s=v?'true':'false';if(b.getAttribute('aria-selected')!==s)b.setAttribute('aria-selected',s);}
 function setCls(b,c,v){if(b.classList.contains(c)!==!!v)b.classList.toggle(c,!!v);}
-function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){setSel(b,curTab!=='log'&&b.dataset.l===curLayer);return;}setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
+function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){setSel(b,b.dataset.l===curLayer);return;}setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
 function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;return (t==='battery'&&S.chal==='eM')||(t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&S.maxStage<BATTERY_STAGE);}
 let devUI=[],TIERFX=null;
 function renderPanel(force){
-  if(curTab!=='log'&&tabHidden(curTab))curTab='drive';
-  if(curTab!=='log'){curLayer=layerOf(curTab)||'home';lastTab[curLayer]=curTab;}
+  if(tabHidden(curTab))curTab='drive';
+  curLayer=layerOf(curTab)||'home';lastTab[curLayer]=curTab;
+  const isSet=curTab==='set',ps=document.getElementById('pset');pbody.style.display=isSet?'none':'';ps.style.display=isSet?'':'none';
   paintTabs();
-  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='uni')renderUniverse();else if(curTab==='light')renderLight();else renderLog();
+  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='uni')renderUniverse();else if(curTab==='light')renderLight();else if(curTab==='set')renderSet();else renderLog();
 }
 function devVisible(i){return devOpen(i);}
 function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}
@@ -197,8 +198,9 @@ function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
   pbody.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(buyTrail(b.dataset.t)){fla=Math.max(fla,0.1);renderPanel(true);}});
   const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、残光は残る。',()=>{startBrake(0);BRK.vr=true;});
   const fg=document.getElementById('farGo');if(fg)fg.onclick=()=>confirmBox('さらに遠くへ','故郷を出発点に、隣の銀河へ航海に出る。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星は残る。',()=>{goFarther();});}
-let logMode='log';
-function renderLog(){pbody.dataset.k='';let h='<div class="phead"><span class="lab">LOG</span><span class="seg"><button data-m="log">日誌</button><button data-m="ach">実績 '+S.ach.length+'/'+ACHIEVEMENTS.length+'</button></span></div>';
+function renderLog(){pbody.dataset.k='';const logMode=curTab==='ach'?'ach':'log';let h='<div class="phead"><span class="lab">'+(logMode==='log'?'LOG':'RECORD')+'</span>'+(logMode==='ach'?'<span class="num" style="font-size:12px;color:var(--ink-dim)">実績 '+S.ach.length+' / '+ACHIEVEMENTS.length+'</span>':'')+'</div>';
   if(logMode==='log'){S.log.slice().reverse().forEach((e,j)=>{const col=e.c>=0?rgb(COLORS[e.c].rgb,1):'var(--ink-dim)';h+='<div class="le"><span class="y" style="color:'+col+'">故郷 '+e.y.toLocaleString('ja-JP')+'年</span><span class="t" style="opacity:'+(j===0?1:0.75)+'">'+e.t+'</span></div>';});}
   else{h+='<div class="row" style="padding:2px 0 8px"><span class="note" style="margin:0">実績1つにつき、すべての生産 +'+Math.round(ACH_BONUS*100)+'%。リセットしても消えない</span><span class="num">×'+achMult().toFixed(2)+'</span></div>';ACHIEVEMENTS.forEach(a=>{const on=S.ach.includes(a[0]);h+='<div class="ach'+(on?'':' off')+'"><span style="width:12px">'+(on?'✦':'·')+'</span><span style="flex:1">'+a[1]+'</span><span style="color:var(--ink-dim)">'+a[2]+'</span></div>';});}
-  pbody.innerHTML=h;pbody.querySelectorAll('.seg button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.m===logMode);b.onclick=()=>{logMode=b.dataset.m;renderLog();};});}
+  pbody.innerHTML=h;}
+/* ETC の SETTING：設定の中身（#setBox）をパネルに移して出す。タイトル画面の歯車では小窓に戻して出す */
+function renderSet(){const box=document.getElementById('setBox'),ps=document.getElementById('pset');if(box.parentElement!==ps)ps.appendChild(box);document.getElementById('sEnd').style.display='';paintSeg();}

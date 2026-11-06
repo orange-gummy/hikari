@@ -27,7 +27,7 @@ function paintTitle(){document.getElementById('tBack').style.display=PREVIEW?'':
 document.getElementById('tAgain').onclick=()=>{if(PREVIEW||!S.cleared)return;document.getElementById('tBack').onclick();rebirth();applyLoadedVisuals();for(let i=0;i<7;i++){A[i]=0.4;}curTab='drive';renderPanel(true);paintGoal();save();startRestart(true);};
 // ③ さらに遠くへ：着いたあとの故郷から、長い航海に出る
 function goFarther(){if(!canVoyage())return;if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();startVoyage();applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}
-document.getElementById('tGear').onclick=()=>document.getElementById('gear').onclick();
+document.getElementById('tGear').onclick=()=>openSettings();
 document.getElementById('tFar').onclick=()=>{if(!PREVIEW)goFarther();};
 document.getElementById('tNew').onclick=()=>confirmBox('最初から遊ぶ','すべての進行が消える。残光、灯した星、実績も残らない。',()=>{S=freshState();applyLoadedVisuals();save();document.getElementById('tBack').onclick();renderPanel(true);prologue();});
 // 2回目以降の到着は、演出を飛ばしてタイトルへ進める

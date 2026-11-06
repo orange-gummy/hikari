@@ -37,7 +37,7 @@
 3. ~~バランス試算ツールを分割後の構成でも動くようにする。~~ 完了。分割の前後で出力が一致することを確認済み。
 
 ## 主な仕組み（詳しくは設計書）
-- パネルのタブは入れ子（panel.js `LAYERS`）：下の段で層（HOME・STAR・GALAXY・UNIVERSE・LIGHT）と LOG（層が5つ以上でボタンを詰める、`#tr2.many`） を選び、上の段にその層の中のタブを出す。HOME＝DRIVE・BOOST・BATTERY・SKILL（星図をいつでも開く）・STOP（緊急停止、内部名 reset）、STAR＝RESTART（再出発）・UPGRADE（残光の強化、内部名 glow）・CHALLENGE（上位の星8つのチャレンジ、内部名 stars、panel.js `renderUnlock()`）、GALAXY＝VOYAGE（さらに遠くへ・航路の引き直し）・WAKE（航跡の強化）、UNIVERSE＝LAW（法則、内部名 uni、ui/universe.js `renderUniverse()`）、LIGHT＝LIGHT（光になる、light.js `renderLight()`）。層は開くまで出さない（`layerOpen()`）。緊急停止が開くまでは1段。層を切り替えると、その層で最後に見ていたタブに戻る（`lastTab`）。
+- パネルのタブは入れ子（panel.js `LAYERS`）：上の段で層（HOME・STAR・GALAXY・UNIVERSE・LIGHT・ETC、層が6つでボタンを詰める `#tr2.many`）を選び、下の段にその層の中のタブを出す（2026-11-06 に上下を入れ替え）。ETC＝LOG（日誌）・RECORD（実績）・SETTING（設定。index.html の `#setBox` をパネルの `#pset` に移して出す。タイトル画面の歯車 `openSettings()` では小窓に戻す。上の表示の歯車はなくした）。HOME＝DRIVE・BOOST・BATTERY・SKILL（星図をいつでも開く）・STOP（緊急停止、内部名 reset）、STAR＝RESTART（再出発）・UPGRADE（残光の強化、内部名 glow）・CHALLENGE（上位の星8つのチャレンジ、内部名 stars、panel.js `renderUnlock()`）、GALAXY＝VOYAGE（さらに遠くへ・航路の引き直し）・WAKE（航跡の強化）、UNIVERSE＝LAW（法則、内部名 uni、ui/universe.js `renderUniverse()`）、LIGHT＝LIGHT（光になる、light.js `renderLight()`）。層は開くまで出さない（`layerOpen()`、HOME と ETC ははじめから）。層を切り替えると、その層で最後に見ていたタブに戻る（`lastTab`）。
 - 残光の強化は「残照の地平」（panel.js `glowHorizon()`）：日が沈んだあとの地平線に、強化ごとの光の筋が段に応じて伸びる。筋を押して選び、下の「灯す」で強化。
 - 装置のループは `PRODI`（生産する装置の番号）を使う。色は `colRGB(col)`（7以上は航海で見つけた色）。
 - 速度：23段階（秒速10km〜1,000km → 光速の1%〜90% → 9が1〜12個）。生産の倍率は時間の遅れ γ。画面では「時間の進み /γ」。光速の99%より先の加速コストは1段ごとに `STAGE_MULT`（500）倍。一周の長さはほぼこれで決まる（生産を何倍にしても少ししか縮まない）。船内時間の基準 `SHIP_K` は33（故郷の年月が段階ごとに積み上がる）。

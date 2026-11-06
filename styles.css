@@ -89,9 +89,9 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 /* panel */
 #panel{position:relative;display:flex;flex-direction:column;background:none;min-height:0}
 #panel::before{content:"";position:absolute;left:0;right:0;bottom:0;top:-28px;pointer-events:none;z-index:0;background:linear-gradient(to bottom,rgba(5,6,14,0),rgba(5,6,14,.52) 44px,rgba(5,6,14,.6));-webkit-mask-image:linear-gradient(to bottom,transparent,#000 44px);mask-image:linear-gradient(to bottom,transparent,#000 44px)}
-#pbody,#tabs{position:relative;z-index:1}
-#pbody{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 20px 6px;min-height:0;overscroll-behavior:contain;scrollbar-width:none}
-#pbody::-webkit-scrollbar{display:none}
+#pbody,#pset,#tabs{position:relative;z-index:1}
+#pbody,#pset{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 20px 6px;min-height:0;overscroll-behavior:contain;scrollbar-width:none}
+#pbody::-webkit-scrollbar,#pset::-webkit-scrollbar{display:none}
 #tabs{display:flex;flex-direction:column;padding:6px 14px 10px;border-top:0.5px solid var(--line-soft)}
 #tabs .tr{display:flex;justify-content:space-between}
 #tr1{justify-content:space-around!important}
@@ -216,7 +216,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
   #panel::before{top:0;-webkit-mask-image:none;mask-image:none;background:rgba(5,6,14,.58)}
   #tabs{border-top:0;border-bottom:0.5px solid var(--line-soft);padding:16px 16px 10px}
   #tabs .tr,#tr2{justify-content:flex-start!important;gap:6px}
-  #pbody{padding:14px 24px}
+  #pbody,#pset{padding:14px 24px}
   #ringWrap{transform:translate(-50%,-52%) scale(1.25)}
 }
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}
@@ -242,3 +242,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #lightFx{position:fixed;inset:0;width:100%;height:100%;z-index:30;display:none}
 #tabs #tr2.many button{padding:6px 4px;letter-spacing:0}
 #tabs #tr2.many button i{display:none}
+/* 層の段を上に、層の中のタブを下に（2026-11-06）。区切り線は層の段の下 */
+#tabs #tr2{order:-1;border-top:0;margin-top:0;padding-top:0;border-bottom:0.5px solid var(--line-soft);margin-bottom:4px;padding-bottom:4px}
+/* SETTING タブでは、設定の中身を枠なしでパネルに出す */
+#pset .mbox{background:none;border:0;padding:0;width:auto;box-shadow:none}
+#pset .mbox>h2,#pset #sClose{display:none}
