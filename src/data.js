@@ -123,7 +123,7 @@ const SKILLS=[
 /* 再出発（第二層）：故郷に着いたあと、もう一度遠い宙域から船を出す（強くてニューゲーム） */
 // ③ さらに遠くへ：故郷を出発点に、目的地を順に目指す長い航海
 const DEST=[{name:'隣の銀河',ly:2.5e6},{name:'銀河群',ly:3e7},{name:'大規模構造',ly:5e8},{name:'宇宙の果て',ly:4.65e10}];
-const VOY_BASE=30;        // 航海の距離の伸びの基準倍率
+const VOY_BASE=60;        // 航海の距離の伸びの基準倍率
 const TRAIL=[  // 航跡の強化
   {id:'vs',name:'航海の速さ',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で進む距離 ×'+fmtN(Math.pow(2.7,l))},
   {id:'ls',name:'残光の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'航海で入る残光 ×'+Math.pow(2,l)},
@@ -143,14 +143,14 @@ const AFTERGLOW=[  // max:0 は上限なし
 const AM_GRANT=[[],['a0','a1','a2','a3','a4','a5','a6','a7'],['aA','aT','aR']];
 // ② 上位の星8つは、チャレンジを越えると灯る（Revolution Idle のチャレンジのように、縛り付きで出直して目標に届く）
 const CHAL={
-  pR:{name:'止まらない',rule:'緊急停止できない',goal:{stage:14},gtext:'光速の99.99%に届く'},
-  pL:{name:'帆だけ',rule:'太陽帆のほかの装置を買えない',goal:{stage:12},gtext:'光速の99%に届く'},
-  eL:{name:'残光なし',rule:'残光の強化が効かない',goal:{home:true},gtext:'故郷に着く'},
+  pR:{name:'止まらない',rule:'緊急停止できない',goal:{stage:15},gtext:'9を5個並べる'},
+  pL:{name:'帆だけ',rule:'太陽帆のほかの装置を買えない',goal:{stage:13},gtext:'光速の99.9%に届く'},
+  eL:{name:'残光なし',rule:'残光の強化が効かない',goal:{stage:18},gtext:'9を8個並べる'},
   eM:{name:'蓄えなし',rule:'蓄電池を使えない',goal:{home:true},gtext:'故郷に着く'},
-  c7:{name:'触れない',rule:'窓をタップできない（太陽帆を1枚持って出る。止めても1枚残る）',goal:{stage:15},gtext:'9を5個並べる'},
+  c7:{name:'触れない',rule:'窓をタップできない（太陽帆を1枚持って出る。止めても1枚残る）',goal:{home:true},gtext:'故郷に着く'},
   cG:{name:'速い故郷',rule:'故郷の時間が10倍の速さで流れる（距離はそのまま）',goal:{home:true},gtext:'故郷に着く'},
-  a8:{name:'錨なし',rule:'時間の錨を買えない',goal:{stage:19},gtext:'9を9個並べる'},
-  aM:{name:'星図なし',rule:'スキルを覚えられない',goal:{stage:14},gtext:'光速の99.99%に届く'}
+  a8:{name:'錨なし',rule:'時間の錨を買えない',goal:{home:true},gtext:'故郷に着く'},
+  aM:{name:'星図なし',rule:'スキルを覚えられない',goal:{home:true},gtext:'故郷に着く'}
 };
 /* ④ 新しい宇宙（法則）。宇宙の果てに着くと、宇宙を畳んで作り直せる */
 const LAWS=[
