@@ -39,7 +39,9 @@ function skBg(){const VB=skBBox(),R=Math.hypot(Math.max(Math.abs(VB.x-180),Math.
   for(let k=0;k<72;k++){const an=k*Math.PI/36,r1=R-8,r2=R-(k%6===0?16:12);h+='<line x1="'+(180+r1*Math.cos(an)).toFixed(1)+'" y1="'+(176+r1*Math.sin(an)).toFixed(1)+'" x2="'+(180+r2*Math.cos(an)).toFixed(1)+'" y2="'+(176+r2*Math.sin(an)).toFixed(1)+'" stroke-opacity=".12"/>';}
   h+='</g></g>';return h;}
 let skillPick=false,lastTap={id:null,t:0};
-function nextSkillAfter(id){const k=SKILLS.find(z=>z.id===id);const nx=SKILLS.filter(z=>z.br===k.br&&z.step===k.step+1&&!has(z.id));if(k.fork){const sib=SKILLS.find(z=>z.br===k.br&&z.step===k.step&&z.id!==k.id&&!has(z.id));if(sib)return sib.id;}return nx.length?nx[0].id:id;}
+function nextSkillAfter(id){const k=SKILLS.find(z=>z.id===id);const nx=SKILLS.filter(z=>skVis(z)&&z.br===k.br&&z.step===k.step+1&&!has(z.id));if(k.fork){const sib=SKILLS.find(z=>skVis(z)&&z.br===k.br&&z.step===k.step&&z.id!==k.id&&!has(z.id));if(sib)return sib.id;}if(nx.length)return nx[0].id;
+  // 枝の終わり（星図に見えている最後のスキル）を覚えたら、ほかの枝でいま覚えられるスキルへ。歪みが足りるもの、次に安いものの順
+  const av=SKILLS.filter(z=>skVis(z)&&skillAvailable(z)).sort((a,b)=>((S.W>=a.cost?0:1)-(S.W>=b.cost?0:1))||a.cost-b.cost);return av.length?av[0].id:id;}
 let PANX=0,PANY=0,PANS=1,skMoved=false;
 function skPanT(){return 'translate('+(180+PANX).toFixed(1)+' '+(176+PANY).toFixed(1)+') scale('+PANS.toFixed(3)+') translate(-180 -176)';}
 function skPanApply(){const g=document.getElementById('skPan');if(g)g.setAttribute('transform',skPanT());}
