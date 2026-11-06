@@ -69,6 +69,7 @@ function goal(){const s=S.stage,nx=s+1;
   if(S.cleared)return[canVoyage()?'GALAXYで、さらに遠くへ':'STARで、もう一度船を出す',canVoyage()?'voy':'restart',false];
   if(S.chal&&CHAL[S.chal])return['挑戦中「'+CHAL[S.chal].name+'」　'+CHAL[S.chal].gtext,null,false];
   if(!S.lightDone&&canLight())return['LIGHTで、光になる','light',false];
+  if(S.flags.bat&&!S.deposited&&S.chal!=='eM')return['BATTERYで、エネルギーを預ける','battery',false];
   if(canFold())return['UNIVERSEで宇宙を畳むと 法則 +'+uGain(),'uni',false];
   if(S.voy&&S.stage>=maxStage()){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];

@@ -1,4 +1,5 @@
 'use strict';
+let batAt=0;   // 蓄電池を開く一文は、最初の色を失ったあとの説明の一文から少し間を空けて出す
 document.addEventListener('pointerdown',()=>SND.unlock(),true);document.addEventListener('keydown',()=>SND.unlock(),true);
 /* =====================================================================
    LOOP / BOOT
@@ -20,6 +21,8 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.letter){toast('故郷からの便り　<b>+'+fmt(FXQ.letter)+'</b>');FXQ.letter=0;}
   if(FXQ.restart){FXQ.restart=0;if(curTab==='drive')renderDrive(true);}
   // ③：航海では緊急停止を自動で（小窓が開いている間は待つ）
+  // 蓄電池：故郷で最初の1年が過ぎ、色を失う演出が終わったら開く
+  if(!S.flags.bat&&S.years>=1&&S.flags.why&&!VQ.length&&!vqTimer&&!BRK&&!RST&&!climax){if(!batAt)batAt=Date.now()+4000;else if(Date.now()>batAt){S.flags.bat=1;logLine(LINES.bat,-1);SND.play('light');renderPanel(true);paintGoal();}}
   // ④ 引き直しの記憶：航路の引き直しも自動で
   if(autoRedrawReady()&&!LIGHTFX&&!BRK&&!RST&&!climax&&!ACC&&!FOLD&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(0,true);BRK.vr=true;}
   if(voyStopReady()&&!FOLD&&!LIGHTFX&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(wGain(),true);}

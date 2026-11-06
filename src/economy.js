@@ -163,7 +163,7 @@ function autoLearn(){if(!has('aM'))return;for(const id of S.prevSkills){if(has(i
 function skillAvailable(k){if(has(k.id)||k.glow)return false;
   if(k.step===0)return true;return SKILLS.some(x=>x.br===k.br&&x.step===k.step-1&&has(x.id));}
 function buySkill(id){if(S.chal==='aM')return;const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
-function deposit(f){if(S.chal==='eM')return;const room=batteryCap()-S.battery;const a=Math.min(room,S.E*(f||1));if(a<=0)return;S.E-=a;S.battery+=a;S.batDep+=a;S.deposited=true;}
+function deposit(f){if(S.chal==='eM'||!S.flags.bat)return;const room=batteryCap()-S.battery;const a=Math.min(room,S.E*(f||1));if(a<=0)return;S.E-=a;S.battery+=a;S.batDep+=a;S.deposited=true;}
 function batGrowth(){return S.batDep>0?S.battery/S.batDep:1;}
 function overMulFor(b){const g=Math.max(1,batGrowth());return Math.min(10,1+3*Math.log2(g))*(has('eB')?1.5:1);}
 function release(){if(S.battery<=0)return 0;const b=S.battery,m=overMulFor(b);S.E+=b;S.Erun+=Math.max(0,b-S.batDep);S.battery=0;S.batDep=0;S.over=has('eB')?45:30;S.overMul=m;S.released=true;FXQ.release=b;return m;}
