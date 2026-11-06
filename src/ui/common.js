@@ -10,5 +10,4 @@ let numKanji=false;try{numKanji=localStorage.getItem('hikari_num')==='1';}catch(
 function fmtParts(n){if(!isFinite(n))return['∞',''];if(n<1e4){if(n<10)return[n.toFixed(n<1&&n>0?2:1).replace(/\.0$/,''),''];return[Math.floor(n).toLocaleString('ja-JP'),''];}if(!numKanji||n>=1e72){let e=Math.floor(Math.log10(n)),m=(n/Math.pow(10,e)).toFixed(2);if(m==='10.00'){m='1.00';e++;}return[m+'e'+e,''];}for(const [v,u] of UNITS)if(n>=v){const x=n/v;return[x<10?x.toFixed(2):x<100?x.toFixed(1):Math.floor(x).toString(),u];}return[String(n),''];}
 function fmt(n){const p=fmtParts(n);return p[0]+p[1];}
 function fmtY(n){return n<10?n.toFixed(2):n<100?n.toFixed(1):fmt(n);}
-function unitIndex(n){for(let i=0;i<UNITS.length;i++)if(n>=UNITS[i][0])return UNITS.length-i;return 0;}
 function fmtG(g){return g<1000?g.toFixed(g<10?2:1):fmt(g);}

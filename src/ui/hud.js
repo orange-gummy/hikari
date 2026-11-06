@@ -81,19 +81,17 @@ let hintTab=null,hintAt=0;
 function hintLatch(t){const now=performance.now();if(t){hintTab=t;hintAt=now;return t;}if(hintTab&&now-hintAt<3000)return hintTab;hintTab=null;return null;}
 function paintGoal(){const gEl=document.getElementById('goal'),hide=!!(BRK||RST||skillOpen||climax);gEl.style.opacity=hide?'0':'';if(hide){tabs.forEach(b=>setCls(b,'hint',false));frameEl.classList.remove('hintTap');return;}const [t,tab0,tap]=goal();const tab=hintLatch(tab0);if(t!==lastGoal){lastGoal=t;document.getElementById('goalT').textContent=t;}tabs.forEach(b=>setCls(b,'hint',!!tab&&curTab!==tab&&(b.dataset.t===tab||(b.dataset.l&&b.dataset.l===layerOf(tab)&&curLayer!==b.dataset.l&&tab!=='boost'))));/* 加速の案内は、別の層を見ているときは層のボタンを光らせない */setCls(frameEl,'hintTap',!!tap);}
 /* HUD */
-let lastUnit=0;
 function paintHUD(){const p=fmtParts(S.E);document.getElementById('eV').textContent=p[0];document.getElementById('eU').textContent=p[1];const L=(p[0]+p[1]).length;document.getElementById('spdV').style.fontSize=(L<=6?28:L<=9?23:19)+'px';document.getElementById('rate').textContent='+'+fmt(prodRate())+' / 秒'+(S.stage>=DILATION_STAGE?'（×'+fmtG(stageGamma(S.stage))+'）':'')+(S.over>0?'　過負荷 ×'+S.overMul.toFixed(1):'');
   if(S.voy){document.getElementById('hrLab').textContent='VOYAGE';document.getElementById('yrU0').textContent='航跡 ';document.getElementById('yrU').textContent='';document.getElementById('yr').textContent=fmt(S.T);document.getElementById('yrRate').textContent='';   // 引き直しで得る航跡は VOYAGE タブに出す
     const n=nextDest(),m=document.getElementById('mem');m.textContent=n?'次の色 '+lyText(Math.max(0,n.ly-S.vdist))+'光年':'すべての色を見つけた';m.style.color='rgba(214,190,255,.9)';}
   else{document.getElementById('hrLab').textContent='HOME';document.getElementById('yrU0').textContent='';document.getElementById('yrU').textContent=' 年';
   document.getElementById('yr').textContent=Math.floor(S.years).toLocaleString('ja-JP');{const yr=yearsPerSec()*timeMult;document.getElementById('yrRate').textContent=yr<0.01?'+'+fmtY(yr*86400)+' 年/日':'+'+fmtY(yr)+' 年/秒';}
   const nm=nextMemIndex(),m=document.getElementById('mem');if(nm>=0&&nm<6){m.textContent='記憶が薄れるまで あと'+fmtY(Math.max(0,LOSE_YEARS[nm]-S.years))+'年';m.style.color=S.years/LOSE_YEARS[nm]>0.85?'#ffb38a':'';}else if(nm===6){m.textContent='最後の記憶が揺らいでいる';m.style.color='#ffb38a';}else m.textContent='';}
-  const u=unitIndex(S.E);if(u>lastUnit&&u>=2){unitPop(numKanji?UNITS[UNITS.length-u][1]:'e'+(u*4));}if(u>lastUnit)lastUnit=u;paintRoute();}
+  paintRoute();}
 function paintSpeed(){const s=S.stage,g=fmtG(stageGamma(s)),h=document.getElementById('hV'),dil=s>=DILATION_STAGE;
   document.getElementById('hLab').textContent='VELOCITY';h.textContent=s<=5?KMS[s].toLocaleString('ja-JP')+' km/s':stagePct(s)+'% c';h.style.fontSize=(h.textContent.length<=7?26:h.textContent.length<=10?21:h.textContent.length<=13?17:14)+'px';
   document.getElementById('hG').textContent=dil?'船の1秒＝外の'+g+'秒':s<=5?'光速の'+stagePct(s)+'%':'秒速'+kmsOf(s).toLocaleString('ja-JP')+'km';
   document.getElementById('spdG').textContent=dil?'時間の進み /'+g:speedText(s);}
-function unitPop(u){const e=document.getElementById('unitPop');e.textContent=u;e.style.transition='none';e.style.opacity='0';e.style.transform='translateY(8px)';requestAnimationFrame(()=>{e.style.transition='';e.style.opacity='0.9';e.style.transform='translateY(0)';setTimeout(()=>{e.style.opacity='0';},1800);});}
 /* 字幕 */
 let subT=[];
 function subtitle(t){subT.forEach(clearTimeout);subT=[];const box=document.getElementById('sub'),st=document.getElementById('subT');st.innerHTML='';const sp=[...t].map(ch=>{const s=document.createElement('span');s.textContent=ch;s.style.opacity='0';st.appendChild(s);return s;});box.style.opacity='1';sp.forEach((s,k)=>subT.push(setTimeout(()=>{s.style.opacity='1';},120+k*60)));subT.push(setTimeout(()=>{box.style.opacity='0';},120+sp.length*60+3200));}

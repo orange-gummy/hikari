@@ -3,7 +3,7 @@ document.addEventListener('pointerdown',()=>SND.unlock(),true);document.addEvent
 /* =====================================================================
    LOOP / BOOT
    ===================================================================== */
-function applyLoadedVisuals(){for(let i=0;i<7;i++){const v=memTarget(i);A[i]=v;TG[i]=v;RV[i]=v;}lastUnit=unitIndex(S.E);paintSpeed();}
+function applyLoadedVisuals(){for(let i=0;i<7;i++){const v=memTarget(i);A[i]=v;TG[i]=v;RV[i]=v;}paintSpeed();}
 function prologue(){story('pro1',LINES.pro1);setTimeout(()=>story('pro2',LINES.pro2),4400);setTimeout(()=>story('start',LINES.start),8800);}
 let lastT=performance.now(),acc=0,secAcc=0,saveAcc=0,lastStage=-1,paused=false,panelHold=false;
 pbody.addEventListener('pointerdown',()=>{panelHold=true;});addEventListener('pointerup',()=>{setTimeout(()=>{panelHold=false;},60);});addEventListener('pointercancel',()=>{panelHold=false;});

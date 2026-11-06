@@ -66,7 +66,6 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #sub{position:absolute;left:0;right:0;bottom:0;height:78px;background:linear-gradient(to bottom,rgba(4,5,12,0),rgba(4,5,12,.86) 55%);display:flex;align-items:flex-end;justify-content:center;padding:0 12px 16px;pointer-events:none;opacity:0;transition:opacity .9s}
 #subT{font-family:var(--log);font-weight:500;font-size:15px;letter-spacing:.06em;color:var(--ink-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #subT span{transition:opacity .25s}
-#unitPop{position:absolute;left:0;right:0;top:20%;text-align:center;font-family:var(--ui);font-weight:200;font-size:40px;letter-spacing:.3em;color:var(--ink-strong);opacity:0;pointer-events:none;transition:opacity 1.2s,transform 2.4s}
 .new9{display:inline-block;animation:new9 .8s cubic-bezier(.2,.8,.2,1)}
 @keyframes new9{0%{transform:translateX(22px);opacity:0;filter:blur(3px)}55%{opacity:1;filter:none;text-shadow:0 0 14px rgba(200,220,255,1)}100%{transform:none;text-shadow:0 0 0 rgba(200,220,255,0)}}
 #accBig{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--num);font-weight:400;font-size:34px;letter-spacing:.04em;color:#f6f7fb;opacity:0;pointer-events:none;white-space:nowrap;text-shadow:0 0 18px rgba(160,200,255,.8);z-index:2}
