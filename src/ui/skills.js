@@ -81,7 +81,7 @@ function withSkill(id,f){const had=has(id);if(!had)S.skills.push(id);const v=f()
 function paintWm(){document.getElementById('skWm').textContent='生産 ×'+fmtG(wMult());}   // 使わずに持っている歪みの倍率
 function skillCompare(k){if(has(k.id))return '';const rows=[];if(!k.glow&&k.cost>0)rows.push(['持っている歪みの倍率','×'+fmtG(wMult())+' → ×'+fmtG(1+0.01*Math.max(0,S.W-k.cost))]);const P0=prodRate(),P1=withSkill(k.id,prodRate);if(Math.abs(P1-P0)>P0*1e-6)rows.push(['生産',fmt(P0)+' → '+fmt(P1)+' / 秒']);
   const id=k.id;
-  if(id==='p1'||id==='p2'){const n=Math.min(S.stage+1,MAX_STAGE);rows.push(['次の加速',fmt(accelCost(n))+' → '+fmt(withSkill(id,()=>accelCost(n)))]);}
+  if(id==='p1'||id==='p2'){const n=Math.min(S.stage+1,maxStage());rows.push(['次の加速',fmt(accelCost(n))+' → '+fmt(withSkill(id,()=>accelCost(n)))]);}
   if(id==='p3')rows.push(['故郷の時間',fmtY(yearsPerSec())+' → '+fmtY(withSkill(id,yearsPerSec))+' 年/秒']);
   if(id==='pA'){rows.push(['加速後60秒の生産',fmt(P0)+' → '+fmt(P0*5)+' / 秒']);}
   if(id==='e2')rows.push(['蓄電の利子',Math.round(batteryRate()*100)+'% → '+Math.round(withSkill(id,batteryRate)*100)+'% / 年']);

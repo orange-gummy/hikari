@@ -23,15 +23,15 @@ const DAYS=${JSON.stringify(DAYS)},LOOPS=${LOOPS},WEEK=${WEEK},SCHED=${JSON.stri
 function stamp(){return DAYS?(t/86400).toFixed(2):(t/60).toFixed(1);}   // 日数モードは日、ふだんは分
 const LOG=[],RLOG=[];
 const PATH=['p1','e1','c1','p2','e2','c2','p3','e3','c3','pB','pA','eA','eB','cB','cA','p5','e5','c5','pS','eC','cL','pI','eR','cM','pW'];
-function best(){let b=null;const nxt=S.stage<MAX_STAGE?accelCost(S.stage+1):1e300;for(const i of PRODI){if(!devOpen(i)||chalBlocksDevice(i))continue;const c=devCost(i,1);if(c>S.E||c>0.12*nxt)continue;const P0=prodRate();S.dev[i]++;const P1=prodRate();S.dev[i]--;const r=(P1-P0)/c;if(!b||r>b.r)b={i,r};}return b;}
+function best(){let b=null;const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;for(const i of PRODI){if(!devOpen(i)||chalBlocksDevice(i))continue;const c=devCost(i,1);if(c>S.E||c>0.12*nxt)continue;const P0=prodRate();S.dev[i]++;const P1=prodRate();S.dev[i]--;const r=(P1-P0)/c;if(!b||r>b.r)b={i,r};}return b;}
 let lastP=0;
 // 画面を触っている1秒
 function act(){
   tick(1);const P=prodRate();if(S.chal!=='c7'&&(P<2000||t%10<3)){S.E+=tapGain()*2;S.Erun+=tapGain()*2;S.pulse=10;}
   checkStory();chalWatch();if(t%5===0)achCheck();
   let g=true;while(g){g=false;
-    if(S.stage<MAX_STAGE&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
-    const nxt=S.stage<MAX_STAGE?accelCost(S.stage+1):1e300;
+    if(S.stage<maxStage()&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
+    const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;
     for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
     const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
   if(S.voy){if(voyStopReady()&&t-lastP>20){LOG.push([stamp(),'prest',wGain()]);prestige(false);lastP=t;}return;}   // ③では自動の停止とスキル選び
@@ -58,11 +58,17 @@ function spendL(){
 }
 let litDay=null,voyDay=null;const FOUND=[],REDRAW=[];
 // ③：残光と航跡を使い、航跡が今までの合計以上たまるなら航路を引き直す
-function voyManage(){if(!S.voy)return;spendL();
+// ④：宇宙の果てに着いてから FOLD_H 時間たったら宇宙を畳み、法則を安い順に（光の上限と時の遅れを先に）使う
+const FOLD_H=+(process.env.FOLD_H||8),ULOG=[];let endAt=null,lcDay=null;
+function uniManage(){if(!canFold()){endAt=null;return;}if(endAt==null)endAt=t;
+  if(t-endAt>=FOLD_H*(DAYS?3600:60)){const g=fold();ULOG.push('宇宙'+(S.uni+1)+'へ '+(t/86400).toFixed(2)+'日目 +'+g);endAt=null;lastP=t;
+    let b=true;while(b){b=false;const c=LAWS.map(a=>[a.id,lawNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.U).sort((x,y)=>x[1].cost*(x[0]==='ut'?3:x[0]==='ar'?0.6:1)-y[1].cost*(y[0]==='ut'?3:y[0]==='ar'?0.6:1));if(c.length){buyLaw(c[0][0]);b=true;}}
+    if(law('lc')>=10&&!lcDay)lcDay=(t/86400).toFixed(2)+'日目';}}
+function voyManage(){if(!S.voy)return;spendL();uniManage();
   while(FOUND.length<S.found)FOUND.push(DEST[FOUND.length].name+' '+(t/86400).toFixed(2)+'日目');
   const g=tGain();if(g>=Math.max(3,S.tTotal)){redraw();REDRAW.push((t/86400).toFixed(2)+'日目 +'+g);lastP=t;}
   let b=true;while(b){b=false;const c=TRAIL.map(a=>[a.id,trailNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.T).sort((x,y)=>x[1].cost*(x[0]==='vs'?0.5:1)-y[1].cost*(y[0]==='vs'?0.5:1));if(c.length){buyTrail(c[0][0]);b=true;}}}
-function summary(){if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('チャレンジ',CLOG.join(' / ')||'-');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
+function summary(){if(process.env.DBG)console.log('DBG maxE',S.maxE.toExponential(2),'E',S.E.toExponential(2),'stage',S.stage,'vbest',S.vbest.toExponential(2),'years',S.years.toExponential(2));if(ULOG.length||S.uni)console.log('宇宙',ULOG.join('、')||'-','／法則',JSON.stringify(S.law),'残り',S.U,'／光の上限10段',lcDay||'まだ');if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('チャレンジ',CLOG.join(' / ')||'-');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
 
 if(!DAYS){
   for(;;){const t0=t;

@@ -225,4 +225,17 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 .gHz .gPop{animation:gPop 1.1s ease-out}
 @keyframes gPop{0%{r:12}40%{r:30}100%{r:12}}
 .gDet{max-width:420px;margin:0 auto}
+.uniSky{display:block;width:100%;max-width:420px;margin:4px auto 0;font-family:var(--ui)}
+.uTint{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 10px}
+.uTint button{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--ink-dim);font:inherit;font-size:12px;padding:4px 0}
+.uTint button i{width:7px;height:7px;border-radius:50%;display:block}
+.uTint button[aria-pressed="true"]{color:var(--ink-strong)}
 #skipC{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:10;font-size:12px;letter-spacing:.1em;color:var(--ink-dim);border:0.5px solid var(--line);border-radius:14px;padding:6px 14px;background:rgba(4,5,12,.5)}   /* 2回目以降の到着の演出を飛ばす */
+/* 層が5つ（HOME〜UNIVERSE と LOG）になっても1行に収める */
+#tabs #tr2{gap:2px;justify-content:center!important}
+#tabs #tr2 button{padding:6px 5px;letter-spacing:.02em;font-size:9.5px}
+#tabs #tr2 button i{margin-right:4px}
+/* 幅の狭いスマホで、航海の星座が増えても右の列がはみ出さないように */
+#hud{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+#hudL,#hudR{min-width:0}
+#cons{max-width:44vw;height:auto}

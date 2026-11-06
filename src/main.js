@@ -20,7 +20,9 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.letter){toast('故郷からの便り　<b>+'+fmt(FXQ.letter)+'</b>');FXQ.letter=0;}
   if(FXQ.restart){FXQ.restart=0;if(curTab==='drive')renderDrive(true);}
   // ③：航海では緊急停止を自動で（小窓が開いている間は待つ）
-  if(voyStopReady()&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(wGain(),true);}
+  // ④ 引き直しの記憶：航路の引き直しも自動で
+  if(autoRedrawReady()&&!BRK&&!RST&&!climax&&!ACC&&!FOLD&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(0,true);BRK.vr=true;}
+  if(voyStopReady()&&!FOLD&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(wGain(),true);}
   if(FXQ.found){const ks=FXQ.found;FXQ.found=null;SND.play('light');fla=Math.max(fla,0.22);ks.forEach(k=>toast('新しい色　<b style="color:'+rgb(NEW_COLORS[k].rgb,1)+'">'+NEW_COLORS[k].name+'</b>　'+DEVICES[ANCHOR+1+k].name+'が使えるようになった'));if(curTab==='drive')renderDrive(true);}
   if(FXQ.chalDone){const id=FXQ.chalDone;FXQ.chalDone=null;SND.play('light');fla=Math.max(fla,0.22);toast('チャレンジを越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が灯った');renderPanel(true);}
   if(FXQ.redraw){FXQ.redraw=0;if(curTab==='drive')renderDrive(true);}

@@ -16,11 +16,24 @@ function bandCanvas(w,h){if(BAND&&BAND.w===w&&BAND.h===h)return BAND.c;const c=d
   const g=x.createRadialGradient(w*0.62,y0-3,0,w*0.62,y0-3,60);g.addColorStop(0,'rgba(255,236,220,.22)');g.addColorStop(1,'rgba(255,236,220,0)');x.fillStyle=g;x.fillRect(0,0,w,h);
   BAND={c,w,h};return c;}
 function drawBand(){if(!S.voy||LANDED||HOMEA||FR.w<=0)return;const c=bandCanvas(FR.w,FR.h);cx.save();cx.globalAlpha=0.85;cx.drawImage(c,FR.x,FR.y+Math.sin(T*0.002)*2,FR.w,FR.h);cx.restore();}
-function frame(){requestAnimationFrame(frame);if(FREEZE)return;const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();}finally{FR=f0;}}
+function frame(){requestAnimationFrame(frame);if(FREEZE)return;const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawFold();}finally{FR=f0;}}
+/* ④ 宇宙を畳む：星がすべて中心へ流れ込み（4秒）→ 光の点ひとつ（2秒）→ 点がほどけて新しい色合いの空が広がる */
+let FOLD=null;
+function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
+function drawFold(){const f=FOLD;if(!f)return;f.t++;const t=f.t,X=RC.x||CW/2,Y=RC.y||CH/2;let dark=0,pt=0;
+  if(t<=240){CONV=ei(t/240);SPDF=1+4*t/240;stk=Math.max(stk,30);dark=cl((t-170)/70);pt=t/240;}
+  else if(t<380){dark=1;pt=1;if(t===300){fold();CONV=0;SPDF=1;stk=0;BAND=null;applyLoadedVisuals();curTab='uni';uniPast=-1;renderPanel(true);save();}}
+  else if(t<560){const k=(t-380)/180;dark=1-ei(k);pt=1-k;if(t===400)logLine(UNI_LINES[Math.min(S.uni,UNI_LINES.length-1)],-1);}
+  else{FOLD=null;document.getElementById('block').style.display='none';document.getElementById('panel').style.opacity='1';paintGoal();return;}
+  if(dark>0){cx.fillStyle='rgba(4,5,12,'+dark.toFixed(3)+')';cx.fillRect(0,0,CW,CH);}
+  if(pt>0){blob(X,Y,(t<380?16+70*pt:16+260*(1-pt)),[230,235,255],0.5*pt);blob(X,Y,6,[255,255,255],pt);}
+  if(t>=380){const a=Math.sin(Math.PI*cl((t-380)/180));cx.save();cx.font='400 17px "Shippori Mincho B1",serif';cx.textAlign='center';cx.fillStyle='rgba(236,238,242,'+(0.85*a).toFixed(3)+')';cx.fillText('宇宙 '+roman(S.uni+1),X,Y+125*RCS);cx.restore();}}
+/* 新しい宇宙の色合い：窓の中心に、その宇宙の色をうっすら重ねる（宇宙 I の白は重ねない） */
+function drawTint(){if(!S.uTint||LANDED||HOMEA||FR.w<=0)return;const c=UNI_TINT[S.uTint%UNI_TINT.length],X=FR.x+FR.w/2,Y=FR.y+FR.h*0.45,r=Math.max(FR.w,FR.h)*0.75;const g=cx.createRadialGradient(X,Y,0,X,Y,r);g.addColorStop(0,rgb(c.a,0.13));g.addColorStop(0.55,rgb(c.b,0.05));g.addColorStop(1,rgb(c.a,0));cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);}
 function frameInner(){
   if(!STILL)T++;for(let i=0;i<7;i++){A[i]+=(TG[i]-A[i])*(TG[i]?0.03:0.022);if(TG[i])RV[i]=Math.min(1,RV[i]+0.012);POP[i]*=0.93;}BB*=0.993;
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
-  cx.clearRect(0,0,CW,CH);drawBand();
+  cx.clearRect(0,0,CW,CH);drawTint();drawBand();
   if(!LANDED)for(let i=0;i<5;i++){const o=COLORS[i];if(o.nx==null)continue;const a=A[i],c=mix(o.rgb,G,1-a);for(let j=0;j<3;j++){const bx=o.nx*CW+Math.sin(T*0.004+j*2.1+i)*40,by=o.ny*CH+Math.cos(T*0.0033+j*1.7+i)*34;blob(bx,by,o.nr*sc*(0.7+0.2*j),c,0.12*(0.08+0.92*a));}}
   for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null)aurBand(i,o,A[i],RV[i]);}
   // stars
@@ -104,7 +117,7 @@ function drawBrk(){const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B
   if(t>=S2){SPDF=0;STILL=false;frameEl.classList.remove('shakeL');document.getElementById('block').style.display='none';BRK=null;if(b.rs)startRestart(true);else if(b.vr)startRestart();else if(b.auto)startRestart(false,true);else openSkill(true,b.g);}}
 const CH_T=65;
 function drawAcc(){const a=ACC;a.t++;const low=fxLow,lv=a.lvl,n=nines(lv),t=a.t,dur=162,amp=low?0.45:1;
-  if(n>0){const i=n-1,an=-1.5708+(i+0.5)/12*6.283,ax=RC.x+Math.cos(an)*74*RCS,ay=RC.y+Math.sin(an)*74*RCS,c=mix(COLORS[i%6].rgb,G,1-A[i%6]),g=t<CH_T?t/CH_T:Math.max(0,1-(t-CH_T)/70);blob(ax,ay,(16+lv)*(0.5+g),c,0.8*g);SEG[i].setAttribute('stroke-width',(2.2+3*g).toFixed(2));}
+  if(n>0){const i=(n-1)%12,an=-1.5708+(i+0.5)/12*6.283,ax=RC.x+Math.cos(an)*74*RCS,ay=RC.y+Math.sin(an)*74*RCS,c=mix(COLORS[i%6].rgb,G,1-A[i%6]),g=t<CH_T?t/CH_T:Math.max(0,1-(t-CH_T)/70);blob(ax,ay,(16+lv)*(0.5+g),c,0.8*g);SEG[i].setAttribute('stroke-width',(2.2+3*g).toFixed(2));}
   let e=0;
   if(t<CH_T){const c=t/CH_T,f=0.35+0.65*Math.sin(Math.PI*Math.min(1,c*1.1));if(!a.inS)a.inS=[];for(let k=0;k<(low?3:8);k++){const an=Math.random()*6.283,d=Math.hypot(CW,CH)*R(0.5,0.6),ci=(k+t)%6;a.inS.push({x:RC.x+Math.cos(an)*d,y:RC.y+Math.sin(an)*d,an,sp:R(5,11),l:0,s:R(0.7,1.5),c:mix(COLORS[ci].rgb,G,1-A[ci])});}
     for(let k=a.inS.length-1;k>=0;k--){const q=a.inS[k];q.x-=Math.cos(q.an)*q.sp*f;q.y-=Math.sin(q.an)*q.sp*f;q.l=Math.min(1,q.l+0.08);const dd=Math.hypot(q.x-RC.x,q.y-RC.y);if(dd<50){a.inS.splice(k,1);continue;}const al=q.l*Math.min(1,dd/160),tl=q.sp*f*2.2;cx.beginPath();cx.moveTo(q.x,q.y);cx.lineTo(q.x+Math.cos(q.an)*tl,q.y+Math.sin(q.an)*tl);cx.strokeStyle=rgb(q.c,al*0.7);cx.lineWidth=q.s*0.7;cx.stroke();cx.beginPath();cx.arc(q.x,q.y,q.s,0,6.283);cx.fillStyle=rgb(q.c,al);cx.fill();}}
@@ -116,7 +129,7 @@ function drawAcc(){const a=ACC;a.t++;const low=fxLow,lv=a.lvl,n=nines(lv),t=a.t,
   if(t>=CH_T&&e>0.01){const k=e*(low?0.45:1),g=cx.createRadialGradient(RC.x,RC.y,Math.min(CW,CH)*0.1,RC.x,RC.y,Math.max(CW,CH)*0.75);
     const bc=mix([140,185,255],G,1-A[4]),rc2=mix([170,40,30],[90,90,96],1-A[0]);g.addColorStop(0,rgb(bc,0.12*k));g.addColorStop(0.35,'rgba(0,0,0,0)');g.addColorStop(0.72,rgb(rc2,0.16*k));g.addColorStop(1,'rgba(0,0,0,'+(0.7*k)+')');cx.fillStyle=g;cx.fillRect(0,0,CW,CH);}
   ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');
-  if(t>CH_T+dur+6){ZOOM=1;SPDF=1;ROTV=0;stk=0;ROT=Math.round(ROT/5)*5;TKG.setAttribute('transform','rotate('+ROT+' 88 88)');if(n>0)SEG[n-1].setAttribute('stroke-width','2.2');ACC=null;accEndAt=Date.now();}}
+  if(t>CH_T+dur+6){ZOOM=1;SPDF=1;ROTV=0;stk=0;ROT=Math.round(ROT/5)*5;TKG.setAttribute('transform','rotate('+ROT+' 88 88)');if(n>0)SEG[(n-1)%12].setAttribute('stroke-width','2.2');ACC=null;accEndAt=Date.now();}}
 function mkCrack(){const br=[];for(let j=0;j<9;j++){let a=j/9*6.283+R(-0.2,0.2),x=RC.x,y=RC.y;const pts=[[x,y]];for(let k=0;k<26;k++){a+=R(-0.35,0.35);x+=Math.cos(a)*R(8,16);y+=Math.sin(a)*R(8,16);pts.push([x,y]);}br.push(pts);}CRACK={t:0,br};}
 
 function drawHome(){const h=HOMEA;h.t++;const D=380;   // 雲を抜けるまで（約6秒）

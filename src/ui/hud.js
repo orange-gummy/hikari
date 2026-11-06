@@ -21,7 +21,7 @@ const SEG=[];for(let i=0;i<12;i++){const a0=-1.5708+i/12*6.283+0.05;SEG.push(el(
 function nextMemIndex(){if(S.cleared)return -1;if(S.lost<6)return S.lost;if(!S.greyLost)return 6;return -1;}
 function paintColorUI(ag){
   const n=nines(S.stage);
-  for(let i=0;i<12;i++){if(i<n){const ci=i%6;SEG[i].setAttribute('stroke',rgb(mix(COLORS[ci].rgb,G,1-A[ci]),1));}else SEG[i].setAttribute('stroke','rgba(255,255,255,0.12)');}
+  for(let i=0;i<12;i++){if(i<n-12)SEG[i].setAttribute('stroke','rgb(255,250,240)');else if(i<n){const ci=i%6;SEG[i].setAttribute('stroke',rgb(mix(COLORS[ci].rgb,G,1-A[ci]),1));}else SEG[i].setAttribute('stroke','rgba(255,255,255,0.12)');}
   const nm=nextMemIndex();let warn=false;if(nm>=0&&nm<6){warn=S.years/LOSE_YEARS[nm]>0.85;}else if(nm===6)warn=S.stage>=GREY_STAGE-1;
   for(let i=0;i<7;i++){const a=A[i],col=mix(COLORS[i].rgb,[90,92,100],1-a);let op=1;if(warn&&i===nm&&A[i]>0.5)op=0.35+0.65*Math.abs(Math.sin(T*0.12));
     CD[i].setAttribute('fill',rgb(POP[i]>0.3?COLORS[i].rgb:col,1));CD[i].setAttribute('opacity',op.toFixed(2));CD[i].setAttribute('r',(1.4+1.0*Math.max(a,POP[i])+POP[i]*2.2).toFixed(2));CHL[i].setAttribute('fill',rgb(COLORS[i].rgb,(0.18*a*op+POP[i]*0.3).toFixed(3)));CHL[i].setAttribute('r',(6+POP[i]*7).toFixed(2));}
@@ -68,12 +68,13 @@ function emblem(svg,kind){const parts=[];const add=(t,a)=>parts.push(el(t,Object
 function goal(){const s=S.stage,nx=s+1;
   if(S.cleared)return[canVoyage()?'GALAXYで、さらに遠くへ':'STARで、もう一度船を出す',canVoyage()?'voy':'restart',false];
   if(S.chal&&CHAL[S.chal])return['挑戦中「'+CHAL[S.chal].name+'」　'+CHAL[S.chal].gtext,null,false];
-  if(S.voy&&S.stage>=MAX_STAGE){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
+  if(canFold())return['UNIVERSEで宇宙を畳むと 法則 +'+uGain(),'uni',false];
+  if(S.voy&&S.stage>=maxStage()){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];
   if(S.dev[0]===0)return['DRIVEで太陽帆を買う','drive',false];
   if(S.maxStage===0)return['BOOSTで秒速10kmまで加速する'+(S.E<accelCost(1)?'（あと'+fmt(accelCost(1)-S.E)+'）':''),S.E>=accelCost(1)?'boost':null,false];
   if(S.maxStage>=BRAKE_STAGE&&S.prestiges===0&&S.restarts===0&&wGain()>=5)return['STOPで緊急停止して、歪みを得る','reset',false];
-  if(nx<=MAX_STAGE){const c=accelCost(nx),rest=S.E<c?'（あと'+fmt(c-S.E)+'）':'';return[(nx>DILATION_STAGE?'時間の進み /'+fmtG(stageGamma(nx))+' まで加速する':speedText(nx)+'まで加速する')+rest,S.E>=c&&!(has('aA')&&S.autoAcc)?'boost':null,false];}   // 自動加速中は BOOST を光らせない（たまった瞬間に加速されて一瞬だけ光るため）
+  if(nx<=maxStage()){const c=accelCost(nx),rest=S.E<c?'（あと'+fmt(c-S.E)+'）':'';return[(nx>DILATION_STAGE?'時間の進み /'+fmtG(stageGamma(nx))+' まで加速する':speedText(nx)+'まで加速する')+rest,S.E>=c&&!(has('aA')&&S.autoAcc)?'boost':null,false];}   // 自動加速中は BOOST を光らせない（たまった瞬間に加速されて一瞬だけ光るため）
   return['故郷まで あと'+Math.ceil(Math.max(0,GOAL_LY-S.dist)).toLocaleString('ja-JP')+'光年',null,false];}
 let lastGoal='';
 // 光らせるタブ：一度光ったら3秒は消さない（自動購入でエネルギーが加速の値段をまたぐたびに、点いたり消えたりしていた）

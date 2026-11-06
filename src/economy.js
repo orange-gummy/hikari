@@ -5,10 +5,11 @@
 function nines(s){return s<11?0:s-10;}
 function stageBeta(s){return s<=11?SPEEDS[s]:1-Math.pow(10,-nines(s));}
 function stageGamma(s){if(s<11){const b=SPEEDS[s];return 1/Math.sqrt(1-b*b);}const e=Math.pow(10,-nines(s));return 1/Math.sqrt(e*(2-e));}
-function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)return String(Math.round(SPEEDS[s]*100));return s===12?'99':'99.'+'9'.repeat(s-12);}
+function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)return String(Math.round(SPEEDS[s]*100));return s===12?'99':s<=22?'99.'+'9'.repeat(s-12):'99.999…（9が'+nines(s)+'個）';}
 function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
+function maxStage(){return MAX_STAGE+law('lc');}   // ④ 光の上限で上がる
 function stageCost(s){return s<=12?STAGE_COST[s]:STAGE_COST[12]*Math.pow(stageMultAt(glow('rm')),s-12);}
 function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
@@ -40,7 +41,7 @@ function fissionBonus(){return 1+Math.min(1,0.005*S.dev[1]);}
 function devBase(i){if(i===ANCHOR)return 0;return DEVICES[i].prod*S.dev[i]*milMult(S.dev[i])*upgA(i)*synMult(i)*regionMult(i);}
 function devRateRaw(i){return devBase(i)*traitMult(i);}
 function wMult(){return 1+0.01*S.W;}   // 使わずに持っている歪み1つにつき生産+1%
-function globalMult(){return stageGamma(S.stage)*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+0.1*S.stage:1)*(has('eL')?1+0.05*S.lTotal:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
+function globalMult(){return Math.pow(stageGamma(S.stage),1+0.1*law('td'))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+0.1*S.stage:1)*(has('eL')?1+0.05*S.lTotal:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
 function achMult(){return 1+ACH_BONUS*S.ach.length;}
 function resonant(){const c={};for(const i of PRODI){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
@@ -68,9 +69,10 @@ function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 function tick(dt,offMul){
   const P=prodRate();const gain=P*(offMul||1)*dt;
   S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;
-  autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<MAX_STAGE&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
+  autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
   for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
   const dy=yearsPerSec()*dt;S.years+=dy;
+  if(S.voy)S.uTime+=dt*(offMul||1);
   if(S.voy)voyAdvance(dy*Math.max(stageBeta(S.stage),0.02)*voyMult());
   else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy/(S.chal==='cG'?10:1)*Math.max(stageBeta(S.stage),0.02));}
   if(S.battery>0)S.battery=Math.min(batteryCap(),S.battery*Math.pow(1+batteryRate(),dy));
@@ -90,7 +92,7 @@ function buyDevice(i,mode){
 }
 function buyUpgrade(id){const u=UPGRADES.find(x=>x.id===id);if(!u||upgHas(id)||S.dev[u.dev]<u.need||S.E<u.cost)return;S.E-=u.cost;S.upg.push(id);FXQ.milestone=true;}
 function accelerate(){
-  if(S.stage>=MAX_STAGE)return;
+  if(S.stage>=maxStage())return;
   const c=accelCost(S.stage+1);if(S.E<c)return;
   const g0=stageGamma(S.stage);S.E-=c;if(has('pW')){const w=prodRate()*60;S.E+=w;S.Erun+=w;}S.coast=0;S.stage++;if(S.stage>S.maxStage)S.maxStage=S.stage;
   if(has('pA'))S.burst=60;
@@ -133,11 +135,21 @@ function canVoyage(){return !S.voy&&S.cleared&&S.lit.length>=SKILLS.filter(k=>k.
 function voyDoublings(d){return d>=1e4?Math.floor(Math.log2(d/1e4))+1:0;}   // 1万光年、2万、4万…と、距離が2倍になるたびに1回
 function lPer(){return Math.floor(RESTART_BASE*(1+0.1*S.restarts))*Math.pow(2,tg('ls'));}   // 距離が2倍になるたびに入る残光
 function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdist=0;S.vL=0;story('voy',VOY_LINES.start);FXQ.voyage=true;return true;}
-function voyAdvance(d){S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;
+function voyAdvance(d){S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
   const n=voyDoublings(S.vdist);if(n>S.vL){const g=(n-S.vL)*lPer();S.L+=g;S.lTotal+=g;S.vL=n;}
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)):0;}
 function redraw(){const g=tGain();if(g<1)return 0;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
+/* ④ 新しい宇宙（法則） */
+function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=DEST[DEST.length-1].ly;}   // この宇宙で宇宙の果てに着いたら
+function uGain(){if(!canFold())return 0;return 2+Math.floor(Math.log2(Math.max(1,S.ubest/DEST[DEST.length-1].ly)));}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
+function fold(){const g=uGain();if(g<1)return 0;
+  S.uHist.push({far:S.ubest,gain:g,time:Math.round(S.uTime),law:Object.assign({},S.law),tint:S.uTint});
+  S.U+=g;S.uTotal+=g;S.uni++;resetRun();S.vdist=0;S.vL=0;S.T=0;S.tTotal=0;S.tg={};S.ubest=0;S.uTime=0;
+  S.uTint=S.uni%UNI_TINT.length;FXQ.fold=g;return g;}
+function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
+function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}
+function autoRedrawReady(){return law('ar')>0&&S.voy&&S.stage>=maxStage()-1&&tGain()>=Math.max(3,S.tTotal);}
 function trailNext(id){const a=TRAIL.find(x=>x.id===id),l=tg(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyTrail(id){const n=trailNext(id);if(!n||S.T<n.cost)return false;S.T-=n.cost;S.tg[id]=n.l+1;return true;}
 // ③では緊急停止とスキル選びが自動になる
