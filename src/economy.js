@@ -5,7 +5,7 @@
 function nines(s){return s<11?0:s-10;}
 function stageBeta(s){return s<=11?SPEEDS[s]:1-Math.pow(10,-nines(s));}
 function stageGamma(s){if(s<11){const b=SPEEDS[s];return 1/Math.sqrt(1-b*b);}const e=Math.pow(10,-nines(s));return 1/Math.sqrt(e*(2-e));}
-function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)return String(Math.round(SPEEDS[s]*100));return s===12?'99':s<=22?'99.'+'9'.repeat(s-12):'99.999…（9が'+nines(s)+'個）';}
+function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)return String(Math.round(SPEEDS[s]*100));return s===12?'99':s<=22?'99.'+'9'.repeat(s-12):'99.999…';}
 function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}

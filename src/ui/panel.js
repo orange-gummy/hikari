@@ -5,10 +5,10 @@
 /* タブ */
 let curTab='drive',buyMode='1';
 /* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
-const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','skill','reset']},{id:'star',name:'STAR',tabs:['restart','glow','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']}];
-const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'BATTERY',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',log:'LOG'};
-const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni'};let curLayer='home',tabs=[],tabKey='';
-function layerOpen(id){return id==='home'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()));}
+const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','skill','reset']},{id:'star',name:'STAR',tabs:['restart','glow','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']}];
+const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'BATTERY',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG'};
+const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light'};let curLayer='home',tabs=[],tabKey='';
+function layerOpen(id){return id==='home'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(law('lc')>=10||S.lightDone));}
 function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}
 function tabClick(t){if(t==='skill'){openSkill(false);return;}curTab=t;renderPanel(true);}
 function buildTabs(){const open=LAYERS.filter(L=>layerOpen(L.id)),multi=open.length>1||!tabHidden('reset');   // 緊急停止が開いたら2段（下に HOME と LOG）
@@ -16,7 +16,7 @@ function buildTabs(){const open=LAYERS.filter(L=>layerOpen(L.id)),multi=open.len
   const key=sub.join()+'|'+(multi?open.map(L=>L.id).join():'');if(key===tabKey)return;tabKey=key;
   const mk=(t,cls,label)=>'<button data-t="'+t+'"'+(cls?' class="'+cls+'"':'')+' role="tab">'+label+'</button>';
   document.getElementById('tr1').innerHTML=sub.map(t=>mk(t,'',TAB_NAME[t])).join('');
-  const r2=document.getElementById('tr2');r2.innerHTML=multi?open.map(L=>'<button data-l="'+L.id+'" role="tab"><i></i>'+L.name+'</button>').join('')+mk('log','','LOG'):'';r2.style.display=multi?'':'none';
+  const r2=document.getElementById('tr2');r2.innerHTML=multi?open.map(L=>'<button data-l="'+L.id+'" role="tab"><i></i>'+L.name+'</button>').join('')+mk('log','','LOG'):'';r2.style.display=multi?'':'none';r2.classList.toggle('many',open.length>=5);
   tabs=[...document.querySelectorAll('#tabs button')];
   tabs.forEach(b=>b.addEventListener('click',()=>{SND.play('tab');if(b.dataset.l){curTab=lastTab[b.dataset.l];curLayer=b.dataset.l;renderPanel(true);return;}tabClick(b.dataset.t);}));}
 let skillOpen=false,lastWShown=-1;
@@ -36,7 +36,7 @@ function renderPanel(force){
   if(curTab!=='log'&&tabHidden(curTab))curTab='drive';
   if(curTab!=='log'){curLayer=layerOf(curTab)||'home';lastTab[curLayer]=curTab;}
   paintTabs();
-  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='uni')renderUniverse();else renderLog();
+  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='uni')renderUniverse();else if(curTab==='light')renderLight();else renderLog();
 }
 function devVisible(i){return devOpen(i);}
 function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}

@@ -44,7 +44,7 @@ function paintRoute(){buildRoute();if(S.voy){paintVoyRoute();return;}const p=S.c
 function nextDest(){return S.found<DEST.length?DEST[S.found]:null;}
 function voyRegion(){const n=nextDest(),d=S.vdist;if(d<1e5)return '故郷の銀河';if(!n)return '宇宙の果ての先';if(d<n.ly*0.6)return S.found===0?'銀河間の空隙':S.found===1?'銀河群の縁':S.found===2?'泡と糸のあいだ':'はじまりの光の手前';return n.name+'の近く';}
 function lyText(n){if(n>=1e8)return fmt(n);if(n>=1e4)return Math.round(n/1e4).toLocaleString('ja-JP')+'万';return Math.ceil(n).toLocaleString('ja-JP');}
-function paintVoyRoute(){const p=routePos(S.vdist),at='calc(6px + (100% - 20px)*'+p.toFixed(4)+')';document.getElementById('rShip').style.left=at;document.getElementById('rDone').style.width='calc((100% - 20px)*'+p.toFixed(4)+')';
+function paintVoyRoute(){const p=Math.min(1,routePos(S.vdist)),at='calc(6px + (100% - 20px)*'+p.toFixed(4)+')';document.getElementById('rShip').style.left=at;document.getElementById('rDone').style.width='calc((100% - 20px)*'+p.toFixed(4)+')';
   document.getElementById('rReg').textContent=voyRegion();const n=nextDest();document.getElementById('dsTo').textContent=n?n.name+'まで':'いちばん遠く';document.getElementById('ds').textContent=n?lyText(Math.max(0,n.ly-S.vdist)):lyText(S.vbest);
   document.querySelectorAll('#rNames span').forEach(s=>{const k=+s.dataset.k;s.style.display=k===S.found?'':'none';});}   // 名前は次の目的地だけ（詰まって読めないので）
 /* 紋章 */
@@ -68,6 +68,7 @@ function emblem(svg,kind){const parts=[];const add=(t,a)=>parts.push(el(t,Object
 function goal(){const s=S.stage,nx=s+1;
   if(S.cleared)return[canVoyage()?'GALAXYで、さらに遠くへ':'STARで、もう一度船を出す',canVoyage()?'voy':'restart',false];
   if(S.chal&&CHAL[S.chal])return['挑戦中「'+CHAL[S.chal].name+'」　'+CHAL[S.chal].gtext,null,false];
+  if(!S.lightDone&&canLight())return['LIGHTで、光になる','light',false];
   if(canFold())return['UNIVERSEで宇宙を畳むと 法則 +'+uGain(),'uni',false];
   if(S.voy&&S.stage>=maxStage()){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];

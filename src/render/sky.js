@@ -16,7 +16,7 @@ function bandCanvas(w,h){if(BAND&&BAND.w===w&&BAND.h===h)return BAND.c;const c=d
   const g=x.createRadialGradient(w*0.62,y0-3,0,w*0.62,y0-3,60);g.addColorStop(0,'rgba(255,236,220,.22)');g.addColorStop(1,'rgba(255,236,220,0)');x.fillStyle=g;x.fillRect(0,0,w,h);
   BAND={c,w,h};return c;}
 function drawBand(){if(!S.voy||LANDED||HOMEA||FR.w<=0)return;const c=bandCanvas(FR.w,FR.h);cx.save();cx.globalAlpha=0.85;cx.drawImage(c,FR.x,FR.y+Math.sin(T*0.002)*2,FR.w,FR.h);cx.restore();}
-function frame(){requestAnimationFrame(frame);if(FREEZE)return;const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawFold();}finally{FR=f0;}}
+function frame(){requestAnimationFrame(frame);if(FREEZE)return;const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
 /* ④ 宇宙を畳む：星がすべて中心へ流れ込み（4秒）→ 光の点ひとつ（2秒）→ 点がほどけて新しい色合いの空が広がる */
 let FOLD=null;
 function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
