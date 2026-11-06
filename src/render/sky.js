@@ -16,7 +16,8 @@ function bandCanvas(w,h){if(BAND&&BAND.w===w&&BAND.h===h)return BAND.c;const c=d
   const g=x.createRadialGradient(w*0.62,y0-3,0,w*0.62,y0-3,60);g.addColorStop(0,'rgba(255,236,220,.22)');g.addColorStop(1,'rgba(255,236,220,0)');x.fillStyle=g;x.fillRect(0,0,w,h);
   BAND={c,w,h};return c;}
 function drawBand(){if(!S.voy||LANDED||HOMEA||FR.w<=0)return;const c=bandCanvas(FR.w,FR.h);cx.save();cx.globalAlpha=0.85;cx.drawImage(c,FR.x,FR.y+Math.sin(T*0.002)*2,FR.w,FR.h);cx.restore();}
-function frame(){requestAnimationFrame(frame);if(FREEZE)return;const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
+let FRK=1,FRT=0;   // 1フレーム（60fps）を1とした経過時間。流れ星は画面の書き換えの速さによらず、実際の時間で動かす
+function frame(){requestAnimationFrame(frame);if(FREEZE)return;{const n=performance.now();FRK=FRT?Math.max(0.2,Math.min(3,(n-FRT)/16.667)):1;FRT=n;}const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
 /* ④ 宇宙を畳む：星がすべて中心へ流れ込み（4秒）→ 光の点ひとつ（2秒）→ 点がほどけて新しい色合いの空が広がる */
 let FOLD=null;
 function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
@@ -83,8 +84,8 @@ function frameInner(){
 let GA=0;
 function drawCrack(){const c=CRACK;c.t++;const p=cl(c.t/90);cx.save();cx.strokeStyle='rgba(240,244,255,'+(0.9)+')';cx.lineWidth=1;cx.shadowColor='rgba(220,230,255,.8)';cx.shadowBlur=6;
   c.br.forEach(b=>{const n=Math.floor(b.length*p);if(n<2)return;cx.beginPath();cx.moveTo(b[0][0],b[0][1]);for(let k=1;k<n;k++)cx.lineTo(b[k][0],b[k][1]);cx.stroke();});cx.restore();if(c.t>110)CRACK=null;}
-function drawMeteor(){if(LANDED||HOMEA||SHOWER){MET=null;return;}if(!MET){const rate=(S.flags.bat?1/(60*20):0)*(has('e2')?1.5:1)+(has('cS')?1/(60*20):0);if(rate>0&&!BRK&&!RST&&!STILL&&FR.w>0&&Math.random()<rate){const L=Math.random()<0.5,sx=L?FR.x-20:FR.x+FR.w+20,sy=FR.y+R(10,FR.h*0.45),tx=L?FR.x+FR.w+40:FR.x-40,ty=sy+R(FR.h*0.35,FR.h*0.7),d=R(85,110);MET={x:sx,y:sy,vx:(tx-sx)/d,vy:(ty-sy)/d,t:0,d};}return;}
-  const m=MET;m.t++;m.x+=m.vx;m.y+=m.vy;if(m.t>m.d){MET=null;return;}const tl=Math.hypot(m.vx,m.vy)*14,ux=m.vx/Math.hypot(m.vx,m.vy),uy=m.vy/Math.hypot(m.vx,m.vy),c=mix([255,236,200],G,1-A[3]*0.6);
+function drawMeteor(){if(LANDED||HOMEA||SHOWER){MET=null;return;}if(!MET){const rate=(S.flags.bat?1/(60*20):0)*(has('e2')?1.5:1)+(has('cS')?1/(60*20):0);if(rate>0&&!BRK&&!RST&&!STILL&&FR.w>0&&Math.random()<rate*FRK){const L=Math.random()<0.5,sx=L?FR.x-20:FR.x+FR.w+20,sy=FR.y+R(10,FR.h*0.45),tx=L?FR.x+FR.w+40:FR.x-40,ty=sy+R(FR.h*0.35,FR.h*0.7),d=R(150,190);MET={x:sx,y:sy,vx:(tx-sx)/d,vy:(ty-sy)/d,t:0,d};}return;}
+  const m=MET;m.t+=FRK;m.x+=m.vx*FRK;m.y+=m.vy*FRK;if(m.t>m.d){MET=null;return;}const tl=Math.hypot(m.vx,m.vy)*14,ux=m.vx/Math.hypot(m.vx,m.vy),uy=m.vy/Math.hypot(m.vx,m.vy),c=mix([255,236,200],G,1-A[3]*0.6);
   const g=cx.createLinearGradient(m.x,m.y,m.x-ux*tl,m.y-uy*tl);g.addColorStop(0,rgb(c,0.95));g.addColorStop(1,rgb(c,0));cx.strokeStyle=g;cx.lineWidth=2;cx.beginPath();cx.moveTo(m.x,m.y);cx.lineTo(m.x-ux*tl,m.y-uy*tl);cx.stroke();blob(m.x,m.y,18,c,0.55);cx.beginPath();cx.arc(m.x,m.y,2.2,0,6.283);cx.fillStyle='#fffaf0';cx.fill();}
 function catchMeteor(){const m=MET;MET=null;const g=prodRate()*(has('cS')?300:60);S.E+=g;S.Erun+=g;let s='流れ星 +'+fmt(g);if(S.flags.bat){vesAdd(1);S.deposited=true;s='器 +1　'+s;if(curTab==='battery')renderPanel(true);}SND.play('catch',4);POPS.push({x:m.x,y:m.y-14,t:0,s});for(let k=0;k<50;k++){const a=Math.random()*6.283,v=R(0.8,4);P.push({x:m.x,y:m.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:k%3?[255,236,200]:mix(COLORS[k%6].rgb,G,1-A[k%6]),r:R(0.8,2.2),dr:0.016});}}
 function startRestart(rs,quiet){RST={t:0,rs:!!rs,quiet:!!quiet};if(!quiet)SND.play('resail');if(!quiet){curTab='drive';document.getElementById('app').classList.add('rstDim');}renderPanel(true);document.getElementById('block').style.display='block';}   // quiet＝航海中の自動の停止：見ているタブはそのまま、画面も暗くしない

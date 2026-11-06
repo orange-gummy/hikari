@@ -10,7 +10,7 @@ function startShower(){if(SHOWER||!canShower()||BRK||RST||climax||FOLD||LIGHTFX)
   S.vessel=0;S.released=true;SND.play('release');subtitle(v.n+'が来る。');save();return true;}
 function shBase(){return prodRate()*3;}                               // 横切るだけの流れ星1つ
 function shCatchGain(k){const cap=has('eB')?5:3,cm=Math.min(cap,1+0.05*SHOWER.combo),sm=Math.min(2,1+0.15*(k-1));return prodRate()*30*cm*sm*(has('eB')?2:1);}
-function shSpawn(){const s=SHOWER,sc=Math.max(FR.w,FR.h)/600,u=Math.random(),sx=FR.x+FR.w*(0.15+u*1.0),sy=FR.y-20-Math.random()*FR.h*0.25,sp=(5+Math.random()*3.5)*sc,a=Math.PI*(0.66+Math.random()*0.08);
+function shSpawn(){const s=SHOWER,sc=Math.min(1.15,Math.max(0.8,Math.min(FR.w,FR.h)/420)),u=Math.random(),sx=FR.x+FR.w*(0.15+u*1.0),sy=FR.y-20-Math.random()*FR.h*0.25,sp=(3.2+Math.random()*2.6)*sc,a=Math.PI*(0.66+Math.random()*0.08);
   const cols=[[255,240,220],[255,240,220],[255,240,220]].concat(COLORS.slice(0,6).map((c,i)=>mix(c.rgb,G,1-A[i])));
   s.ms.push({x:sx,y:sy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,c:cols[Math.floor(Math.random()*cols.length)],dead:false});s.spawned++;}
 // 点（x,y）と線分（ax,ay)-(bx,by）の距離
@@ -21,16 +21,16 @@ function shTry(ax,ay,bx,by,rad){const s=SHOWER;if(!s)return;let got=0;
     const g=shCatchGain(s.stroke?s.stroke.k:1);S.E+=g;S.Erun+=g;s.gain+=g;SND.play('catch',s.combo);
     POPS.push({x:m.x,y:m.y-14,t:0,s:'+'+fmt(g)});for(let k=0;k<22;k++){const a=Math.random()*6.283,v=R(0.8,3.4);P.push({x:m.x,y:m.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:m.c,r:R(0.8,2),dr:0.02});}}}
   return got;}
-function drawShower(){const s=SHOWER;if(!s)return;s.t++;
-  if(s.t<=s.dur){s.acc+=s.total/s.dur;while(s.acc>=1&&s.spawned<s.total){s.acc--;shSpawn();}}
+function drawShower(){const s=SHOWER;if(!s)return;const k=FRK;s.t+=k;
+  if(s.t<=s.dur){s.acc+=s.total/s.dur*k;while(s.acc>=1&&s.spawned<s.total){s.acc--;shSpawn();}}
   // 流れ星
-  for(const m of s.ms){if(m.dead)continue;m.x+=m.vx;m.y+=m.vy;
+  for(const m of s.ms){if(m.dead)continue;m.x+=m.vx*k;m.y+=m.vy*k;
     if(m.x<FR.x-60||m.y>FR.y+FR.h+60){m.dead=true;const g=shBase();S.E+=g;S.Erun+=g;s.gain+=g;continue;}
     const sp=Math.hypot(m.vx,m.vy),tl=sp*9,ux=m.vx/sp,uy=m.vy/sp,gr=cx.createLinearGradient(m.x,m.y,m.x-ux*tl,m.y-uy*tl);gr.addColorStop(0,rgb(m.c,0.95));gr.addColorStop(1,rgb(m.c,0));
     cx.strokeStyle=gr;cx.lineWidth=1.4;cx.beginPath();cx.moveTo(m.x,m.y);cx.lineTo(m.x-ux*tl,m.y-uy*tl);cx.stroke();blob(m.x,m.y,9,m.c,0.45);cx.beginPath();cx.arc(m.x,m.y,1.6,0,6.283);cx.fillStyle='#fffaf0';cx.fill();}
-  if(s.t%30===0)s.ms=s.ms.filter(m=>!m.dead);
+  if(s.ms.length>60&&s.ms.filter(m=>m.dead).length>30)s.ms=s.ms.filter(m=>!m.dead);
   // なぞった光の跡
-  for(let i=s.trail.length-1;i>=0;i--){const q=s.trail[i];q.l-=0.04;if(q.l<=0){s.trail.splice(i,1);continue;}cx.strokeStyle='rgba(255,226,190,'+(0.6*q.l).toFixed(3)+')';cx.lineWidth=1.6*q.l+0.4;cx.lineCap='round';cx.beginPath();cx.moveTo(q.ax,q.ay);cx.lineTo(q.bx,q.by);cx.stroke();}
+  for(let i=s.trail.length-1;i>=0;i--){const q=s.trail[i];q.l-=0.04*k;if(q.l<=0){s.trail.splice(i,1);continue;}cx.strokeStyle='rgba(255,226,190,'+(0.6*q.l).toFixed(3)+')';cx.lineWidth=1.6*q.l+0.4;cx.lineCap='round';cx.beginPath();cx.moveTo(q.ax,q.ay);cx.lineTo(q.bx,q.by);cx.stroke();}
   // 連続の数と残り時間
   if(s.t-s.last>90)s.combo=0;
   const X=FR.x+FR.w/2,Y=FR.y+FR.h*0.86,left=Math.max(0,Math.ceil((s.dur-s.t)/60));cx.save();cx.textAlign='center';
