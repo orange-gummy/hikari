@@ -247,3 +247,5 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 /* SETTING タブでは、設定の中身を枠なしでパネルに出す */
 #pset .mbox{background:none;border:0;padding:0;width:auto;box-shadow:none}
 #pset .mbox>h2,#pset #sClose{display:none}
+/* 星図のスキルを押したときに出るフォーカスの枠（PCブラウザで白い◇に見える）を出さない */
+.node:focus,.node:focus-visible{outline:none}

@@ -90,7 +90,7 @@ function catchMeteor(){const m=MET;MET=null;const g=prodRate()*300;S.E+=g;S.Erun
 function startRestart(rs,quiet){RST={t:0,rs:!!rs,quiet:!!quiet};if(!quiet)SND.play('resail');if(!quiet){curTab='drive';document.getElementById('app').classList.add('rstDim');}renderPanel(true);document.getElementById('block').style.display='block';}   // quiet＝航海中の自動の停止：見ているタブはそのまま、画面も暗くしない
 function drawRst(){const r=RST;r.t++;const t=r.t;
   if(t<30){SPDF=0;}
-  if(t>=30&&t<90){const p=(t-30)/60,pulse=Math.pow(Math.max(0,Math.sin(p*Math.PI*2)),2),warm=mix([255,236,200],G,1-A[0]*0.5);blob(RC.x,RC.y,30+60*pulse,warm,0.55*pulse+0.08);blob(RC.x,RC.y,8+6*pulse,[255,250,240],0.9*(0.3+0.7*pulse));ROTV=2*p;}
+  if(t>=30&&t<90){ROTV=2*(t-30)/60;}   /* 中心が白く光る演出はなくした（2026-11-06） */
   if(t===60){const ln=r.rs&&RESTART_LINES[S.restarts];if(ln)story('rs'+S.restarts,ln);else subtitle('もう一度、帆を張る。');}
   if(t===80&&r.rs){for(let i=0;i<7;i++)TG[i]=memTarget(i);paintGoal();}
   if(t===80){['hud','route','panel'].forEach((id,i)=>{document.getElementById(id).style.transitionDelay=(i*0.25)+'s';});document.getElementById('app').classList.remove('rstDim');setTimeout(()=>{['hud','route','panel'].forEach(id=>document.getElementById(id).style.transitionDelay='');},1500);}
