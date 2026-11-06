@@ -7,7 +7,7 @@ function applyLoadedVisuals(){for(let i=0;i<7;i++){const v=memTarget(i);A[i]=v;T
 function prologue(){story('pro1',LINES.pro1);setTimeout(()=>story('pro2',LINES.pro2),4400);setTimeout(()=>story('start',LINES.start),8800);}
 let lastT=performance.now(),acc=0,secAcc=0,saveAcc=0,lastStage=-1,paused=false,panelHold=false;
 pbody.addEventListener('pointerdown',()=>{panelHold=true;});addEventListener('pointerup',()=>{setTimeout(()=>{panelHold=false;},60);});addEventListener('pointercancel',()=>{panelHold=false;});
-function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);lastT=now;
+function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);lastT=now;if(!document.hidden)S.st.play+=dt;
   if(paused)return;
   if(!climax){const steps=timeMult>=100?10:1;for(let k=0;k<steps;k++)tick(dt*timeMult/steps);checkStory();}
   if(FXQ.accel){const r=FXQ.accel;FXQ.accel=false;SND.play('accel',S.stage);for(const sg of SEG)sg.setAttribute('stroke-width','2.2');if(ACC&&ACC.t>=CH_T){ACC.t=CH_T-1;ACC.lvl=S.stage;HVR={from:S.stage-1,to:S.stage,t0:Date.now()};}else if(ACC){ACC.lvl=S.stage;HVR={from:S.stage-1,to:S.stage,t0:Date.now()+Math.max(0,(CH_T-ACC.t))*16};}else{ACC={t:0,lvl:S.stage};HVR={from:S.stage-1,to:S.stage,t0:Date.now()+1080};}const v=document.getElementById('hV'),dl=Math.max(0,(HVR?HVR.t0:Date.now())-Date.now());v.style.transition='text-shadow .25s, opacity .25s';setTimeout(()=>{v.style.textShadow='0 0 12px rgba(235,240,255,.85)';setTimeout(()=>{v.style.transition='text-shadow 1.2s';v.style.textShadow='';},450);},dl);if(r>1.05)hudPop('故郷の時間 ×'+fmtG(r));}
@@ -32,7 +32,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.region){FXQ.region=false;fla=Math.max(fla,0.12);if(curTab==='drive')renderDrive(true);}
   if(S.stage!==lastStage){lastStage=S.stage;paintSpeed();if(curTab==='drive')renderDrive(false);}
   paintHUD();rollHV();acc+=dt;if(acc>0.25){acc=0;paintGoal();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();else if(!panelHold&&(curTab==='glow'||curTab==='restart'))renderGlow();else if(!panelHold&&curTab==='stars')renderUnlock();else if(!panelHold&&(curTab==='voy'||curTab==='wake'))renderVoy();}
-  secAcc+=dt;if(secAcc>1){secAcc=0;checkAch();renderPanelTabsOnly();if(skillOpen&&S.W!==lastWShown)renderSkill();}
+  secAcc+=dt;if(secAcc>1){secAcc=0;checkAch();renderPanelTabsOnly();if(curTab==='stats')renderStats();if(skillOpen&&S.W!==lastWShown)renderSkill();}
   saveAcc+=dt;if(saveAcc>10){saveAcc=0;save();}
 }
 let HVR=null;
@@ -44,7 +44,7 @@ function rollHV(){if(!HVR)return;const h=document.getElementById('hV'),el2=Date.
   else{const v0=stageBeta(from)*100,v1=stageBeta(to)*100,v=v0+(v1-v0)*q;h.textContent=(v<1?v.toFixed(2):v<10?v.toFixed(1):Math.floor(v).toString())+'% c';}
   h.style.fontSize=sizeFor(h.textContent);if(p>=1){paintSpeed();HVR=null;}}
 function renderPanelTabsOnly(){paintTabs();}
-function offline(){const el2=(Date.now()-(S.last||Date.now()))/1000;if(el2<30||S.cleared)return;const t=Math.min(el2,offlineCap());const e0=S.Erun,y0=S.years;const steps=200,mul=has('cB')?2:1;for(let k=0;k<steps;k++)tick(t/steps,mul);
+function offline(){const el2=(Date.now()-(S.last||Date.now()))/1000;if(el2<30||S.cleared)return;S.st.idle+=Math.min(el2,offlineCap());const t=Math.min(el2,offlineCap());const e0=S.Erun,y0=S.years;const steps=200,mul=has('cB')?2:1;for(let k=0;k<steps;k++)tick(t/steps,mul);
   if(el2>=600)S.idleBack=true;checkStory();
   const h=Math.floor(t/3600),m=Math.floor(t%3600/60);document.getElementById('wBody').innerHTML='<div class="row"><span class="note" style="margin:0">船内で過ぎた時間</span><span class="num">'+(h?h+'時間':'')+m+'分</span></div><div class="row"><span class="note" style="margin:0">故郷で過ぎた年月</span><span class="num">'+fmtY(S.years-y0)+'年</span></div><div class="row"><span class="note" style="margin:0">集めたエネルギー</span><span class="num">'+fmt(Math.max(0,S.Erun-e0))+'</span></div>'+(el2>t?'<div class="note">放置できる上限（'+(offlineCap()/3600)+'時間）までの分を受け取る。</div>':'');
   const m2=document.getElementById('mWelcome');m2.classList.add('on');document.getElementById('wOk').onclick=()=>{m2.classList.remove('on');logLine(IDLE_LINES[Math.floor(Math.random()*IDLE_LINES.length)],-1);};}

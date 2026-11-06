@@ -108,7 +108,7 @@ function prestige(respec){
   const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
   const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage/2):0,keep=has('eM')?0.5:0;
   if(respec){S.W+=skillSpent();S.skills=[];}
-  S.W+=g;S.wTotal+=g;S.prestiges++;S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
+  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   story('prest1',LINES.prest1);FXQ.prestige=true;voyLearn();
 }
 /* 再出発（第二層） */
@@ -127,7 +127,7 @@ function resetRun(){   // 再出発・航海の開始・航路の引き直しで
 function canChallenge(){return !S.voy&&(S.cleared||S.restarts>0);}
 function startChallenge(id){if(!canChallenge()||!CHAL[id]||S.lit.includes(id))return false;resetRun();S.chal=id;if(id==='c7')S.dev[0]=1;FXQ.chal=id;return true;}
 function quitChallenge(){S.chal=null;}
-function chalCheck(){if(!S.chal)return;const id=S.chal,g=CHAL[id].goal;if((g.stage&&S.maxStage>=g.stage)||(g.home&&S.dist>=GOAL_LY)){S.chal=null;if(!S.lit.includes(id))S.lit.push(id);const k=SKILLS.find(x=>x.id===id);logLine(k.name+'が灯った。',-1);FXQ.chalDone=id;}}
+function chalCheck(){if(!S.chal)return;const id=S.chal,g=CHAL[id].goal;if((g.stage&&S.maxStage>=g.stage)||(g.home&&S.dist>=GOAL_LY)){S.chal=null;if(!S.lit.includes(id))S.lit.push(id);S.st.chal[id]=Date.now();const k=SKILLS.find(x=>x.id===id);logLine(k.name+'が灯った。',-1);FXQ.chalDone=id;}}
 /* ③ さらに遠くへ（航跡） */
 function tg(id){return S.tg[id]||0;}
 function voyMult(){return VOY_BASE*Math.pow(2.7,tg('vs'));}
@@ -137,9 +137,9 @@ function lPer(){return Math.floor(RESTART_BASE*(1+0.1*S.restarts))*Math.pow(2,tg
 function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdist=0;S.vL=0;story('voy',VOY_LINES.start);FXQ.voyage=true;return true;}
 function voyAdvance(d){S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
   const n=voyDoublings(S.vdist);if(n>S.vL){const g=(n-S.vL)*lPer();S.L+=g;S.lTotal+=g;S.vL=n;}
-  while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
+  while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)):0;}
-function redraw(){const g=tGain();if(g<1)return 0;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
+function redraw(){const g=tGain();if(g<1)return 0;S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
 function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=DEST[DEST.length-1].ly;}   // この宇宙で宇宙の果てに着いたら
 function uGain(){if(!canFold())return 0;return 2+Math.floor(Math.log2(Math.max(1,S.ubest/DEST[DEST.length-1].ly)));}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
