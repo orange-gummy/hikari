@@ -27,7 +27,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.chalDone){const id=FXQ.chalDone;FXQ.chalDone=null;SND.play('light');fla=Math.max(fla,0.22);toast('チャレンジを越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が灯った');renderPanel(true);}
   if(FXQ.redraw){FXQ.redraw=0;if(curTab==='drive')renderDrive(true);}
   if(FXQ.voyage){FXQ.voyage=false;routeMode=null;}
-  if(FXQ.milestone){FXQ.milestone=false;SND.play('milestone');fla=Math.max(fla,0.1);}
+  if(FXQ.milestone){FXQ.milestone=false;SND.play('milestone');}   /* 画面全体のフラッシュはなくした（2026-11-06）。音と、台数の節目の表示だけ */
   if(FXQ.prestige){FXQ.prestige=false;if(!BRK){stk=60;fla=0.25;}}
   if(FXQ.region){FXQ.region=false;fla=Math.max(fla,0.12);if(curTab==='drive')renderDrive(true);}
   if(S.stage!==lastStage){lastStage=S.stage;paintSpeed();if(curTab==='drive')renderDrive(false);}
