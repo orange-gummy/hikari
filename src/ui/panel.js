@@ -6,7 +6,7 @@
 let curTab='drive',buyMode='1';
 /* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
 const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','skill','reset']},{id:'star',name:'STAR',tabs:['restart','glow','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
-const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'BATTERY',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
+const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
 const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
 function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(law('lc')>=10||S.lightDone));}
 function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}
@@ -97,20 +97,30 @@ function renderBoost(){const s=S.stage,nx=s+1,c=nx<=maxStage()?accelCost(nx):0,c
   pbody.dataset.k='';pbody.innerHTML=h;
   const a=document.getElementById('bAcc');if(a)a.onclick=()=>{accelerate();renderPanel(true);};const au=document.getElementById('bAuto');if(au)au.onclick=()=>{S.autoAcc=!S.autoAcc;renderPanel(true);};
 }
-function renderBattery(){const cap=batteryCap();let h='';
-  {const full=S.battery>=cap*0.999,per=Math.pow(1+batteryRate(),yearsPerSec())-1,om=S.battery>0?overMulFor(S.battery):0;
-    h+='<div class="phead"><span class="lab">BATTERY</span><span class="num" style="font-size:12px;color:var(--ink-dim)">故郷の1年ごとに +'+Math.round(batteryRate()*100)+'%</span></div>'+
-    '<div class="row"><span class="num" style="font-size:18px">'+fmt(S.battery)+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">上限 '+fmt(cap)+'</span></div><div class="bar'+(full?' full':'')+'"><i style="width:'+(cl(S.battery/cap)*100).toFixed(1)+'%"></i></div>'+
-    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">預けた額から</span><span class="num" style="font-size:12px">×'+batGrowth().toFixed(2)+'</span></div>'+
-    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">いまの速さでは 1秒で</span><span class="num" style="font-size:12px">+'+(per*100<1000?(per*100).toFixed(per<0.01?3:1):fmt(per*100))+'%</span></div>'+
-    '<div class="seg" style="justify-content:space-between;margin-top:6px"><button class="act" style="margin:0 3px 0 0;font-size:12px;padding:8px" data-d=".25">25%預ける</button><button class="act" style="margin:0 3px;font-size:12px;padding:8px" data-d=".5">50%預ける</button><button class="act" style="margin:0 0 0 3px;font-size:12px;padding:8px" data-d="1">全部預ける</button></div>'+
-    (has('aR')?'<div class="row"><span class="note" style="margin:0">自動放出（預けた額の4倍で）</span><button class="auto" id="aRel"'+(S.autoRel?' data-on':'')+'>'+(S.autoRel?'自動':'手動')+'</button></div>':'')+
-    (S.over>0?'<div class="act" style="border-color:#ffc670;color:#ffd38a;cursor:default">過負荷 ×'+S.overMul.toFixed(1)+'　残り '+Math.ceil(S.over)+'秒</div>':'<button class="act" id="bRel"'+(S.battery<=0?' disabled':'')+' style="border-color:rgba(255,198,112,.7)">放出する'+(om?'　<span class="num">'+(has('eB')?45:30)+'秒間 生産×'+om.toFixed(1)+'</span>':'')+'</button>')+
-    '<div class="note">預けた分は故郷の時間で増える。加速して外の時間が速く流れるほど早く増える。放出すると全額が戻り、しばらく「過負荷」で生産が跳ね上がる。過負荷の強さは、預けた額から何倍に増えたかで決まる。緊急停止すると中身は失われる。核融合炉は蓄電が満ちるほど強い。</div>';}
-  pbody.dataset.k='';pbody.innerHTML=h;
-  pbody.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{deposit(+b.dataset.d);renderPanel(true);});
-  const ar=document.getElementById('aRel');if(ar)ar.onclick=()=>{S.autoRel=!S.autoRel;renderPanel(true);};
-  const rl=document.getElementById('bRel');if(rl)rl.onclick=()=>{FXQ.relBtn=rl.getBoundingClientRect();release();renderPanel(true);};}
+/* 流星群の器（METEOR）：窓を横切る流れ星を捕まえて器を満たし、流星群を呼ぶ。上の4つの点が予報の段 */
+function renderBattery(){const tier=vesTier(),v=S.vessel||0,top=VES[VES.length-1].need,key='bt|'+[Math.floor(v),tier,!!SHOWER,S.autoRel,has('aR')].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
+  const W=360,y0=26,x0=40,x1=320,xs=VES.map((_,i)=>x0+(x1-x0)*i/(VES.length-1));
+  let pos=0;for(let i=0;i<VES.length;i++){if(v>=VES[i].need)pos=xs[i];else{const p0=i?VES[i-1].need:0,px=i?xs[i-1]:x0-30;pos=px+(xs[i]-px)*Math.max(0,(v-p0)/(VES[i].need-p0));break;}}
+  let svg='<svg class="uniSky" viewBox="0 0 '+W+' 230" aria-label="流星群の器" style="max-height:280px"><defs><linearGradient id="vsl"><stop offset="0" stop-color="#ffd6aa" stop-opacity="0"/><stop offset="1" stop-color="#ffd6aa" stop-opacity=".85"/></linearGradient><radialGradient id="vsg"><stop offset="0" stop-color="#ffd6aa" stop-opacity=".45"/><stop offset="1" stop-color="#ffd6aa" stop-opacity="0"/></radialGradient></defs>'+
+    '<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="rgba(255,236,200,.18)" stroke-width=".6"/>'+(pos>x0-30?'<line x1="'+(x0-30)+'" y1="'+y0+'" x2="'+Math.min(x1,pos).toFixed(1)+'" y2="'+y0+'" stroke="url(#vsl)" stroke-width="1.2"/>':'');
+  VES.forEach((q,i)=>{const on=i<=tier;svg+=(on?'<circle cx="'+xs[i]+'" cy="'+y0+'" r="11" fill="url(#vsg)"/><circle cx="'+xs[i]+'" cy="'+y0+'" r="2.6" fill="#ffe2be"/>':'<circle cx="'+xs[i]+'" cy="'+y0+'" r="1.5" fill="rgba(236,238,242,'+(i===tier+1?0.6:0.28)+')"/>')+
+    '<text x="'+xs[i]+'" y="'+(y0+20)+'" text-anchor="middle" font-size="10" fill="rgba(236,238,242,'+(on?0.85:0.42)+')">'+q.n+'</text>';});
+  // 器：底の丸い弧に、捕まえた流れ星の数だけ光の粒
+  const cx2=180,cy2=70,r=72;svg+='<path d="M'+(cx2-r*0.95)+' '+(cy2+r*0.3)+' A'+r+' '+r+' 0 0 0 '+(cx2+r*0.95)+' '+(cy2+r*0.3)+'" fill="none" stroke="rgba(236,238,242,.25)" stroke-width=".7"/>';
+  let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};const n=Math.round(Math.min(1,v/top)*260),cols=[[255,226,190]].concat(COLORS.slice(0,6).map(c=>c.rgb));
+  const pts=[];for(let i=0;pts.length<260&&i<6000;i++){const a=0.05*Math.PI+rnd()*0.9*Math.PI,rr=Math.sqrt(rnd())*r*0.93,px=cx2+Math.cos(a)*rr,py=cy2+Math.sin(a)*rr;if(py>cy2+r*0.3+2)pts.push([px,py]);}   // 器の内側（縁より下）。下から満ちる
+  pts.sort((p,q)=>q[1]-p[1]);for(let i=0;i<n;i++){const [px,py]=pts[i],c=cols[rnd()<0.15?1+Math.floor(rnd()*6):0];svg+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="'+(0.5+rnd()*0.9).toFixed(2)+'" fill="'+rgb(c,(0.3+rnd()*0.6).toFixed(2))+'"/>';}
+  if(n>0)svg+='<ellipse cx="'+cx2+'" cy="'+(cy2+r*0.75)+'" rx="'+(r*0.8)+'" ry="'+(r*0.35)+'" fill="url(#vsg)" opacity="'+(0.3+0.5*v/top).toFixed(2)+'"/>';
+  svg+='<text x="'+cx2+'" y="'+(cy2+r+28)+'" text-anchor="middle" font-size="20" class="num" fill="rgba(236,238,242,.9)">'+Math.floor(v)+'<tspan font-size="11" fill="rgba(236,238,242,.5)"> / '+top+'</tspan></text>'+
+    '<text x="'+cx2+'" y="'+(cy2+r+46)+'" text-anchor="middle" font-size="10" fill="rgba(236,238,242,.5)">器の中の流れ星</text></svg>';
+  const nx=VES[tier+1],cur=VES[tier],cnt=c=>Math.round(c.count*(has('e3')?1.5:1));
+  let d='<div class="note" style="margin:2px 0 10px">'+(cur?'いま呼ぶと「'+cur.n+'」。約'+cur.dur+'秒、およそ'+cnt(cur)+'個。':'窓を横切る流れ星をタップで捕まえると、器に入る。')+(nx?'<br>「'+nx.n+'」まで あと'+Math.ceil(nx.need-v)+'個':'')+'</div>';
+  if(has('aR'))d+='<div class="row"><span class="note" style="margin:0">極大になったら自動で呼ぶ</span><button class="auto" id="aRel"'+(S.autoRel?' data-on':'')+'>'+(S.autoRel?'自動':'手動')+'</button></div>';
+  d+='<button class="act" id="vGo"'+(canShower()&&!SHOWER?'':' disabled')+' style="border-color:rgba(255,214,170,.7);color:#ffe2be;letter-spacing:.12em">'+(SHOWER?'流星群が降っている':'流星群を呼ぶ')+'</button>'+
+    '<div class="note">流星群の流れ星は、タップか、指でなぞって捕まえる。一筆で何個も捕まえるほど、続けて捕まえるほど大きく入る。</div>';
+  pbody.innerHTML='<div class="phead"><span class="lab">METEOR</span><span class="num" style="font-size:12px;color:var(--ink-dim)">流星群の器</span></div>'+svg+'<div class="gDet">'+d+'</div>';
+  const ar=document.getElementById('aRel');if(ar)ar.onclick=()=>{S.autoRel=!S.autoRel;pbody.dataset.k='';renderBattery();};
+  const go=document.getElementById('vGo');if(go)go.onclick=()=>{if(startShower())renderPanel(true);};}
 
 function renderReset(){const g=wGain();let h='<div class="phead"><span class="lab">EMERGENCY STOP</span></div><div class="row"><span>得られる歪み</span><span class="big">'+fmt(g)+'</span></div>'+
   '<div class="note">緊急停止すると、エネルギー、速度、装置、改良、蓄電がなくなる。進んだ距離と、故郷で過ぎた年月は戻らない。停止のあと星図が開き、歪みで新しいスキルを覚えられる。</div>'+

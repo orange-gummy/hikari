@@ -26,7 +26,7 @@ function synMult(i){if((S.tier[i]||1)<3)return 1;const n=S.dev,k=synK();
 function batteryCapRaw(P){return Math.max(2000,P*3600*(has('e3')?4:1));}
 function traitMult(i){const n=S.dev;switch(i){
   case 0:return 1+0.25*Math.min(S.stage,11)+0.2*nines(S.stage);
-  case 2:{const cap=batteryCapRaw(baseRateNoFusion());return 1+2*Math.min(1,S.battery/cap);}
+  case 2:return 1+2*Math.min(1,(S.vessel||0)/VES[VES.length-1].need);   // 器が満ちるほど強い
   case 3:return S.runTime<300?3:1;
   case 4:return 1+0.1*Math.floor(n[0]/10);
   case 5:return S.pulse>0?4:1;
@@ -75,8 +75,7 @@ function tick(dt,offMul){
   if(S.voy)S.uTime+=dt*(offMul||1);
   if(S.voy)voyAdvance(dy*Math.max(stageBeta(S.stage),0.02)*voyMult());
   else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy/(S.chal==='cG'?10:1)*Math.max(stageBeta(S.stage),0.02));}
-  if(S.battery>0)S.battery=Math.min(batteryCap(),S.battery*Math.pow(1+batteryRate(),dy));
-  S.runTime+=dt;if(!S.cleared)S.loopTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.battery>0&&S.batDep>0&&batGrowth()>=4)release();if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);if(S.sig>0)S.sig=Math.max(0,S.sig-dt);autoLearn();
+  S.runTime+=dt;if(!S.cleared)S.loopTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.vessel>=VES[VES.length-1].need&&canShower())FXQ.autoShower=true;if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);if(S.sig>0)S.sig=Math.max(0,S.sig-dt);autoLearn();
 }
 function devOpen(i){const d=DEVICES[i];if(d.find&&S.found<d.find)return false;return S.dev[i]>0||S.maxStage>=d.unlock;}
 function chalBlocksDevice(i){return (S.chal==='pL'&&i!==0)||(S.chal==='a8'&&i===ANCHOR);}
@@ -163,7 +162,7 @@ function autoLearn(){if(!has('aM'))return;for(const id of S.prevSkills){if(has(i
 function skillAvailable(k){if(has(k.id)||k.glow)return false;
   if(k.step===0)return true;return SKILLS.some(x=>x.br===k.br&&x.step===k.step-1&&has(x.id));}
 function buySkill(id){if(S.chal==='aM')return;const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
-function deposit(f){if(S.chal==='eM'||!S.flags.bat)return;const room=batteryCap()-S.battery;const a=Math.min(room,S.E*(f||1));if(a<=0)return;S.E-=a;S.battery+=a;S.batDep+=a;S.deposited=true;}
-function batGrowth(){return S.batDep>0?S.battery/S.batDep:1;}
-function overMulFor(b){const g=Math.max(1,batGrowth());return Math.min(10,1+3*Math.log2(g))*(has('eB')?1.5:1);}
-function release(){if(S.battery<=0)return 0;const b=S.battery,m=overMulFor(b);S.E+=b;S.Erun+=Math.max(0,b-S.batDep);S.battery=0;S.batDep=0;S.over=has('eB')?45:30;S.overMul=m;S.released=true;FXQ.release=b;return m;}
+/* 流星群の器 */
+function vesTier(){let t=-1;VES.forEach((v,i)=>{if(S.vessel>=v.need)t=i;});return t;}
+function vesAdd(n){S.vessel=Math.min(VES[VES.length-1].need,(S.vessel||0)+n);}
+function canShower(){return S.flags.bat&&S.chal!=='eM'&&vesTier()>=0;}

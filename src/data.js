@@ -32,7 +32,7 @@ const GREY_STAGE=21;
 const DEVICES=[
   {name:'太陽帆',cost:10,prod:0.5,unlock:0,col:0,emb:'sail',trait:'加速するほど効率が上がる（段階ごとに+25%、9の数でさらに上がる）'},
   {name:'核分裂炉',cost:120,prod:5,unlock:2,col:1,emb:'atom',trait:'1台ごとに全装置+0.5%（最大+100%）'},
-  {name:'核融合炉',cost:1500,prod:55,unlock:8,col:3,emb:'fusion',trait:'蓄電が満ちるほど強い（最大×3）'},
+  {name:'核融合炉',cost:1500,prod:55,unlock:8,col:3,emb:'fusion',trait:'流星群の器が満ちるほど強い（最大×3）'},
   {name:'反物質炉',cost:2.2e4,prod:650,unlock:10,col:4,emb:'anti',trait:'緊急停止後の5分間 ×3'},
   {name:'恒星集光殻',cost:3.4e5,prod:8000,unlock:15,col:2,emb:'shell',trait:'太陽帆10台ごとに+10%',spawn:{to:0,rate:0.5,why:'あふれた光が膜を押し広げ、帆になる'}},
   {name:'パルサー共振器',cost:5.5e6,prod:1e5,unlock:17,col:5,emb:'pulsar',trait:'タップ後10秒間 ×4',spawn:{to:3,rate:0.3,why:'強磁場で生まれた陽電子を閉じ込める'}},
@@ -78,10 +78,10 @@ const SKILLS=[
   {id:'pB',br:0,step:3,fork:1,name:'巡航',desc:'9の数1つにつき生産 +20%',cost:30},
   {id:'p5',br:0,step:4,name:'相対論的航法',desc:'外の時間による生産の倍率 ×1.5',cost:100},
   {id:'e1',br:1,step:0,name:'発電効率',desc:'全装置の生産 ×2',cost:1},
-  {id:'e2',br:1,step:1,name:'蓄電の利率',desc:'利子 +2%（故郷の1年ごと）',cost:3},
-  {id:'e3',br:1,step:2,name:'蓄電の容量',desc:'蓄電の上限 ×4',cost:10},
+  {id:'e2',br:1,step:1,name:'流れ星の道',desc:'窓を横切る流れ星が1.5倍よく現れる',cost:3},
+  {id:'e3',br:1,step:2,name:'濃い流星群',desc:'流星群の流れ星 +50%',cost:10},
   {id:'eA',br:1,step:3,fork:-1,name:'連鎖反応',desc:'台数の節目の倍率 ×2→×3',cost:30},
-  {id:'eB',br:1,step:3,fork:1,name:'過負荷の強化',desc:'蓄電池の放出の倍率 ×1.5、過負荷が45秒続く',cost:30},
+  {id:'eB',br:1,step:3,fork:1,name:'光の手ざわり',desc:'捕まえた流れ星 ×2。連続の倍率の上限 ×3 → ×5',cost:30},
   {id:'e5',br:1,step:4,name:'余剰の循環',desc:'改良の効果 ×1.5',cost:100},
   {id:'c1',br:2,step:0,name:'長い眠り I',desc:'放置の上限 8時間',cost:1},
   {id:'c2',br:2,step:1,name:'受信感度',desc:'タップ ×3',cost:3},
@@ -108,12 +108,12 @@ const SKILLS=[
   {id:'a7',br:3,step:7,name:'自動化：真空エネルギー炉',desc:'真空エネルギー炉を、買えるエネルギーが溜まると自動で買う',cost:128},
   {id:'aA',br:3,step:8,name:'自動化：加速',desc:'次の加速に必要なエネルギーが溜まると自動で加速する（光速の限界への最後の加速は除く）',cost:256},
   {id:'aT',br:3,step:9,name:'自動化：TIER',desc:'全装置のTIERを、上げられるようになり次第、自動で上げる',cost:512},
-  {id:'aR',br:3,step:10,name:'自動化：放出',desc:'蓄電池が預けた額の4倍に育ったら自動で放出する',cost:1024},
+  {id:'aR',br:3,step:10,name:'自動化：流星群',desc:'器が「極大」まで満ちたら、自動で流星群を呼ぶ',cost:1024},
   // 残光で灯す上位の星（glow＝灯すのに要る残光。灯した星は周回の最初から覚えている。歪みでは覚えない）
   {id:'pR',br:0,step:8,name:'余韻',desc:'緊急停止のあと、停止したときの速度の半分の段階から始まる',cost:0,glow:20},
   {id:'pL',br:0,step:9,name:'光の帆',desc:'速度の段階1つにつき、生産 +10%',cost:0,glow:40},
   {id:'eL',br:1,step:7,name:'残光炉',desc:'これまでに得た残光1つにつき、生産 +5%',cost:0,glow:20},
-  {id:'eM',br:1,step:8,name:'蓄えの記憶',desc:'緊急停止しても、蓄電池の中身が半分残る',cost:0,glow:40},
+  {id:'eM',br:1,step:8,name:'星を待つ器',desc:'放置の間も、器が3倍の速さで満ちる',cost:0,glow:40},
   {id:'c7',br:2,step:9,name:'長い眠り III',desc:'放置の上限 72時間',cost:0,glow:20},
   {id:'cG',br:2,step:10,name:'帰郷の信号',desc:'色を一つ失うたびに、30秒間 生産×10',cost:0,glow:40},
   {id:'a8',br:3,step:11,name:'自動化：時間の錨',desc:'時間の錨を、買えるエネルギーが溜まると自動で買う',cost:0,glow:20},
@@ -137,7 +137,7 @@ const AFTERGLOW=[  // max:0 は上限なし
   {id:'wm',name:'歪みの増幅',max:0,cost:l=>5*Math.pow(2,l),text:l=>'得られる歪み ×'+wMultAt(l)},
   {id:'sk',name:'船内時間',max:0,cost:l=>5*Math.pow(2,l),text:l=>'船内時間 ×'+(1+0.25*l)+'。生産も故郷の時間も速くなる'},
   {id:'rm',name:'航路の記憶',max:0,cost:l=>5*Math.pow(2,l),text:l=>'光速の99%より先の加速コストの上がり方 ×'+Math.round(stageMultAt(l))},
-  {id:'am',name:'自動化の記憶',max:2,cost:l=>[5,10][l],text:l=>['','自動購入（太陽帆〜真空エネルギー炉）を覚えた状態で始まる','加速・TIER・放出の自動化も覚えた状態で始まる'][l]}
+  {id:'am',name:'自動化の記憶',max:2,cost:l=>[5,10][l],text:l=>['','自動購入（太陽帆〜真空エネルギー炉）を覚えた状態で始まる','加速・TIER・流星群の自動化も覚えた状態で始まる'][l]}
 ];
 const AM_GRANT=[[],['a0','a1','a2','a3','a4','a5','a6','a7'],['aA','aT','aR']];
 // ② 上位の星8つは、チャレンジを越えると灯る（Revolution Idle のチャレンジのように、縛り付きで出直して目標に届く）
@@ -145,7 +145,7 @@ const CHAL={
   pR:{name:'止まらない',rule:'緊急停止できない',goal:{stage:15},gtext:'9を5個並べる'},
   pL:{name:'帆だけ',rule:'太陽帆のほかの装置を買えない',goal:{stage:13},gtext:'光速の99.9%に届く'},
   eL:{name:'残光なし',rule:'残光の強化が効かない',goal:{stage:18},gtext:'9を8個並べる'},
-  eM:{name:'蓄えなし',rule:'蓄電池を使えない',goal:{home:true},gtext:'故郷に着く'},
+  eM:{name:'流星なし',rule:'流星群を呼べない',goal:{home:true},gtext:'故郷に着く'},
   c7:{name:'触れない',rule:'窓をタップできない（太陽帆を1枚持って出る。止めても1枚残る）',goal:{home:true},gtext:'故郷に着く'},
   cG:{name:'速い故郷',rule:'故郷の時間が10倍の速さで流れる（距離はそのまま）',goal:{home:true},gtext:'故郷に着く'},
   a8:{name:'錨なし',rule:'時間の錨を買えない',goal:{home:true},gtext:'故郷に着く'},
@@ -160,13 +160,15 @@ const LAWS=[
 ];
 const UNI_TINT=[{name:'白',a:[235,238,250],b:[200,210,240]},{name:'青緑',a:[150,230,210],b:[255,214,150]},{name:'朱',a:[255,170,140],b:[255,230,180]},{name:'紫',a:[180,160,255],b:[150,200,255]},{name:'橙',a:[255,200,120],b:[255,140,120]}];
 const UNI_LINES=['','星の色が、少し違う。','同じ光、別の空。','時間の流れ方が、変わった。','何度目かの、はじまり。'];
+/* 流星群の器（2026-11-06、蓄電池を作り替え）：窓を横切る流れ星を捕まえて器を満たし、流星群を呼ぶ */
+const VES=[{n:'小さな流星群',need:5,dur:10,count:40},{n:'流星群',need:15,dur:20,count:120},{n:'大流星群',need:40,dur:30,count:250},{n:'極大',need:100,dur:40,count:400}];
 const VOY_LINES={start:'故郷の光が、背中の向こうで小さくなっていく。',redraw:'航路を、もう一度引き直す。'};
 const RESTART_LINES={1:'空の色を確かめてから、もう一度出た。',2:'前にも、同じ星を見た。',3:'着いた日の雨の匂いを、まだ覚えている。',4:'夕焼けをもう一度見るために、帆を張る。',5:'故郷の窓の明かりは、前より少し増えていた。',6:'若葉の色は、着くたびに少し違う。',7:'失うと分かっていて、それでも見に帰る。',8:'速さと引き換えに、何を渡してきたのか。',10:'何度でも、帰り道を選ぶ。'};
 
 const BRANCHES=['推進','動力','通信','自動化'];
 const BR_COL=[[255,150,72],[255,220,110],[100,155,255],[205,208,222]];
 
-const LINES={bat:'故郷の一年を、蓄えておける。',
+const LINES={bat:'故郷の時間が、流れ星になって降ってくる。',shEnd:'流星群が、通り過ぎた。',
   pro1:'遠い宙域に、ひとり取り残された。',pro2:'帰るには、光の速さに近づくしかない。',start:'帰り道は、まだ覚えている。',
   dev0:'帆が、遠い恒星の光を受けて膨らんだ。',
   s1:'船が、ゆっくりと動き出した。',s3:'止まっていた星が、わずかに流れ始めた。',s6:'光の速さの、百分の一。まだ、遠い。',
@@ -241,7 +243,8 @@ const ACHIEVEMENTS=[
   ['k5','節目の星','枝の最後のスキルを覚える',s=>s.skills.some(id=>['p5','e5','c5'].includes(id))],
   ['reg2','星雲帯','星雲帯に入る',s=>s.dist>=100],
   ['reg4','暗黒領域','暗黒領域に入る',s=>s.dist>=3000],
-  ['bat','蓄える','蓄電池に預ける',s=>s.deposited],
-  ['rel','あふれる光','蓄電池を放出する',s=>s.released],
+  ['bat','流れ星','流れ星を捕まえる',s=>s.deposited],
+  ['rel','流星群','流星群を呼ぶ',s=>s.released],
+  ['sh20','二十連','流星群で20個続けて捕まえる',s=>(s.st&&s.st.bestCombo||0)>=20],
   ['idle','おかえり','10分以上離れて戻る',s=>s.idleBack]
 ];

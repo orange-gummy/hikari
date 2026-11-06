@@ -59,10 +59,11 @@ const SND=(()=>{
     hear:()=>{COLOR_HZ.forEach((f,k)=>tone(f/2,{at:k*0.35,a:2.0,d:5.0,g:0.035}));},
     fold:()=>{air({d:4.0,f0:4000,f1:120,g:0.07,peak:0.3,q:0.7});tone(880,{type:'triangle',a:0.3,d:3.8,g:0.04,to:110,glide:3.8,lp:3000,lpTo:300});tone(36.7,{at:4.0,a:0.003,d:1.2,g:0.3,wet:0.3});bell(1174.7,{at:6.4,d:3,g:0.06});[293.7,440,587.3,740].forEach((f,k)=>tone(f,{at:6.5+k*0.12,a:1.0,d:3.5,g:0.04}));},
     lightEnd:()=>{air({d:1.2,f0:300,f1:6000,g:0.08,peak:0.9});tone(110,{type:'sawtooth',a:0.8,d:1.2,g:0.04,to:880,glide:1.1,lp:600,lpTo:5000});tone(1760,{at:1.0,d:6,g:0.03,wet:0.9});[146.8,220,293.7,440].forEach((f,k)=>tone(f,{at:7.8+k*0.4,a:2.5,d:7,g:0.035,wet:0.8}));bell(1174.7,{at:10,d:5,g:0.05});},
+    catch:(k)=>{const f=880*Math.pow(2,Math.min(k||0,24)/12);bell(f,{d:0.6,g:0.05});tone(f*2,{d:0.15,g:0.02});},
     land:()=>{[146.8,220,293.7,370,440,587.3].forEach((f,k)=>tone(f,{at:k*0.06,a:0.8,d:6,g:0.05}));bell(1174.7,{at:0.6,d:4,g:0.05});}
   };
   // 自動で続けて起きるもの（加速・TIER・節目）は間を空けて鳴らす
-  const GAP={accel:1.2,tier:0.6,milestone:0.5,buy:0.06,tap:0.04,learn:0.15,lose:1,back:1},last={};
+  const GAP={catch:0.03,accel:1.2,tier:0.6,milestone:0.5,buy:0.06,tap:0.04,learn:0.15,lose:1,back:1},last={};
   function play(name,arg){if(!on||vol<=0||!ac||!SOUNDS[name]||document.hidden)return;const t=ac.currentTime;if(GAP[name]&&last[name]!=null&&t-last[name]<GAP[name])return;last[name]=t;try{SOUNDS[name](arg);}catch(e){}}
   function setVolume(v){vol=v;if(master)master.gain.value=v;}
   function setOn(v){on=!!v;}
