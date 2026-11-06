@@ -275,3 +275,9 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
    画面全体を固定し、高さは実際に見えている高さ（dvh）に合わせる */
 html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 #app{height:100%;height:100dvh}
+/* スマホ（縦長の画面）では、層の中のタブを上、層の段を下（親指の近く）にする（2026-11-06）。PC の横長の画面は層が上のまま */
+@media not ((min-width:860px) and (min-aspect-ratio:1/1)){
+  #tabs #tr2{order:1;border-bottom:0;margin-bottom:0;padding-bottom:0;border-top:0.5px solid rgba(255,255,255,.08);margin-top:6px;padding-top:2px}
+  #tabs #tr2 button{padding:7px 8px 6px}
+  #tabs #tr2 button[aria-selected="true"]::after,#tabs #tr2 button.hint::after{bottom:auto;top:0}
+}

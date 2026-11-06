@@ -98,6 +98,7 @@ function paintSpeed(){const s=S.stage,g=fmtG(stageGamma(s)),h=document.getElemen
   document.getElementById('spdG').textContent=dil?'時間の進み /'+g:speedText(s);}
 /* 字幕 */
 let subT=[];
+function clearSub(){subT.forEach(clearTimeout);subT=[];document.getElementById('sub').style.opacity='0';document.getElementById('subT').innerHTML='';}   // タイトルを閉じるとき、前の字幕（「着いた。」など）を残さない
 function subtitle(t){subT.forEach(clearTimeout);subT=[];const box=document.getElementById('sub'),st=document.getElementById('subT');st.innerHTML='';const sp=[...t].map(ch=>{const s=document.createElement('span');s.textContent=ch;s.style.opacity='0';st.appendChild(s);return s;});box.style.opacity='1';sp.forEach((s,k)=>subT.push(setTimeout(()=>{s.style.opacity='1';},120+k*60)));subT.push(setTimeout(()=>{box.style.opacity='0';},120+sp.length*60+3200));}
 function toast(html){const t=document.createElement('div');t.className='toast';t.innerHTML=html;document.getElementById('toasts').appendChild(t);requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='translateY(0)';});setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),600);},3000);}
 function checkAch(){for(const a of achCheck())toast('実績　<b>'+a[1]+'</b>　生産 ×'+achMult().toFixed(2));}
