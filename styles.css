@@ -266,3 +266,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #tabs #tr1 button.hint{color:#ffd6aa;border:0;box-shadow:none}
 #tabs #tr1 button.hint::before{background:#ffc890;box-shadow:0 0 8px 2px rgba(255,200,140,.7)}
 .stHead{font-family:var(--label);font-size:9.5px;letter-spacing:.22em;color:rgba(255,214,170,.75);margin:16px 0 4px;padding-bottom:4px;border-bottom:0.5px solid rgba(255,255,255,.08)}
+/* 選んでいて、かつ目標の案内中のタブは橙を優先（選んでいる印の大きさはそのまま） */
+#tabs #tr1 button[aria-selected="true"].hint{color:#ffd6aa}
+#tabs #tr1 button[aria-selected="true"].hint::before{background:#ffc890;box-shadow:0 0 8px 2px rgba(255,200,140,.75)}
+#tabs #tr2 button[aria-selected="true"].hint{color:#ffd6aa}
+#tabs #tr2 button[aria-selected="true"].hint::after{left:18%;right:18%;background:linear-gradient(90deg,rgba(255,200,140,0),rgba(255,200,140,.95),rgba(255,200,140,0))}
