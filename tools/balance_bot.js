@@ -10,8 +10,8 @@ let core=CORE_FILES.map(f=>fs.readFileSync(path.join(__dirname,'..','src',f+'.js
 core=core.replace("if(typeof skillPick!=='undefined'&&!skillPick)return;","");
 const argv=process.argv,arg=k=>{const i=argv.indexOf(k);return i>0?argv[i+1]:null;};
 const LOOPS=+(arg('--loops')||0),DAYS=arg('--days'),WEEK=+(arg('--week')||7);
-const SCHED={A:[[8,15],[13,15],[21,15]],B:[[21,30]]};
-if(DAYS&&!SCHED[DAYS]){console.error('--days は A か B');process.exit(1);}
+const SCHED={A:[[8,15],[13,15],[21,15]],B:[[21,30]],C:[[8,60],[13,60],[21,60]]};
+if(DAYS&&!SCHED[DAYS]){console.error('--days は A・B・C');process.exit(1);}
 
 // 経済側が呼ぶ演出の関数を空にしておく。LOSES は色を失った時刻
 const stub=`var localStorage={getItem:()=>null,setItem:()=>{}};var curTab='x';function subtitle(){} function renderPanel(){}
@@ -34,6 +34,8 @@ function act(){
     const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;
     for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
     const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
+  // 噴射：次の加速が遠い（いまのエネルギーの50倍以上）なら、手元の半分までで噴射する
+  if(!process.env.NOBURN&&canBurn()){const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;while(nxt>S.E*50&&burnCost()<=S.E*0.5){burn();LOG.push([stamp(),'burn',S.burns]);}}
   if(S.voy){if(voyStopReady()&&t-lastP>20){LOG.push([stamp(),'prest',wGain()]);prestige(false);lastP=t;}return;}   // ③では自動の停止とスキル選び
   const w=wGain();if(S.stage>=BRAKE_STAGE&&w>=Math.max(5,1.6*(S.W+skillSpent()))&&t-lastP>90){prestige(false);lastP=t;LOG.push([stamp(),'prest',w]);for(const id of PATH)buySkill(id);}
 }

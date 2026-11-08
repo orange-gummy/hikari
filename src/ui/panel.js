@@ -94,8 +94,13 @@ function renderBoost(){const s=S.stage,nx=s+1,c=nx<=maxStage()?accelCost(nx):0,c
     else if(nx===DILATION_STAGE)h+='<div class="note">光速の90%を超えると、船の時間の進みがはっきり遅くなり始める。外の光が早回しで届くので、ここから先は加速するほど生産が大きく伸びる。</div>';
     else h+='<div class="note">加速すると太陽帆がよく働き、故郷への航路も早く進む。'+(un.length?un.join('、')+'が使えるようになる。':'')+''+'</div>';}
   else h+='<div class="note">これ以上は加速できない。</div>';
+  if(canBurn()){const bc=burnCost(),bg=burnGain();h+='<div class="phead" style="margin-top:18px"><span class="lab">BURN</span><span class="num" style="font-size:12px;color:var(--ink-dim)">この周回で '+(S.burns||0)+'回</span></div>'+
+    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">1回で進む距離</span><span class="num">'+lyText(bg.ly)+' 光年</span></div>'+
+    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">故郷で過ぎる年月</span><span class="num">+'+fmtG(bg.years)+'年</span></div>'+
+    '<button class="act" id="bBurn"'+(S.E<bc?' disabled':'')+'>噴射する　<span class="num">'+fmt(bc)+'</span></button>'+
+    '<div class="note">エネルギーを燃やして、いまの速さで30分ぶん先へ進む。使うたびに値段が上がる（緊急停止で戻る）。</div>';}
   pbody.dataset.k='';pbody.innerHTML=h;
-  const a=document.getElementById('bAcc');if(a)a.onclick=()=>{accelerate();renderPanel(true);};const au=document.getElementById('bAuto');if(au)au.onclick=()=>{S.autoAcc=!S.autoAcc;renderPanel(true);};
+  const a=document.getElementById('bAcc');if(a)a.onclick=()=>{accelerate();renderPanel(true);};const bb=document.getElementById('bBurn');if(bb)bb.onclick=()=>{if(burn())renderPanel(true);};const au=document.getElementById('bAuto');if(au)au.onclick=()=>{S.autoAcc=!S.autoAcc;renderPanel(true);};
 }
 /* 流星群の器（METEOR）：窓を横切る流れ星を捕まえて器を満たし、流星群を呼ぶ。上の4つの点が予報の段 */
 function renderBattery(){const tier=vesTier(),v=S.vessel||0,top=VES[VES.length-1].need,key='bt|'+[Math.floor(v),tier,!!SHOWER,S.autoRel,has('aR')].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;

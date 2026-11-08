@@ -6,7 +6,7 @@ function freshState(){return{v:SAVE_VERSION,E:0,Erun:0,maxE:0,dev:DEVICES.map(()
   battery:0,years:0,dist:0,lost:0,greyLost:false,flags:{},ach:[],log:[],taps:0,deposited:false,idleBack:false,cleared:false,
   runTime:0,pulse:0,burst:0,over:0,overMul:1,batDep:0,released:false,auto:DEVICES.map(()=>1),autoT:[0,0,0,0,0,0,0,0],autoBud:0.5,autoBought:0,autoAcc:true,autoTier:true,autoRel:true,sling:0,coast:0,crit:0,tier:[1,1,1,1,1,1,1,1],region:0,
   L:0,lTotal:0,restarts:0,ag:{},lit:[],prevSkills:[],sig:0,loopTime:0,
-  chal:null,voy:false,vdist:0,vbest:0,vL:0,found:0,T:0,tTotal:0,tg:{},uni:0,U:0,uTotal:0,law:{},uHist:[],ubest:0,uTime:0,uTint:0,lightDone:false,lightAt:0,lightUni:0,vessel:0,vfrac:0,st:freshStats(),last:Date.now()};}
+  chal:null,voy:false,vdist:0,vbest:0,vL:0,found:0,T:0,tTotal:0,tg:{},uni:0,U:0,uTotal:0,law:{},uHist:[],ubest:0,uTime:0,uTint:0,lightDone:false,lightAt:0,lightUni:0,burns:0,vessel:0,vfrac:0,st:freshStats(),last:Date.now()};}
 /* 統計（ETC の STATS）。2026-11-06 から数え始める */
 function freshStats(){return {since:Date.now(),play:0,idle:0,stops:0,loops:[],chal:{},dest:{},redraws:0,showers:0,caught:0,bestCombo:0};}
 let S=freshState();
