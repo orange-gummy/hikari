@@ -46,7 +46,7 @@ function frameInner(){
     if(s.big&&al>0.4)blob(x,y,7*(0.6+0.4*aw),col,al*0.32);
     cx.beginPath();cx.arc(x,y,s.s*(0.7+0.3*aw),0,6.283);cx.fillStyle=rgb(col,al);cx.fill();}
   if(stk>0)stk--;
-  if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const m of FLY){const a=A[m.k];if(!STILL){m.x+=(m.vx+Math.sin(T*0.01+m.ph)*0.2)*0.4/CW;m.y+=m.vy*0.4/CH;}if(SPDF!==1){const f2=(SPDF-1)*0.012;m.x+=(m.x*CW-CXs)*f2/CW;m.y+=(m.y*CH-CYs)*f2/CH;}if(m.y>1.04||m.y<-0.02||m.x<-0.02||m.x>1.02){if(SPDF>1.05){const an=Math.random()*6.283,rr=R(0.03,0.2)*Math.min(CW,CH);m.x=(CXs+Math.cos(an)*rr)/CW;m.y=(CYs+Math.sin(an)*rr)/CH;}else if(m.y<-0.02){m.y=1.02;m.x=Math.random();}else{m.x=Math.random();m.y=Math.random();}}
+  if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const m of FLY){const a=A[m.k];if(!STILL){m.x+=(m.vx+Math.sin(T*0.01+m.ph)*0.2)*0.4/CW;m.y+=m.vy*0.4/CH;}if(SPDF>1){const f2=(SPDF-1)*0.012;m.x+=(m.x*CW-CXs)*f2/CW;m.y+=(m.y*CH-CYs)*f2/CH;}if(m.y>1.04||m.y<-0.02||m.x<-0.02||m.x>1.02){if(SPDF>1.05){const an=Math.random()*6.283,rr=R(0.03,0.2)*Math.min(CW,CH);m.x=(CXs+Math.cos(an)*rr)/CW;m.y=(CYs+Math.sin(an)*rr)/CH;}else if(m.y<-0.02){m.y=1.02;m.x=Math.random();}else{m.x=Math.random();m.y=Math.random();}}
     const px=m.x*CW,py=m.y*CH;if(Math.abs(px-CXs)<52&&Math.abs(py-CYs)<34)continue;const pu=0.5+0.5*Math.sin(T*0.04+m.ph),cc=mix(COLORS[m.k].rgb,G,1-a),al=(0.25+0.6*pu)*(0.4+0.6*a);blob(px,py,m.r*6,cc,al*0.3);cx.beginPath();cx.arc(px,py,m.r,0,6.283);cx.fillStyle=rgb(cc,al);cx.fill();}
   // scenes inside the window
   if(HEARD&&!LANDED){HEARD.t++;cx.fillStyle='rgba(19,21,30,'+ei(cl(HEARD.t/100)).toFixed(3)+')';cx.fillRect(0,0,CW,CH);}
