@@ -5,7 +5,7 @@
 /* タブ */
 let curTab='drive',buyMode='1';
 /* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
-const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','skill','reset']},{id:'star',name:'STAR',tabs:['restart','glow','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
+const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
 const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
 const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
 function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(law('lc')>=10||S.lightDone));}
@@ -131,8 +131,10 @@ function renderReset(){const g=wGain();let h='<div class="phead"><span class="la
   '<div class="note">緊急停止すると、エネルギー、速度、装置、改良、蓄電がなくなる。進んだ距離と、故郷で過ぎた年月は戻らない。停止のあと星図が開き、歪みで新しいスキルを覚えられる。</div>'+
   '<button class="act" id="rGo"'+(S.stage<BRAKE_STAGE||g<1||S.chal==='pR'?' disabled':'')+'>緊急停止する</button>'+(S.chal==='pR'?'<div class="note">チャレンジ「止まらない」の間は止まれない。</div>':'')+(S.stage<BRAKE_STAGE?'<div class="note">光速の90%に達すると使える。</div>':'')+
   '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">持っている歪み '+fmt(S.W)+'（使わずにいると1つにつき生産+1%）</span><span class="num">×'+fmtG(wMult())+'</span></div>'+
-  '<div class="row"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>';
+  '<div class="row"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>'+
+  ((S.prestiges>0||S.skills.length||S.lTotal>0)?'<button class="act" id="rMap" style="margin-top:10px;opacity:.8">星図を見る</button>':'');
   pbody.dataset.k='';pbody.innerHTML=h;
+  const mp=document.getElementById('rMap');if(mp)mp.onclick=()=>openSkill(false);
   document.getElementById('rGo').onclick=()=>confirmBox('緊急停止','歪みを '+fmt(g)+' 得て、速度0からやり直す。距離と年月はそのまま残る。このあとスキルを選べる。',()=>{startBrake(g);});}
 /* ② 再出発と残光（STAR タブ）。強化は「残照の地平」：日が沈んだあとの地平線に、強化ごとの光の筋が段に応じて空へ伸びる */
 let glowSel='rm',GLOWFX=null;
@@ -157,6 +159,16 @@ function glowHorizon(){const W=360,H=210,hz=150,n=AFTERGLOW.length,xs=AFTERGLOW.
     '<div class="note" style="margin:4px 0 2px">'+(l?'いま：'+a.text(l)+'<br>':'')+(nx?'次：'+nx.text:'これ以上は灯せない。')+'</div>'+
     (nx?'<button class="act" id="gBuy"'+(S.L<nx.cost?' disabled':'')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">灯す　残光 '+fmt(nx.cost)+'</button>':'')+'</div>';
   return v;}
+/* 残光の強化は合間に開く（2026-11-09）：故郷に着いて再出発するときと、航路を引き直すときに「残照の地平」が開き、閉じると帆を張る */
+let glowOpen=false,glowAfter=null;
+function glowAffordable(){return AFTERGLOW.some(a=>{const n=glowNext(a.id);return n&&S.L>=n.cost;});}
+function glowAutoSpend(){let b=true;while(b){b=false;const c=AFTERGLOW.map(a=>[a.id,glowNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.L).sort((x,y)=>x[1].cost-y[1].cost)[0];if(c){buyGlow(c[0]);b=true;}}}
+function openGlow(after){if(!glowAffordable()){after();return;}glowOpen=true;glowAfter=after;document.getElementById('glowOv').classList.add('on');renderGlowOv();}
+function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.remove('on');const f=glowAfter;glowAfter=null;if(f)f();}
+function renderGlowOv(){const b=document.getElementById('glowBody');b.innerHTML='<div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div><div class="note" style="margin:0 0 4px">船を出す前に、残光で灯しておける。</div>'+glowHorizon()+'<button class="act" id="glowGo" style="margin-top:12px">帆を張る</button>';
+  b.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;renderGlowOv();});
+  const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){SND.play('light');GLOWFX={id:glowSel,t:Date.now()};renderGlowOv();}};
+  document.getElementById('glowGo').onclick=closeGlow;}
 function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[fmt(S.L),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
   if(part==='restart'){
     if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。残光は、進んだ距離が2倍になるたびに入ってくる。</div>';

@@ -11,7 +11,7 @@ pbody.addEventListener('pointerdown',()=>{panelHold=true;});addEventListener('po
 function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);lastT=now;if(!document.hidden)S.st.play+=dt;
   if(paused)return;
   // 緊急停止の演出から、星図、帆を張る演出が終わるまでは、ゲームの時間を止める（航海の自動の停止も含む）
-  const halted=!!BRK||!!RST||(skillOpen&&skillPick);
+  const halted=!!BRK||!!RST||(skillOpen&&skillPick)||glowOpen;
   if(!climax&&!halted){const steps=timeMult>=100?10:1;for(let k=0;k<steps;k++)tick(dt*timeMult/steps);checkStory();}
   if(FXQ.accel){const r=FXQ.accel;FXQ.accel=false;SND.play('accel',S.stage);for(const sg of SEG)sg.setAttribute('stroke-width','2.2');if(ACC&&ACC.t>=CH_T){ACC.t=CH_T-1;ACC.lvl=S.stage;HVR={from:S.stage-1,to:S.stage,t0:Date.now()};}else if(ACC){ACC.lvl=S.stage;HVR={from:S.stage-1,to:S.stage,t0:Date.now()+Math.max(0,(CH_T-ACC.t))*16};}else{ACC={t:0,lvl:S.stage};HVR={from:S.stage-1,to:S.stage,t0:Date.now()+1080};}const v=document.getElementById('hV'),dl=Math.max(0,(HVR?HVR.t0:Date.now())-Date.now());v.style.transition='text-shadow .25s, opacity .25s';setTimeout(()=>{v.style.textShadow='0 0 12px rgba(235,240,255,.85)';setTimeout(()=>{v.style.transition='text-shadow 1.2s';v.style.textShadow='';},450);},dl);if(r>1.05)hudPop('故郷の時間 ×'+fmtG(r));}
   if(FXQ.release){FXQ.release=false;SND.play('release');const r=FXQ.relBtn||{left:CW/2,top:CH*0.85,width:0,height:0},tg=document.getElementById('spdV').getBoundingClientRect(),sx=r.left+r.width/2,sy=r.top+r.height/2,tx=tg.left+tg.width/2,ty=tg.top+tg.height/2;FXQ.relBtn=null;
