@@ -10,7 +10,7 @@ function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
 function maxStage(){return MAX_STAGE+law('lc');}   // ④ 光の上限で上がる
-function stageCost(s){return s<=12?STAGE_COST[s]:STAGE_COST[12]*Math.pow(stageMultAt(glow('rm')),s-12);}
+function stageCost(s){if(s<=12)return STAGE_COST[s];const m=stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(m,s-MAX_STAGE);}   // 光速の限界（9が12個）への最後の加速だけ、値段の上がり方を抑える
 function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
 function regionMult(i){const m=REGIONS[S.region].m;return (m[i]||1)*(m.all||1);}
@@ -107,7 +107,7 @@ function prestige(respec){
   const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
   const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage/2):0,keep=has('eM')?0.5:0;
   if(respec){S.W+=skillSpent();S.skills=[];}
-  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.burns=0;S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
+  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   story('prest1',LINES.prest1);FXQ.prestige=true;voyLearn();
 }
 /* 再出発（第二層） */
@@ -120,7 +120,7 @@ function rebirth(){
 function resetRun(){   // 再出発・航海の開始・航路の引き直しで共通：①の中身と、距離・年月・歪み・スキルを戻す
   S.cleared=false;S.lost=0;S.greyLost=false;delete S.flags.near;
   S.E=0;S.Erun=0;S.dev=DEVICES.map(()=>0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=0;S.maxStage=0;S.battery=0;S.batDep=0;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
-  S.prevSkills=S.skills.slice();S.loopTime=0;S.burns=0;S.W=0;S.skills=[];S.prestiges=0;S.sig=0;S.years=0;S.dist=0;S.region=0;S.sling=0;S.coast=0;S.crit=0;
+  S.prevSkills=S.skills.slice();S.loopTime=0;S.W=0;S.skills=[];S.prestiges=0;S.sig=0;S.years=0;S.dist=0;S.region=0;S.sling=0;S.coast=0;S.crit=0;
 }
 /* ② チャレンジ：上位の星を灯す */
 function canChallenge(){return !S.voy&&(S.cleared||S.restarts>0);}
@@ -162,13 +162,6 @@ function autoLearn(){if(!has('aM'))return;for(const id of S.prevSkills){if(has(i
 function skillAvailable(k){if(has(k.id)||k.glow)return false;
   if(k.step===0)return true;return SKILLS.some(x=>x.br===k.br&&x.step===k.step-1&&has(x.id));}
 function buySkill(id){if(S.chal==='aM')return;const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
-/* 噴射（BOOST）：後半、次の加速が遠いときに、エネルギーを使って故郷への道のりを先へ進める。
-   1回で、いまの速さで BURN_SEC 秒ぶん進む（故郷の年月も同じだけ過ぎる）。値段は生産 BURN_COST 秒ぶんから、使うたびに BURN_GROW 倍 */
-const BURN_SEC=1800,BURN_COST=300,BURN_GROW=1.15,BURN_STAGE=20;
-function canBurn(){return !S.voy&&!S.cleared&&S.maxStage>=BURN_STAGE&&S.dist<GOAL_LY;}
-function burnCost(){return prodRate()*BURN_COST*Math.pow(BURN_GROW,S.burns||0);}
-function burnGain(){const dy=yearsPerSec()*BURN_SEC;return {years:dy,ly:dy/(S.chal==='cG'?10:1)*Math.max(stageBeta(S.stage),0.02)};}
-function burn(){if(!canBurn())return false;const c=burnCost();if(S.E<c)return false;const g=burnGain();S.E-=c;S.years+=g.years;S.dist=Math.min(GOAL_LY,S.dist+g.ly);S.burns=(S.burns||0)+1;FXQ.burn=g;return true;}
 /* 流星群の器 */
 function vesTier(){let t=-1;VES.forEach((v,i)=>{if(S.vessel>=v.need)t=i;});return t;}
 function vesAdd(n){S.vessel=Math.min(VES[VES.length-1].need,(S.vessel||0)+n);}

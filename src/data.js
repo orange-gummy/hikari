@@ -67,6 +67,7 @@ const SPEEDS=[0,10/C_KMS,30/C_KMS,100/C_KMS,300/C_KMS,1000/C_KMS,0.01,0.05,0.1,0
 const STAGE_MULT=500;   // 光速の99%より先は、段階ごとに加速コストがこの倍率で上がる
 const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階12（光速の99%）まで。その先は STAGE_MULT 倍ずつ（stageCost）
 const MAX_STAGE=22;
+const FINAL_MULT=25;   // 9が11個 → 12個の加速は、ひとつ前の段階の値段のこの倍（ほかは STAGE_MULT 倍）。1周目の後半に届く目標にするため
 const BRAKE_STAGE=11;    // 緊急停止が使えるのは光速の90%から
 const DILATION_STAGE=11; // ここから表示の主役を「時間の進み」にする
 
