@@ -10,8 +10,7 @@ function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
 function maxStage(){return TOP_STAGE;}
-function lcMult(l){return Math.pow(0.85,l);}   // ④ 光の近さ：9が12個より先の、1段ごとの値段の上がり方にかける
-function stageCost(s){if(s<=12)return STAGE_COST[s];const m=stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(m*lcMult(law('lc')),s-MAX_STAGE);}   // 光速の限界（9が12個）への最後の加速だけ、値段の上がり方を抑える
+function stageCost(s){if(s<=12)return STAGE_COST[s];const m=stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(m,s-MAX_STAGE);}   // 光速の限界（9が12個）への最後の加速だけ、値段の上がり方を抑える
 function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
 function regionMult(i){const m=REGIONS[S.region].m;return (m[i]||1)*(m.all||1);}
@@ -73,7 +72,9 @@ function offlineCap(){return (has('c7')?sp('c7'):has('c3')?24:has('c1')?8:2)*360
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return 0;}
-function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR*(S.chal==='cG'?chalP():1);}
+// 故郷の時間の速まり：9が（12＋光の近さ）個までは γ のまま、その先は γ の TIME_K 乗でゆるやかに
+function timeGamma(s){const c=MAX_STAGE+law('lc');if(s<=c)return stageGamma(s);const g=stageGamma(c);return g*Math.pow(stageGamma(s)/g,TIME_K);}
+function yearsPerSec(){return timeGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR*(S.chal==='cG'?chalP():1);}
 function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
 function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&&i>ANCHOR))||S.auto[i]===0)continue;if(!devOpen(i)||chalBlocksDevice(i))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;onBought(i);S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
 function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}

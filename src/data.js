@@ -68,6 +68,7 @@ const STAGE_MULT=500;   // 光速の99%より先は、段階ごとに加速コ�
 const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階12（光速の99%）まで。その先は STAGE_MULT 倍ずつ（stageCost）
 const MAX_STAGE=22;
 const TOP_STAGE=MAX_STAGE+10;   // 9が22個。はじめからここまで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
+const TIME_K=0.3;   // 9が（12＋光の近さ）個より先は、故郷の時間の速まりを γ のこの乗にとどめる（周回が数分に縮まないように）
 const FINAL_MULT=25;   // 9が11個 → 12個の加速は、ひとつ前の段階の値段のこの倍（ほかは STAGE_MULT 倍）。1周目の後半に届く目標にするため
 const BRAKE_STAGE=11;    // 緊急停止が使えるのは光速の90%から
 const DILATION_STAGE=11; // ここから表示の主役を「時間の進み」にする
@@ -156,7 +157,7 @@ const CHAL={
 };
 /* ④ 新しい宇宙（法則）。宇宙の果てに着くと、宇宙を畳んで作り直せる */
 const LAWS=[
-  {id:'lc',name:'光の近さ',max:10,col:[235,238,250],cost:l=>1+Math.floor(l/3),text:l=>'9が12個より先の加速の、1段ごとの値段の上がり方が緩む（×'+Math.round(stageMultAt(glow('rm'))*lcMult(l))+' → ×'+Math.round(stageMultAt(glow('rm'))*lcMult(l+1))+'）'},
+  {id:'lc',name:'光の近さ',max:10,col:[235,238,250],cost:l=>1+Math.floor(l/3),text:l=>'加速するほど故郷の時間が速くなるのが、9が'+(12+l)+'個 → '+(13+l)+'個まで続く（その先はゆるやか）'},
   {id:'td',name:'時の遅れ',max:8,col:[170,200,255],cost:l=>1+Math.floor(l/2),text:l=>'生産の倍率 γ が強くなる（γ<sup>'+(1+0.1*(l-1)).toFixed(1)+'</sup> → γ<sup>'+(1+0.1*l).toFixed(1)+'</sup>）'},
   {id:'ar',name:'引き直しの記憶',max:1,col:[255,214,170],cost:()=>2,text:()=>'航路の引き直しが自動になる（航跡が今までの合計以上たまったとき）'},
   {id:'ut',name:'宇宙の色合い',max:4,col:[150,230,210],cost:()=>1,text:l=>'宇宙の色合いを選べる（'+(l+1)+'種類）。見た目だけ'}
