@@ -92,7 +92,6 @@ function skillCompare(k){if(has(k.id))return '';const rows=[];if(!k.glow&&k.cost
   if(id==='aA')rows.push(['加速','手動 → 自動']);else if(id==='pW')rows.push(['加速のたびに','+'+fmt(P0*60)]);else if(id==='cS')rows.push(['流れ星1つ','+'+fmt(P0*300)]);else if(id==='cL')rows.push(['便り1通','+'+fmt(P0*600)]);else if(id==='cC')rows.push(['ため撃ち1回',fmt(tapGain()*20)]);else if(id==='aT')rows.push(['TIER','手動 → 自動']);else if(id==='aM')rows.push(['スキルの覚え方','手動 → 自動']);else if(id[0]==='a'&&id.length===2)rows.push(['購入','手動 → 自動']);
   if(id==='pR')rows.push(['停止のあとの速度',speedText(0)+' → '+speedText(Math.floor(S.stage*sp('pR')))]);if(id==='c1'||id==='c3'||id==='c7')rows.push(['放置の上限',(offlineCap()/3600)+'時間 → '+(withSkill(id,offlineCap)/3600)+'時間']);
   if(id==='c2'||id==='cA')rows.push(['タップ1回',fmt(tapGain())+' → '+fmt(withSkill(id,tapGain))]);
-  if(id==='cB')rows.push(['時間の錨の効果','−'+Math.round(anchorCut()*100)+'% → −'+Math.round(withSkill(id,anchorCut)*100)+'%']);
   if(id==='c5')rows.push(['停止後に持ち越す','0 → '+fmt(S.peakP*60)]);
   return rows.map(r=>'<div class="row"><span class="note" style="margin:0">'+r[0]+'</span><span class="num">'+r[1]+'</span></div>').join('');}
 

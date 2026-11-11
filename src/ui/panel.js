@@ -43,7 +43,7 @@ function devVisible(i){return devOpen(i);}
 function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}
 function renderDrive(force){
   const order=DEVICES.map((_,i)=>i).sort((a,b)=>(DEVICES[a].find||0)-(DEVICES[b].find||0)||DEVICES[a].unlock-DEVICES[b].unlock);
-  const visible=order.filter(devVisible);const nextLocked=order.find(i=>!devVisible(i)&&(!DEVICES[i].find||S.voy));
+  const visible=order.filter(devVisible);const nextLocked=order.find(i=>i!==ANCHOR&&!devVisible(i)&&(!DEVICES[i].find||S.voy));
   const key=visible.join()+'|'+nextLocked+'|'+buyMode+'|'+S.skills.filter(x=>x[0]==='a').join()+'|'+S.auto.join()+'|'+S.autoTier;
   if(force||pbody.dataset.k!==key){pbody.dataset.k=key;pbody.innerHTML='';devUI=[];
     const h=document.createElement('div');h.className='phead';h.innerHTML='<span class="lab">DEVICES</span><span class="seg"><button data-m="1">×1</button><button data-m="10">×10</button><button data-m="max">MAX</button></span>';pbody.appendChild(h);

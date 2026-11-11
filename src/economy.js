@@ -71,7 +71,7 @@ function batteryRate(){return 0.03+(has('e2')?0.02:0);}
 function offlineCap(){return (has('c7')?sp('c7'):has('c3')?24:has('c1')?8:2)*3600;}
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
-function anchorCut(){return Math.min(0.6,0.03*S.dev[ANCHOR]*(has('cB')?1.5:1));}
+function anchorCut(){return 0;}
 function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR*(S.chal==='cG'?chalP():1);}
 function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
 function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&&i>ANCHOR))||S.auto[i]===0)continue;if(!devOpen(i)||chalBlocksDevice(i))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;onBought(i);S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
@@ -88,7 +88,8 @@ function tick(dt,offMul){
   else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy/(S.chal==='cG'?chalP():1)*Math.max(stageBeta(S.stage),0.02));}
   S.runTime+=dt;if(!S.cleared)S.loopTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.vessel>=VES[VES.length-1].need&&canShower())FXQ.autoShower=true;if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);if(S.sig>0)S.sig=Math.max(0,S.sig-dt);autoLearn();
 }
-function devOpen(i){const d=DEVICES[i];if(d.find&&S.found<d.find)return false;return S.dev[i]>0||S.maxStage>=d.unlock;}
+function devOpen(i){if(i===ANCHOR)return false;   // 時間の錨はやめた（2026-11-11）。番号は航海の装置のために残す
+  const d=DEVICES[i];if(d.find&&S.found<d.find)return false;return S.dev[i]>0||S.maxStage>=d.unlock;}
 function chalBlocksDevice(i){return S.chal==='pL'&&i!==0;}
 // 装置を買ったあとに呼ぶ：「冷えていく炉」は買った時刻を記録、「一列の船」は下の装置を0台に戻す
 function onBought(i){S.lastBuy[i]=S.runTime;if(S.chal==='aM')for(let j=0;j<i;j++)S.dev[j]=0;}

@@ -38,7 +38,7 @@ const DEVICES=[
   {name:'パルサー共振器',cost:5.5e6,prod:1e5,unlock:17,col:5,emb:'pulsar',trait:'タップ後10秒間 ×4',spawn:{to:3,rate:0.3,why:'強磁場で生まれた陽電子を閉じ込める'}},
   {name:'ブラックホール抽出炉',cost:9e7,prod:1.25e6,unlock:19,col:0,emb:'hole',trait:'故郷で過ぎた年月が長いほど強い',spawn:{to:2,rate:0.4,why:'降着円盤のプラズマを切り分けて点火する'}},
   {name:'真空エネルギー炉',cost:1.5e9,prod:1.6e7,unlock:21,col:4,emb:'vacuum',trait:'覚えたスキル1つにつき+15%'},
-  {name:'時間の錨',cost:5e6,prod:0,unlock:14,col:6,emb:'anchor',trait:'生産しない。1台ごとに故郷の時間の進み−3%（最大−60%）',growth:1.5},
+  {name:'時間の錨',cost:5e6,prod:0,unlock:14,col:6,emb:'anchor',trait:'（使わない）',growth:1.5},
   // ③の航海で目的地に着くと加わる装置（find＝見つけた目的地の数。col 7〜10 は NEW_COLORS）
   {name:'銀河核炉',cost:2e10,prod:3e8,unlock:12,find:1,col:7,emb:'galaxy',trait:'航海で進んだ距離が長いほど強い'},
   {name:'暗黒物質炉',cost:5e11,prod:6e9,unlock:12,find:2,col:8,emb:'dark',trait:'見えない重さが、持っている装置1台ごとに+0.2%'},
@@ -88,7 +88,7 @@ const SKILLS=[
   {id:'c2',br:2,step:1,name:'受信感度',desc:'タップ ×3',cost:3},
   {id:'c3',br:2,step:2,name:'長い眠り II',desc:'放置の上限 24時間',cost:10},
   {id:'cA',br:2,step:3,fork:-1,name:'能動',desc:'タップ ×5、パルサーの効果時間 2倍',cost:30},
-  {id:'cB',br:2,step:3,fork:1,name:'放置',desc:'不在中の生産 ×2、時間の錨の効果 +50%',cost:30},
+  {id:'cB',br:2,step:3,fork:1,name:'放置',desc:'不在中の生産 ×2',cost:30},
   {id:'c5',br:2,step:4,name:'過去への投資',desc:'停止後、前回の最大生産60秒分を持ち越す',cost:100},
   {id:'pS',br:0,step:5,name:'スリングショット',desc:'航路の区域が変わるたびに、60秒間 生産×3',cost:150},
   {id:'pI',br:0,step:6,name:'惰性',desc:'加速しない時間が長いほど生産が上がる（5分で最大×3、加速でリセット）',cost:250},
@@ -117,7 +117,7 @@ const SKILLS=[
   {id:'eM',br:1,step:8,name:'濃い光',desc:'生産の桁が1.02倍になる',cost:0,glow:40},
   {id:'c7',br:2,step:9,name:'長い眠り III',desc:'放置の上限 72時間',cost:0,glow:20},
   {id:'cG',br:2,step:10,name:'帰郷の信号',desc:'色を一つ失うたびに、30秒間 生産×10',cost:0,glow:40},
-  {id:'a8',br:3,step:11,name:'出だしの風',desc:'周回の最初の10分は生産×5。時間の錨も自動で買う',cost:0,glow:20},
+  {id:'a8',br:3,step:11,name:'出だしの風',desc:'周回の最初の10分は生産×5',cost:0,glow:20},
   {id:'aM',br:3,step:12,name:'連なる船',desc:'上位の装置1台につき、下の装置の生産 +0.2%（最大×3）。スキルも前の順に自動で覚える',cost:0,glow:40}
 ];
 /* 再出発（第二層）：故郷に着いたあと、もう一度遠い宙域から船を出す（強くてニューゲーム） */
@@ -171,7 +171,7 @@ const STAR_P={
   eM:{p:[1.02,1.03,1.04],t:v=>'生産の桁が'+v+'倍になる'},
   c7:{p:[72,96,120],t:v=>'放置の上限 '+v+'時間'},
   cG:{p:[30,60,90],t:v=>'色を一つ失うたびに、'+v+'秒間 生産×10'},
-  a8:{p:[5,10,20],t:v=>'周回の最初の10分は生産×'+v+'。時間の錨も自動で買う'},
+  a8:{p:[5,10,20],t:v=>'周回の最初の10分は生産×'+v},
   aM:{p:[3,4,5],t:v=>'上位の装置1台につき、下の装置の生産 +0.2%（最大×'+v+'）。スキルも前の順に自動で覚える'}
 };
 const VES=[{n:'小さな流星群',need:5,dur:10,count:40},{n:'流星群',need:15,dur:20,count:120},{n:'大流星群',need:40,dur:30,count:250},{n:'極大',need:100,dur:40,count:400}];
@@ -209,7 +209,6 @@ const ACHIEVEMENTS=[
   ['d5','鼓動','パルサー共振器を買う',s=>s.dev[5]>=1],
   ['d6','光を借りる','ブラックホール抽出炉を買う',s=>s.dev[6]>=1],
   ['d7','空っぽの力','真空エネルギー炉を買う',s=>s.dev[7]>=1],
-  ['d8','錨を下ろす','時間の錨を買う',s=>s.dev[8]>=1],
   ['m50','五十','どれかの装置を50台にする',s=>Math.max(...s.dev)>=50],
   ['m100','百','どれかの装置を100台にする',s=>Math.max(...s.dev)>=100],
   ['up','TIER','装置のTIERを上げる',s=>s.tier.some(t=>t>=2)],
