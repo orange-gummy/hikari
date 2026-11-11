@@ -48,7 +48,7 @@ function renderUniverse(){
     d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(uniPast+1)+'</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+lyText(h.far)+' 光年<br>得た法則　'+h.gain+'<br>この宇宙にいた時間　'+durText(h.time)+'<br>そのときの法則　'+lw+'</div><button class="act" id="uBack">いまの宇宙に戻る</button>';}
   else{const L=LAWS.find(x=>x.id===uniSel),l=law(L.id),nx=lawNext(L.id);
     d='<div class="row" style="padding:0"><span style="font-size:14px">'+L.name+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">'+l+' / '+L.max+'</span></div>'+
-      '<div class="note" style="margin:4px 0 8px">'+(nx?nx.text:(L.id==='lc'?'光の上限を書き換えきった。この先は、光そのもの。（⑤ 光になる は準備中）':'書き換えきった。'))+'</div>';
+      '<div class="note" style="margin:4px 0 8px">'+(nx?nx.text:(L.id==='lc'?'光の近さを書き換えきった。9を22個並べると、光になれる。':'書き換えきった。'))+'</div>';
     if(L.id==='ut'&&l>0)d+='<div class="uTint">'+UNI_TINT.slice(0,l+1).map((t,i)=>'<button data-tint="'+i+'" aria-label="'+t.name+'" aria-pressed="'+(S.uTint===i)+'"><i style="background:'+rgb(t.a,1)+';box-shadow:0 0 8px '+rgb(t.a,0.7)+'"></i>'+t.name+'</button>').join('')+'</div>';
     if(nx)d+='<button class="act" id="uLaw"'+(S.U<nx.cost?' disabled':'')+' style="border-color:rgba(200,210,255,.6);color:#dfe4ff">書き換える　法則 '+nx.cost+'</button>';}
   d+=canFold()?'<button class="act" id="uFold" style="margin-top:10px">宇宙を畳む　法則 +'+uGain()+'</button>':'<div class="note" style="margin-top:8px">宇宙の果てに着くと、宇宙を畳める。距離・航跡とその強化は戻り、見つけた色と装置・灯した星・残光の強化・実績は残る。</div>';
