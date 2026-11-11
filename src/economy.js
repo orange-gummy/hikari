@@ -109,9 +109,9 @@ function buyUpgrade(id){const u=UPGRADES.find(x=>x.id===id);if(!u||upgHas(id)||S
 function accelerate(){
   if(S.stage>=maxStage())return;
   const c=accelCost(S.stage+1);if(S.E<c)return;
-  const g0=stageGamma(S.stage);S.E-=c;if(has('pW')){const w=prodRate()*60;S.E+=w;S.Erun+=w;}S.coast=0;S.stage++;if(S.stage>S.maxStage)S.maxStage=S.stage;
+  const g0=timeGamma(S.stage);S.E-=c;if(has('pW')){const w=prodRate()*60;S.E+=w;S.Erun+=w;}S.coast=0;S.stage++;if(S.stage>S.maxStage)S.maxStage=S.stage;
   if(has('pA'))S.burst=60;
-  FXQ.accel=stageGamma(S.stage)/g0;
+  FXQ.accel=timeGamma(S.stage)/g0;
   const key='s'+S.stage;if(LINES[key])story(key,LINES[key]);
   if(S.stage===DILATION_STAGE&&!S.flags.dilx)setTimeout(()=>story('dilx',LINES.dilx),5200);
   if(S.stage>=GREY_STAGE)forceLoseAll();

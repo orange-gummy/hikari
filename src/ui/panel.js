@@ -81,14 +81,14 @@ function updateDrive(){const gm=globalMult();devUI.forEach(u=>{const i=u.i,k=buy
 }
 function paintDeviceColors(){devUI.forEach(u=>{const d=DEVICES[u.i],a=A[d.col],base=mix(d.col===5?[230,232,240]:colRGB(d.col),G,1-a),col=rgb(devGlow>0.05?mix(base,[255,255,255],devGlow*0.5):base,1);u.em.parts.forEach(p=>p.setAttribute('stroke',col));u.em.core.setAttribute('fill',col);
   if(!u.ticks.length)return;const n=S.dev[u.i],scale=n>=100?2:1;for(let k=0;k<100;k++){const t=u.ticks[k];t.style.background=(k+1)*scale<=n?col:(t.big?'rgba(255,255,255,.3)':'rgba(255,255,255,.12)');}});}
-function renderBoost(){const s=S.stage,nx=s+1,c=nx<=maxStage()?accelCost(nx):0,cap=batteryCap(),blocked=false,dil=s>=DILATION_STAGE,g=stageGamma(s);
+function renderBoost(){const s=S.stage,nx=s+1,c=nx<=maxStage()?accelCost(nx):0,cap=batteryCap(),blocked=false,dil=s>=DILATION_STAGE,g=timeGamma(s);
   let h='<div class="phead"><span class="lab">'+(dil?'SHIP TIME':'VELOCITY')+'</span></div>';
   if(dil)h+='<div class="row"><span>時間の進み</span><span class="big">/'+fmtG(g)+'</span></div><div class="row"><span class="note" style="margin:0">船の1秒の間に外で過ぎる時間（＝生産の倍率）</span><span class="num">'+fmtG(g)+'秒</span></div><div class="row"><span class="note" style="margin:0">速度</span><span class="num">'+speedText(s)+'</span></div>';
   else h+='<div class="row"><span>いまの速度</span><span class="big">'+speedText(s)+'</span></div><div class="row"><span class="note" style="margin:0">'+(s>=6?'秒速':'光速の')+'</span><span class="num">'+(s>=6?kmsOf(s).toLocaleString('ja-JP')+'km':stagePct(s)+'%')+'</span></div>';
-  if(nx<=maxStage()){const label=nx>DILATION_STAGE?'時間の進み /'+fmtG(stageGamma(nx))+' まで加速する':speedText(nx)+'まで加速する';
+  if(nx<=maxStage()){const label=nx>DILATION_STAGE?'時間の進み /'+fmtG(timeGamma(nx))+' まで加速する':speedText(nx)+'まで加速する';
     if(has('aA'))h+='<div class="row"><span class="note" style="margin:0">自動加速</span><button class="auto" id="bAuto"'+(S.autoAcc?' data-on':'')+'>'+(S.autoAcc?'自動':'手動')+'</button></div>';
     h+='<button class="act" id="bAcc"'+(S.E<c||blocked?' disabled':'')+'>'+label+'　<span class="num">'+fmt(c)+'</span></button>';
-    const ratio=(stageGamma(nx)/g).toFixed(1),un=DEVICES.filter(d=>d.unlock===nx).map(d=>d.name);
+    const ratio=(timeGamma(nx)/g).toFixed(1),un=DEVICES.filter(d=>d.unlock===nx).map(d=>d.name);
     if(blocked)h+='<div class="note">故郷まで残り'+Math.round((1-ARRIVE_RATIO)*100)+'%（'+fmt(GOAL_LY*(1-ARRIVE_RATIO))+'光年）に近づくと開く。</div>';
     else if(nx>DILATION_STAGE)h+='<div class="note">光速の'+stagePct(nx)+'%へ。速さはほとんど変わらないが、船の時間の進みが約'+ratio+'倍ゆっくりになる。外から届く光は早回しになり、生産も故郷で過ぎる時間も約'+ratio+'倍になる。</div>';
     else if(nx===DILATION_STAGE)h+='<div class="note">光速の90%を超えると、船の時間の進みがはっきり遅くなり始める。外の光が早回しで届くので、ここから先は加速するほど生産が大きく伸びる。</div>';

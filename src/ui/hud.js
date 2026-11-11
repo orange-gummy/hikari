@@ -77,7 +77,7 @@ function goal(){const s=S.stage,nx=s+1;
   if(S.dev[0]===0)return['DRIVEで太陽帆を買う','drive',false];
   if(S.maxStage===0)return['BOOSTで秒速10kmまで加速する'+(S.E<accelCost(1)?'（あと'+fmt(accelCost(1)-S.E)+'）':''),S.E>=accelCost(1)?'boost':null,false];
   if(S.maxStage>=BRAKE_STAGE&&S.prestiges===0&&S.restarts===0&&wGain()>=5)return['STOPで緊急停止して、歪みを得る','reset',false];
-  if(nx<=maxStage()){const c=accelCost(nx),rest=S.E<c?'（あと'+fmt(c-S.E)+'）':'';return[(nx>DILATION_STAGE?'時間の進み /'+fmtG(stageGamma(nx))+' まで加速する':speedText(nx)+'まで加速する')+rest,S.E>=c&&!(has('aA')&&S.autoAcc)?'boost':null,false];}   // 自動加速中は BOOST を光らせない（たまった瞬間に加速されて一瞬だけ光るため）
+  if(nx<=maxStage()){const c=accelCost(nx),rest=S.E<c?'（あと'+fmt(c-S.E)+'）':'';return[(nx>DILATION_STAGE?'時間の進み /'+fmtG(timeGamma(nx))+' まで加速する':speedText(nx)+'まで加速する')+rest,S.E>=c&&!(has('aA')&&S.autoAcc)?'boost':null,false];}   // 自動加速中は BOOST を光らせない（たまった瞬間に加速されて一瞬だけ光るため）
   return['故郷まで あと'+Math.ceil(Math.max(0,GOAL_LY-S.dist)).toLocaleString('ja-JP')+'光年',null,false];}
 let lastGoal='';
 // 光らせるタブ：一度光ったら3秒は消さない（自動購入でエネルギーが加速の値段をまたぐたびに、点いたり消えたりしていた）
@@ -92,7 +92,7 @@ function paintHUD(){const p=fmtParts(S.E);document.getElementById('eV').textCont
   document.getElementById('yr').textContent=Math.floor(S.years).toLocaleString('ja-JP');{const yr=yearsPerSec()*timeMult;document.getElementById('yrRate').textContent=yr<0.01?'+'+fmtY(yr*86400)+' 年/日':'+'+fmtY(yr)+' 年/秒';}
   const nm=nextMemIndex(),m=document.getElementById('mem');if(nm>=0&&nm<6){m.textContent='記憶が薄れるまで あと'+fmtY(Math.max(0,LOSE_YEARS[nm]-S.years))+'年';m.style.color=S.years/LOSE_YEARS[nm]>0.85?'#ffb38a':'';}else if(nm===6){m.textContent='最後の記憶が揺らいでいる';m.style.color='#ffb38a';}else m.textContent='';}
   paintRoute();}
-function paintSpeed(){const s=S.stage,g=fmtG(stageGamma(s)),h=document.getElementById('hV'),dil=s>=DILATION_STAGE;
+function paintSpeed(){const s=S.stage,g=fmtG(timeGamma(s)),h=document.getElementById('hV'),dil=s>=DILATION_STAGE;
   document.getElementById('hLab').textContent='VELOCITY';h.textContent=s<=5?KMS[s].toLocaleString('ja-JP')+' km/s':stagePct(s)+'% c';h.style.fontSize=(h.textContent.length<=7?26:h.textContent.length<=10?21:h.textContent.length<=13?17:14)+'px';
   document.getElementById('hG').textContent=dil?'船の1秒＝外の'+g+'秒':s<=5?'光速の'+stagePct(s)+'%':'秒速'+kmsOf(s).toLocaleString('ja-JP')+'km';
   document.getElementById('spdG').textContent=dil?'時間の進み /'+g:speedText(s);}
