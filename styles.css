@@ -178,8 +178,9 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 .skPulse{animation:skPulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes skPulse{0%,100%{opacity:.25;transform:scale(.92)}50%{opacity:1;transform:scale(1.05)}}
 .skd{border:0.5px solid var(--line);border-radius:14px;padding:10px 14px;height:184px;display:flex;flex-direction:column;overflow:hidden}
-.skd>div.note:first-of-type{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.9em}
-.skd>.act,.skd>div.note:last-child:not(:first-of-type){margin-top:auto}
+.skTxt{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}.skTxt::-webkit-scrollbar{display:none}
+.skd>.act,.skd>.note{flex:none;margin-top:6px}
+.skd>.note{min-height:34px;display:flex;align-items:center}
 .skd .act{margin:6px 0 0;padding:8px 12px;flex:none}
 .skd h3{font-family:var(--ui);font-weight:400;font-size:15px;margin:0;color:var(--ink-strong)}
 .skd .meta{font-size:11px;color:var(--ink-dim)}
