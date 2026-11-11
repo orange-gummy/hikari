@@ -22,7 +22,7 @@ const loop=`
 const DAYS=${JSON.stringify(DAYS)},LOOPS=${LOOPS},WEEK=${WEEK},SCHED=${JSON.stringify(SCHED)};
 function stamp(){return DAYS?(t/86400).toFixed(2):(t/60).toFixed(1);}   // 日数モードは日、ふだんは分
 const LOG=[],RLOG=[];
-const PATH=['p1','e1','c1','p2','e2','c2','p3','e3','c3','pB','pA','eA','eB','cB','cA','p5','e5','c5','pS','eC','cL','pI','eR','cM','pW'];
+const PATH=['p1','e1','c1','p2','e2','c2','p3','e3','c3','pB','pA','eA','eB','cB','cA','p5','e5','c5','pS','eC','cS','cL','pI','eR','cC','cM','pW'];
 function best(){let b=null;const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;for(const i of PRODI){if(!devOpen(i)||chalBlocksDevice(i))continue;const c=devCost(i,1);if(c>S.E||c>0.12*nxt)continue;const P0=prodRate();S.dev[i]++;const P1=prodRate();S.dev[i]--;const r=(P1-P0)/c;if(!b||r>b.r)b={i,r};}return b;}
 let lastP=0;
 // 画面を触っている1秒
@@ -35,7 +35,7 @@ function act(){
     for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
     const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;onBought(b.i);if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
   if(S.voy){if(voyStopReady()&&t-lastP>20){LOG.push([stamp(),'prest',wGain()]);prestige(false);lastP=t;}return;}   // ③では自動の停止とスキル選び
-  const w=wGain();if(S.stage>=BRAKE_STAGE&&w>=Math.max(5,1.6*(S.W+skillSpent()))&&t-lastP>90){prestige(false);lastP=t;LOG.push([stamp(),'prest',w]);for(const id of PATH)buySkill(id);}
+  const w=wGain();if(S.stage>=BRAKE_STAGE&&w>=Math.max(5,1.6*(S.W+skillSpent()))&&t-lastP>90){prestige(false);lastP=t;LOG.push([stamp(),'prest',w]);for(const id of PATH){const k=SKILLS.find(z=>z.id===id);if(k.cost<=100||k.cost<=0.25*S.W)buySkill(id);}}
 }
 // 放置（ゲームの offline() と同じく、上限までを200刻みで進める）
 function idle(sec){if(sec<30||done)return;const tt=Math.min(sec,offlineCap()),mul=has('cB')?2:1;for(let k=0;k<200&&!done;k++){tick(tt/200,mul);checkStory();chalWatch();achCheck();}}
