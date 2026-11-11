@@ -83,7 +83,7 @@ const SKILLS=[
   {id:'e3',br:1,step:2,name:'濃い流星群',desc:'流星群の流れ星 +50%',cost:10},
   {id:'eA',br:1,step:3,fork:-1,name:'連鎖反応',desc:'台数の節目の倍率 ×2→×3',cost:30},
   {id:'eB',br:1,step:3,fork:1,name:'光の手ざわり',desc:'捕まえた流れ星 ×2。連続の倍率の上限 ×3 → ×5',cost:30},
-  {id:'e5',br:1,step:4,name:'余剰の循環',desc:'改良の効果 ×1.5',cost:100},
+  {id:'e5',br:1,step:4,name:'余剰の循環',desc:'TIER の効果 ×1.5（1段ごとの倍率 ×2 → ×2.5）',cost:100},
   {id:'c1',br:2,step:0,name:'長い眠り I',desc:'放置の上限 8時間',cost:1},
   {id:'c2',br:2,step:1,name:'受信感度',desc:'タップ ×3',cost:3},
   {id:'c3',br:2,step:2,name:'長い眠り II',desc:'放置の上限 24時間',cost:10},

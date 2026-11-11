@@ -123,7 +123,7 @@ function renderBattery(){const tier=vesTier(),v=S.vessel||0,top=VES[VES.length-1
   const go=document.getElementById('vGo');if(go)go.onclick=()=>{if(startShower())renderPanel(true);};}
 
 function renderReset(){const g=wGain();let h='<div class="phead"><span class="lab">EMERGENCY STOP</span></div><div class="row"><span>得られる歪み</span><span class="big">'+fmt(g)+'</span></div>'+
-  '<div class="note">緊急停止すると、エネルギー、速度、装置、改良、蓄電がなくなる。進んだ距離と、故郷で過ぎた年月は戻らない。停止のあと星図が開き、歪みで新しいスキルを覚えられる。</div>'+
+  '<div class="note">緊急停止すると、エネルギー、速度、装置、TIER がなくなる。流星群の器はそのまま。進んだ距離と、故郷で過ぎた年月は戻らない。停止のあと星図が開き、歪みで新しいスキルを覚えられる。</div>'+
   '<button class="act" id="rGo"'+(S.stage<BRAKE_STAGE||g<1||S.chal==='pR'?' disabled':'')+'>緊急停止する</button>'+(S.chal==='pR'?'<div class="note">チャレンジ「止まらない」の間は止まれない。</div>':'')+(S.stage<BRAKE_STAGE?'<div class="note">光速の90%に達すると使える。</div>':'')+
   '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">持っている歪み '+fmt(S.W)+'（使わずにいると1つにつき生産+1%）</span><span class="num">×'+fmtG(wMult())+'</span></div>'+
   '<div class="row"><span class="note" style="margin:0">これまでの停止</span><span class="num">'+S.prestiges+' 回</span></div>'+
