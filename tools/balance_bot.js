@@ -29,11 +29,11 @@ let lastP=0;
 function act(){
   tick(1);const P=prodRate();if(S.chal!=='c7'&&(P<2000||t%10<3)){S.E+=tapGain()*2;S.Erun+=tapGain()*2;S.pulse=10;}
   checkStory();chalWatch();if(t%5===0)achCheck();
-  let g=true;while(g){g=false;
+  let g=true,gi=0;while(g&&gi++<300){g=false;
     if(S.stage<maxStage()&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
     const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;
     for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
-    const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
+    const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;onBought(b.i);if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
   if(S.voy){if(voyStopReady()&&t-lastP>20){LOG.push([stamp(),'prest',wGain()]);prestige(false);lastP=t;}return;}   // ③では自動の停止とスキル選び
   const w=wGain();if(S.stage>=BRAKE_STAGE&&w>=Math.max(5,1.6*(S.W+skillSpent()))&&t-lastP>90){prestige(false);lastP=t;LOG.push([stamp(),'prest',w]);for(const id of PATH)buySkill(id);}
 }

@@ -39,9 +39,11 @@ function traitMult(i){const n=S.dev;switch(i){
   default:return 1;}}
 function fissionBonus(){return 1+Math.min(1,0.005*S.dev[1]);}
 function devBase(i){if(i===ANCHOR)return 0;return DEVICES[i].prod*S.dev[i]*milMult(S.dev[i])*upgA(i)*synMult(i)*regionMult(i);}
-function devRateRaw(i){return devBase(i)*traitMult(i);}
+function devRateRaw(i){return devBase(i)*traitMult(i)*(S.chal==='eL'?Math.pow(0.5,Math.max(0,S.runTime-(S.lastBuy[i]||0))/chalP()):1);}   // 「冷えていく炉」
+function chalP(){return CHAL[S.chal]&&CHAL[S.chal].p?CHAL[S.chal].p[(S.chalLv||1)-1]:1;}
+function chalBonus(){let n=0;for(const id in S.chalTier)n+=Math.max(0,(S.chalTier[id]||0)-1);return 1+CHAL_TIER_BONUS*n;}
 function wMult(){return 1+0.01*S.W;}   // 使わずに持っている歪み1つにつき生産+1%
-function globalMult(){return Math.pow(stageGamma(S.stage),1+0.1*law('td'))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+0.1*S.stage:1)*(has('eL')?1+0.05*S.lTotal:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
+function globalMult(){return Math.pow(stageGamma(S.stage),1+0.1*law('td'))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+0.1*S.stage:1)*(has('eL')?1+0.05*S.lTotal:1)*(has('cG')&&S.sig>0?10:1)*achMult()*chalBonus();}
 function achMult(){return 1+ACH_BONUS*S.ach.length;}
 function resonant(){const c={};for(const i of PRODI){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
@@ -49,7 +51,10 @@ function memHas(i){if(S.cleared||S.voy)return true;return i===6?!S.greyLost:i>=S
 function memTarget(i){return memHas(i)?1:0;}
 function onMilestone(){FXQ.milestone=true;if(has('eC'))S.crit=30;}
 function baseRateNoFusion(){let b=0;for(const i of PRODI)if(i!==2)b+=devBase(i);return b*globalMult();}
-function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);return b*globalMult();}
+function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult();
+  if(S.chal==='eM'&&r>1)r=Math.pow(r,chalP());                                    // 「薄い光」：桁が小さくなる
+  if(S.chal==='a8')r/=Math.pow(Math.max(1,S.loopTime/10),chalP());                // 「急ぐ帰り道」：周回の時間（10秒単位）で割られる
+  return r;}
 function devShare(i){return devRateRaw(i)*globalMult();}
 function tapGain(){return Math.max(1,prodRate()*0.05)*(has('c2')?3:1)*(has('cA')?5:1)*((S.tier[5]||1)>=3?1+0.02*S.dev[5]*synK():1);}
 function growth(i){return DEVICES[i].growth||DEVICE_GROWTH;}
@@ -61,9 +66,9 @@ function offlineCap(){return (has('c7')?72:has('c3')?24:has('c1')?8:2)*3600;}
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return Math.min(0.6,0.03*S.dev[ANCHOR]*(has('cB')?1.5:1));}
-function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR*(S.chal==='cG'?10:1);}
+function yearsPerSec(){return stageGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR*(S.chal==='cG'?chalP():1);}
 function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
-function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&&i>ANCHOR))||S.auto[i]===0)continue;if(!devOpen(i)||chalBlocksDevice(i))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
+function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&&i>ANCHOR))||S.auto[i]===0)continue;if(!devOpen(i)||chalBlocksDevice(i))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;onBought(i);S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
 function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 
 function tick(dt,offMul){
@@ -74,17 +79,19 @@ function tick(dt,offMul){
   const dy=yearsPerSec()*dt;S.years+=dy;
   if(S.voy)S.uTime+=dt*(offMul||1);
   if(S.voy)voyAdvance(dy*Math.max(stageBeta(S.stage),0.02)*voyMult());
-  else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy/(S.chal==='cG'?10:1)*Math.max(stageBeta(S.stage),0.02));}
+  else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy/(S.chal==='cG'?chalP():1)*Math.max(stageBeta(S.stage),0.02));}
   S.runTime+=dt;if(!S.cleared)S.loopTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.vessel>=VES[VES.length-1].need&&canShower())FXQ.autoShower=true;if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);if(S.sig>0)S.sig=Math.max(0,S.sig-dt);autoLearn();
 }
 function devOpen(i){const d=DEVICES[i];if(d.find&&S.found<d.find)return false;return S.dev[i]>0||S.maxStage>=d.unlock;}
-function chalBlocksDevice(i){return (S.chal==='pL'&&i!==0)||(S.chal==='a8'&&i===ANCHOR);}
+function chalBlocksDevice(i){return S.chal==='pL'&&i!==0;}
+// 装置を買ったあとに呼ぶ：「冷えていく炉」は買った時刻を記録、「一列の船」は下の装置を0台に戻す
+function onBought(i){S.lastBuy[i]=S.runTime;if(S.chal==='aM')for(let j=0;j<i;j++)S.dev[j]=0;}
 function buyDevice(i,mode){
   if(!devOpen(i)||chalBlocksDevice(i))return;
   const k=mode==='max'?devMax(i):mode==='10'?10:1;if(k<1)return;
   const c=devCost(i,k);if(c>S.E)return;
   const first=S.dev[i]===0,before=S.dev[i];
-  S.E-=c;S.dev[i]+=k;
+  S.E-=c;S.dev[i]+=k;onBought(i);
   if(first&&LINES['dev'+i])story('dev'+i,LINES['dev'+i]);
   if(MILESTONES.some(m=>before<m&&S.dev[i]>=m))onMilestone();
   return true;
@@ -107,7 +114,7 @@ function prestige(respec){
   const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
   const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage/2):0,keep=has('eM')?0.5:0;
   if(respec){S.W+=skillSpent();S.skills=[];}
-  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
+  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.lastBuy=[];S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   story('prest1',LINES.prest1);FXQ.prestige=true;voyLearn();
 }
 /* 再出発（第二層） */
@@ -124,9 +131,10 @@ function resetRun(){   // 再出発・航海の開始・航路の引き直しで
 }
 /* ② チャレンジ：上位の星を灯す */
 function canChallenge(){return !S.voy&&(S.cleared||S.restarts>0);}
-function startChallenge(id){if(!canChallenge()||!CHAL[id]||S.lit.includes(id))return false;resetRun();S.chal=id;if(id==='c7')S.dev[0]=1;FXQ.chal=id;return true;}
-function quitChallenge(){S.chal=null;}
-function chalCheck(){if(!S.chal)return;const id=S.chal,g=CHAL[id].goal;if((g.stage&&S.maxStage>=g.stage)||(g.home&&S.dist>=GOAL_LY)){S.chal=null;if(!S.lit.includes(id))S.lit.push(id);S.st.chal[id]=Date.now();const k=SKILLS.find(x=>x.id===id);logLine(k.name+'が灯った。',-1);FXQ.chalDone=id;}}
+function chalNext(id){const t=S.chalTier[id]||0;return t<3?t+1:0;}   // 次に挑む段（3段すべて越えたら0）
+function startChallenge(id){if(!canChallenge()||!CHAL[id])return false;const lv=chalNext(id);if(!lv)return false;resetRun();S.chal=id;S.chalLv=lv;S.lastBuy=[];if(id==='c7')S.dev[0]=1;FXQ.chal=id;return true;}
+function quitChallenge(){S.chal=null;S.chalLv=0;}
+function chalCheck(){if(!S.chal)return;const id=S.chal,lv=S.chalLv||1,g=CHAL[id].goal[lv-1];if((g.stage&&S.maxStage>=g.stage)||(g.home&&S.dist>=GOAL_LY)){S.chal=null;S.chalLv=0;S.chalTier[id]=Math.max(S.chalTier[id]||0,lv);if(!S.lit.includes(id))S.lit.push(id);if(lv===1)S.st.chal[id]=Date.now();const k=SKILLS.find(x=>x.id===id);logLine(lv===1?k.name+'が灯った。':'「'+CHAL[id].name+'」の段'+lv+'を越えた。',-1);FXQ.chalDone={id,lv};}}
 /* ③ さらに遠くへ（航跡） */
 function tg(id){return S.tg[id]||0;}
 function voyMult(){return VOY_BASE*Math.pow(2.7,tg('vs'));}
@@ -161,8 +169,8 @@ function starLit(k){return !k.glow||S.lit.includes(k.id);}
 function autoLearn(){if(!has('aM'))return;for(const id of S.prevSkills){if(has(id))continue;const k=SKILLS.find(x=>x.id===id);if(!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);}}
 function skillAvailable(k){if(has(k.id)||k.glow)return false;
   if(k.step===0)return true;return SKILLS.some(x=>x.br===k.br&&x.step===k.step-1&&has(x.id));}
-function buySkill(id){if(S.chal==='aM')return;const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
+function buySkill(id){const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='undefined'&&!skillPick)return;if(!k||!skillAvailable(k)||S.W<k.cost)return;S.W-=k.cost;S.skills.push(id);if(typeof NEWSK!=='undefined')NEWSK.push(id);}
 /* 流星群の器 */
 function vesTier(){let t=-1;VES.forEach((v,i)=>{if(S.vessel>=v.need)t=i;});return t;}
 function vesAdd(n){S.vessel=Math.min(VES[VES.length-1].need,(S.vessel||0)+n);}
-function canShower(){return S.flags.bat&&S.chal!=='eM'&&vesTier()>=0;}
+function canShower(){return S.flags.bat&&!(S.chal==='c7'&&S.chalLv>=2)&&vesTier()>=0;}

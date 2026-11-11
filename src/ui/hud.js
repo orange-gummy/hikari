@@ -67,9 +67,9 @@ function emblem(svg,kind){const parts=[];const add=(t,a)=>parts.push(el(t,Object
 /* 目標 */
 function goal(){const s=S.stage,nx=s+1;
   if(S.cleared)return[canVoyage()?'GALAXYで、さらに遠くへ':'STARで、もう一度船を出す',canVoyage()?'voy':'restart',false];
-  if(S.chal&&CHAL[S.chal])return['挑戦中「'+CHAL[S.chal].name+'」　'+CHAL[S.chal].gtext,null,false];
+  if(S.chal&&CHAL[S.chal])return['挑戦中「'+CHAL[S.chal].name+'」段'+(S.chalLv||1)+'　'+CHAL[S.chal].gtext[(S.chalLv||1)-1],null,false];
   if(!S.lightDone&&canLight())return['LIGHTで、光になる','light',false];
-  if(S.flags.bat&&!S.deposited&&S.chal!=='eM')return['窓を横切る流れ星をタップで捕まえる',null,false];
+  if(S.flags.bat&&!S.deposited&&S.chal!=='c7')return['窓を横切る流れ星をタップで捕まえる',null,false];
   if(S.flags.bat&&!S.released&&canShower())return['METEORで、流星群を呼ぶ','battery',false];
   if(canFold())return['UNIVERSEで宇宙を畳むと 法則 +'+uGain(),'uni',false];
   if(S.voy&&S.stage>=maxStage()){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}

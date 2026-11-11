@@ -29,7 +29,7 @@ function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if
 function setSel(b,v){const s=v?'true':'false';if(b.getAttribute('aria-selected')!==s)b.setAttribute('aria-selected',s);}
 function setCls(b,c,v){if(b.classList.contains(c)!==!!v)b.classList.toggle(c,!!v);}
 function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){setSel(b,b.dataset.l===curLayer);return;}setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
-function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;return (t==='battery'&&(S.chal==='eM'||!S.flags.bat))||(t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
+function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;return (t==='battery'&&((S.chal==='c7'&&S.chalLv>=2)||!S.flags.bat))||(t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&!S.flags.bat);}
 let devUI=[],TIERFX=null;
 function renderPanel(force){
@@ -181,25 +181,25 @@ function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';
 let litSel=null;
 let unlockChal=null;
 function renderUnlock(){const ks=SKILLS.filter(k=>k.glow);if(S.chal!==unlockChal){unlockChal=S.chal;if(S.chal)litSel=S.chal;}if(!litSel)litSel=(S.chal||(ks.find(k=>!S.lit.includes(k.id))||ks[0]).id);
-  const key='u|'+[S.lit.join(),litSel,S.chal,canChallenge()].join('|');if(pbody.dataset.k===key)return;
+  const key='u|'+[S.lit.join(),JSON.stringify(S.chalTier),litSel,S.chal,canChallenge()].join('|');if(pbody.dataset.k===key)return;
   const W=360,H=250,cx=180,cy=120,P=ks.map((_,i)=>{const a=-Math.PI*0.62+i*Math.PI*2/ks.length;return[cx+Math.cos(a)*120,cy+Math.sin(a)*92];});
-  let v='<div class="phead"><span class="lab">CHALLENGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">'+S.lit.filter(id=>CHAL[id]).length+' / '+ks.length+'</span></div><svg class="gHz" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="残光の星座">';
+  const tsum=ks.reduce((a,k)=>a+(S.chalTier[k.id]||0),0);let v='<div class="phead"><span class="lab">CHALLENGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">段 '+tsum+' / '+(ks.length*3)+'　生産 ×'+chalBonus().toFixed(1)+'</span></div><svg class="gHz" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="残光の星座">';
   ks.forEach((k,i)=>{const a=P[i],b=P[(i+1)%ks.length],both=S.lit.includes(k.id)&&S.lit.includes(ks[(i+1)%ks.length].id);v+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="rgb(255,236,200)" stroke-opacity="'+(both?0.4:0.1)+'" stroke-width=".8"'+(both?'':' stroke-dasharray="2 4"')+'/>';});
   ks.forEach((k,i)=>{const [x,y]=P[i],lit=S.lit.includes(k.id),c=BR_COL[k.br],sel=k.id===litSel,act=S.chal===k.id;
     v+='<g data-us="'+k.id+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="22" fill="transparent"/>'+
       (lit?'<circle cx="'+x+'" cy="'+y+'" r="20" fill="'+rgb(c,0.22)+'"/><circle cx="'+x+'" cy="'+y+'" r="3.4" fill="'+rgb(c,1)+'"/>'
           :'<circle cx="'+x+'" cy="'+y+'" r="9" fill="none" stroke="rgb(255,236,200)" stroke-opacity="'+(act?0.9:0.3)+'" stroke-dasharray="'+(act?'':'1 3')+'"/><circle cx="'+x+'" cy="'+y+'" r="'+(act?2.4:1.6)+'" fill="rgb(255,236,200)" fill-opacity="'+(act?1:0.5)+'"/>')+
       (sel?'<circle cx="'+x+'" cy="'+y+'" r="14" fill="none" stroke="rgb(255,214,170)" stroke-opacity=".8" stroke-width=".8"/>':'')+
-      '<text x="'+x+'" y="'+(y+26)+'" text-anchor="middle" font-size="10" fill="rgba(236,238,242,'+(lit||act?0.8:0.45)+')">'+CHAL[k.id].name+'</text></g>';});
+      '<text x="'+x+'" y="'+(y+26)+'" text-anchor="middle" font-size="10" fill="rgba(236,238,242,'+(lit||act?0.8:0.45)+')">'+CHAL[k.id].name+'</text>'+[0,1,2].map(j=>'<circle cx="'+(x-6+j*6)+'" cy="'+(y+34)+'" r="'+(j<(S.chalTier[k.id]||0)?1.6:1)+'" fill="rgb(255,226,190)" fill-opacity="'+(j<(S.chalTier[k.id]||0)?0.95:0.25)+'"/>').join('')+'</g>';});
   v+='</svg>';
-  const k=ks.find(z=>z.id===litSel),ch=CHAL[k.id],lit=S.lit.includes(k.id),act=S.chal===k.id;
-  v+='<div class="gDet"><div class="row" style="padding:0"><span style="font-size:14px">「'+ch.name+'」</span><span class="num" style="font-size:12px;color:var(--ink-dim)">'+(lit?'越えた':act?'挑戦中':'')+'</span></div>'+
-    '<div class="note" style="margin:4px 0 2px">縛り：'+ch.rule+'<br>目標：'+ch.gtext+'<br>灯る星：'+k.name+'（'+k.desc+'）</div>'+
-    (lit?'<div class="note">この星は灯っている。周回の最初から効き、消えない。</div>':act?'<button class="act" id="chQuit">やめる</button>':'<button class="act" id="chGo"'+(canChallenge()?'':' disabled')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">挑む</button>'+(canChallenge()?'':'<div class="note">故郷に一度着くと挑める。</div>'))+'</div>';
+  const k=ks.find(z=>z.id===litSel),ch=CHAL[k.id],lit=S.lit.includes(k.id),act=S.chal===k.id,tier=S.chalTier[k.id]||0,nx=act?(S.chalLv||1):chalNext(k.id),ri=Math.max(1,nx||3)-1;
+  v+='<div class="gDet"><div class="row" style="padding:0"><span style="font-size:14px">「'+ch.name+'」'+(nx?'　段'+nx:'')+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">'+(act?'挑戦中':tier>=3?'3段すべて越えた':tier?'段'+tier+'まで越えた':'')+'</span></div>'+
+    '<div class="note" style="margin:4px 0 2px">縛り：'+ch.rule[ri]+'<br>目標：'+ch.gtext[ri]+'<br>'+(nx===1||!nx&&!lit?'灯る星：'+k.name+'（'+k.desc+'）':nx?'越えると：すべての生産 +'+Math.round(CHAL_TIER_BONUS*100)+'%（灯った星 '+k.name+' はそのまま）':'灯った星：'+k.name+'（'+k.desc+'）')+'</div>'+
+    (act?'<button class="act" id="chQuit">やめる</button>':nx?'<button class="act" id="chGo"'+(canChallenge()?'':' disabled')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">段'+nx+'に挑む</button>'+(canChallenge()?'':'<div class="note">'+(S.voy?'航海に出ている間は挑めない。':'故郷に一度着くと挑める。')+'</div>'):'<div class="note">この星は灯っている。周回の最初から効き、消えない。</div>')+'</div>';
   pbody.dataset.k=key;pbody.innerHTML=v;
   pbody.querySelectorAll('[data-us]').forEach(g=>g.onclick=()=>{litSel=g.dataset.us;pbody.dataset.k='';renderUnlock();});
-  const go=document.getElementById('chGo');if(go)go.onclick=()=>confirmBox('チャレンジ「'+ch.name+'」','今の周回をやめて、遠い宙域から出直す。縛りは「'+ch.rule+'」。'+ch.gtext+'と、'+k.name+'が灯る。距離・年月・歪み・スキルはなくなり、残光は得られない。',()=>{if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();if(startChallenge(k.id)){applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}});
-  const q=document.getElementById('chQuit');if(q)q.onclick=()=>confirmBox('チャレンジをやめる','縛りがなくなり、今の周回をそのまま続ける。星は灯らない。',()=>{quitChallenge();pbody.dataset.k='';renderPanel(true);});}
+  const go=document.getElementById('chGo');if(go)go.onclick=()=>confirmBox('チャレンジ「'+ch.name+'」段'+nx,'今の周回をやめて、遠い宙域から出直す。縛りは「'+ch.rule[ri]+'」。'+ch.gtext[ri]+'と、'+(nx===1?k.name+'が灯る。':'すべての生産が +'+Math.round(CHAL_TIER_BONUS*100)+'% になる。')+'距離・年月・歪み・スキルはなくなり、残光は得られない。',()=>{if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();if(startChallenge(k.id)){applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}});
+  const q=document.getElementById('chQuit');if(q)q.onclick=()=>confirmBox('チャレンジをやめる','縛りがなくなり、今の周回をそのまま続ける。この段は越えたことにならない。',()=>{quitChallenge();pbody.dataset.k='';renderPanel(true);});}
 /* ③ さらに遠くへ（GALAXY タブ） */
 function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
   if(part==='voy'&&!S.voy&&canVoyage())h+='<div class="phead"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';

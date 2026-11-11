@@ -30,7 +30,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(autoRedrawReady()&&!LIGHTFX&&!BRK&&!RST&&!climax&&!ACC&&!FOLD&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(0,true);BRK.vr=true;}
   if(voyStopReady()&&!FOLD&&!LIGHTFX&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(wGain(),true);}
   if(FXQ.found){const ks=FXQ.found;FXQ.found=null;SND.play('light');fla=Math.max(fla,0.22);ks.forEach(k=>toast('新しい色　<b style="color:'+rgb(NEW_COLORS[k].rgb,1)+'">'+NEW_COLORS[k].name+'</b>　'+DEVICES[ANCHOR+1+k].name+'が使えるようになった'));if(curTab==='drive')renderDrive(true);}
-  if(FXQ.chalDone){const id=FXQ.chalDone;FXQ.chalDone=null;SND.play('light');fla=Math.max(fla,0.22);toast('チャレンジを越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が灯った');renderPanel(true);}
+  if(FXQ.chalDone){const {id,lv}=FXQ.chalDone;FXQ.chalDone=null;SND.play('light');fla=Math.max(fla,0.22);toast(lv===1?'チャレンジを越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が灯った':'「'+CHAL[id].name+'」段'+lv+'を越えた　<b>すべての生産 ×'+chalBonus().toFixed(1)+'</b>');renderPanel(true);}
   if(FXQ.redraw){FXQ.redraw=0;if(curTab==='drive')renderDrive(true);}
   if(FXQ.voyage){FXQ.voyage=false;routeMode=null;}
   if(FXQ.milestone){FXQ.milestone=false;SND.play('milestone');}   /* 画面全体のフラッシュはなくした（2026-11-06）。音と、台数の節目の表示だけ */
