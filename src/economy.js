@@ -39,11 +39,15 @@ function traitMult(i){const n=S.dev;switch(i){
   default:return 1;}}
 function fissionBonus(){return 1+Math.min(1,0.005*S.dev[1]);}
 function devBase(i){if(i===ANCHOR)return 0;return DEVICES[i].prod*S.dev[i]*milMult(S.dev[i])*upgA(i)*synMult(i)*regionMult(i);}
-function devRateRaw(i){return devBase(i)*traitMult(i)*(S.chal==='eL'?Math.pow(0.5,Math.max(0,S.runTime-(S.lastBuy[i]||0))/chalP()):1);}   // 「冷えていく炉」
+function devRateRaw(i){return devBase(i)*traitMult(i)*starDevMult(i)*(S.chal==='eL'?Math.pow(0.5,Math.max(0,S.runTime-(S.lastBuy[i]||0))/chalP()):1);}   // 「冷えていく炉」
+// 余熱（買ったばかりの装置）と連なる船（上位の装置の台数）
+function starDevMult(i){let m=1;if(has('eL')&&S.lastBuy[i]!=null&&S.runTime-S.lastBuy[i]<60)m*=sp('eL');
+  if(has('aM')){let u=0;for(const j of PRODI)if(j>i)u+=S.dev[j]||0;m*=Math.min(sp('aM'),1+0.002*u);}return m;}
 function chalP(){return CHAL[S.chal]&&CHAL[S.chal].p?CHAL[S.chal].p[(S.chalLv||1)-1]:1;}
-function chalBonus(){let n=0;for(const id in S.chalTier)n+=Math.max(0,(S.chalTier[id]||0)-1);return 1+CHAL_TIER_BONUS*n;}
+function sp(id){return STAR_P[id].p[Math.max(1,Math.min(3,S.chalTier[id]||1))-1];}   // 上位の星の強さ（越えた段で変わる）
+function starText(id){return STAR_P[id]?STAR_P[id].t(sp(id)):'';}
 function wMult(){return 1+0.01*S.W;}   // 使わずに持っている歪み1つにつき生産+1%
-function globalMult(){return Math.pow(stageGamma(S.stage),1+0.1*law('td'))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+0.1*S.stage:1)*(has('eL')?1+0.05*S.lTotal:1)*(has('cG')&&S.sig>0?10:1)*achMult()*chalBonus();}
+function globalMult(){return Math.pow(stageGamma(S.stage),1+0.1*law('td'))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+sp('pL')*S.stage:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
 function achMult(){return 1+ACH_BONUS*S.ach.length;}
 function resonant(){const c={};for(const i of PRODI){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
@@ -53,6 +57,8 @@ function onMilestone(){FXQ.milestone=true;if(has('eC'))S.crit=30;}
 function baseRateNoFusion(){let b=0;for(const i of PRODI)if(i!==2)b+=devBase(i);return b*globalMult();}
 function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult();
   if(S.chal==='eM'&&r>1)r=Math.pow(r,chalP());                                    // 「薄い光」：桁が小さくなる
+  if(has('eM')&&r>1)r=Math.pow(r,sp('eM'));                                       // 濃い光
+  if(has('a8')&&S.loopTime<600)r*=sp('a8');                                       // 出だしの風
   if(S.chal==='a8')r/=Math.pow(Math.max(1,S.loopTime/10),chalP());                // 「急ぐ帰り道」：周回の時間（10秒単位）で割られる
   return r;}
 function devShare(i){return devRateRaw(i)*globalMult();}
@@ -62,7 +68,7 @@ function devCost(i,k){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);r
 function devMax(i){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);return Math.max(0,Math.floor(Math.log(S.E*(g-1)/c+1)/Math.log(g)));}
 function batteryCap(){return batteryCapRaw(prodRate());}
 function batteryRate(){return 0.03+(has('e2')?0.02:0);}
-function offlineCap(){return (has('c7')?72:has('c3')?24:has('c1')?8:2)*3600;}
+function offlineCap(){return (has('c7')?sp('c7'):has('c3')?24:has('c1')?8:2)*3600;}
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return Math.min(0.6,0.03*S.dev[ANCHOR]*(has('cB')?1.5:1));}
@@ -112,7 +118,7 @@ function skillSpent(){return S.skills.reduce((a,id)=>a+SKILLS.find(k=>k.id===id)
 function prestige(respec){
   if(S.chal==='pR')return;   // チャレンジ「止まらない」
   const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
-  const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage/2):0,keep=has('eM')?0.5:0;
+  const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage*sp('pR')):0,keep=0;
   if(respec){S.W+=skillSpent();S.skills=[];}
   S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.lastBuy=[];S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   story('prest1',LINES.prest1);FXQ.prestige=true;voyLearn();
