@@ -156,7 +156,7 @@ const CHAL={
 };
 /* ④ 新しい宇宙（法則）。宇宙の果てに着くと、宇宙を畳んで作り直せる */
 const LAWS=[
-  {id:'lc',name:'光の近さ',max:10,col:[235,238,250],cost:l=>1+Math.floor(l/3),text:l=>'9が12個より先の加速の、1段ごとの値段の上がり方が緩む（×'+fmtG(stageMultAt(glow('rm'))*lcMult(l))+' → ×'+fmtG(stageMultAt(glow('rm'))*lcMult(l+1))+'）'},
+  {id:'lc',name:'光の近さ',max:10,col:[235,238,250],cost:l=>1+Math.floor(l/3),text:l=>'9が12個より先の加速の、1段ごとの値段の上がり方が緩む（×'+Math.round(stageMultAt(glow('rm'))*lcMult(l))+' → ×'+Math.round(stageMultAt(glow('rm'))*lcMult(l+1))+'）'},
   {id:'td',name:'時の遅れ',max:8,col:[170,200,255],cost:l=>1+Math.floor(l/2),text:l=>'生産の倍率 γ が強くなる（γ<sup>'+(1+0.1*(l-1)).toFixed(1)+'</sup> → γ<sup>'+(1+0.1*l).toFixed(1)+'</sup>）'},
   {id:'ar',name:'引き直しの記憶',max:1,col:[255,214,170],cost:()=>2,text:()=>'航路の引き直しが自動になる（航跡が今までの合計以上たまったとき）'},
   {id:'ut',name:'宇宙の色合い',max:4,col:[150,230,210],cost:()=>1,text:l=>'宇宙の色合いを選べる（'+(l+1)+'種類）。見た目だけ'}
