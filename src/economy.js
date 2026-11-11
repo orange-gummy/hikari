@@ -9,7 +9,7 @@ function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)retu
 function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
-function maxStage(){return TOP_STAGE;}
+function maxStage(){return S.voy?MAX_STAGE+law('lc'):TOP_STAGE;}   // 航海（③④）は今までどおり ④ 光の上限で上がる。故郷への周回は9が22個まで
 function stageCost(s){if(s<=12)return STAGE_COST[s];const m=stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(m,s-MAX_STAGE);}   // 光速の限界（9が12個）への最後の加速だけ、値段の上がり方を抑える
 function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
@@ -72,7 +72,7 @@ function offlineCap(){return (has('c7')?sp('c7'):has('c3')?24:has('c1')?8:2)*360
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return 0;}
-// 故郷の時間の速まり：9が（12＋光の近さ）個までは γ のまま、その先は γ の TIME_K 乗でゆるやかに
+// 故郷の時間の速まり：9が（12＋光の上限）個までは γ のまま、その先は γ の TIME_K 乗でゆるやかに
 function timeGamma(s){const c=MAX_STAGE+law('lc');if(s<=c)return stageGamma(s);const g=stageGamma(c);return g*Math.pow(stageGamma(s)/g,TIME_K);}
 function yearsPerSec(){return timeGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR*(S.chal==='cG'?chalP():1);}
 function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
@@ -165,7 +165,7 @@ function fold(){const g=uGain();if(g<1)return 0;
   S.uTint=S.uni%UNI_TINT.length;FXQ.fold=g;return g;}
 function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}
-function autoRedrawReady(){return law('ar')>0&&S.voy&&S.stage>=MAX_STAGE-1&&tGain()>=Math.max(3,S.tTotal);}
+function autoRedrawReady(){return law('ar')>0&&S.voy&&S.stage>=maxStage()-1&&tGain()>=Math.max(3,S.tTotal);}
 function trailNext(id){const a=TRAIL.find(x=>x.id===id),l=tg(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyTrail(id){const n=trailNext(id);if(!n||S.T<n.cost)return false;S.T-=n.cost;S.tg[id]=n.l+1;return true;}
 // ③では緊急停止とスキル選びが自動になる
