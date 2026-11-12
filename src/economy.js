@@ -10,7 +10,7 @@ function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
 function maxStage(){return S.voy?MAX_STAGE+law('lc'):TOP_STAGE;}   // 航海（③④）は今までどおり ④ 光の上限で上がる。故郷への周回は9が22個まで
-function stageCost(s){if(s<=12)return STAGE_COST[s];const m=stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(m,s-MAX_STAGE);}   // 光速の限界（9が12個）への最後の加速だけ、値段の上がり方を抑える
+function stageCost(s){if(s<=12)return STAGE_COST[s];const m=stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);const k=s-MAX_STAGE,ch=Math.min(k,FINAL_N-1);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(FINAL_MULT,ch)*Math.pow(m,k-ch);}   // 9が12個と13個への加速は、値段の上がり方を FINAL_MULT 倍に抑える（1周目の終わりまで届く目標を残す）
 function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
 function regionMult(i){const m=REGIONS[S.region].m;return (m[i]||1)*(m.all||1);}
