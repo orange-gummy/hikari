@@ -68,6 +68,7 @@ const STAGE_MULT=500;   // 光速の99%より先は、段階ごとに加速コ�
 const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階12（光速の99%）まで。その先は STAGE_MULT 倍ずつ（stageCost）
 const MAX_STAGE=22;
 const TOP_STAGE=MAX_STAGE+10;   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
+const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.3),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||5);   // 追い風（2026-11-16）：留守の間のエネルギーは OFF_NOW だけすぐ入り、残りは追い風になって、遊んでいる間に生産 ×WIND_X で吹き出す
 const TIME_K=0.3;   // 故郷への周回で9が12個より先は、故郷の時間と生産の速まりを γ のこの乗にとどめる（周回が数分に縮まないように）
 const FINAL_N=2;   // 9が12個から数えて、この数の段階は FINAL_MULT 倍で上がる
 const FINAL_MULT=25;   // 9が11個 → 12個の加速は、ひとつ前の段階の値段のこの倍（ほかは STAGE_MULT 倍）。1周目の後半に届く目標にするため
