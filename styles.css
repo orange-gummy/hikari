@@ -234,8 +234,13 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 .gScene .gNew{animation:gNew 1.6s 1.4s ease-out both;transform-box:fill-box;transform-origin:center}@keyframes gNew{0%{opacity:0;transform:scale(4)}100%{opacity:1;transform:scale(1)}}
 .gVal{font-family:var(--ui);font-size:20px;color:var(--ink-strong);margin:2px 0 2px;letter-spacing:.02em}
 .gVal b{font-weight:400;color:#ffd6aa}.gVal .gArr{color:var(--ink-dim);font-size:14px;margin:0 10px}
-.gRes{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;margin:2px 0 14px;font-size:12px;color:var(--ink-dim)}
-.gRes b{font-family:var(--ui);font-weight:400;font-size:16px;color:var(--ink-strong)}.gRes .gGain{color:#ffd6aa}
+.gTop{text-align:center}
+.gLab{font-family:var(--ui);font-size:11px;letter-spacing:.42em;color:var(--ink-dim);padding-left:.42em}
+.gL{margin:8px 0 2px;display:flex;align-items:baseline;justify-content:center;gap:10px}
+.gL span{font-size:12px;color:var(--ink-dim);letter-spacing:.2em}
+.gL b{font-family:var(--ui);font-weight:300;font-size:40px;line-height:1;color:#ffe2be;text-shadow:0 0 18px rgba(255,190,130,.35)}
+.gRes{font-size:12px;color:var(--ink-dim);letter-spacing:.04em}
+.gRes i{font-style:normal;margin:0 .7em;opacity:.5}.gRes em{font-style:normal;color:#ffd6aa}
 .uniSky{display:block;width:100%;max-width:420px;margin:4px auto 0;font-family:var(--ui)}
 .uTint{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 10px}
 .uTint button{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--ink-dim);font:inherit;font-size:12px;padding:4px 0}

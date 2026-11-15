@@ -181,12 +181,12 @@ function glowAffordable(){return AFTERGLOW.some(a=>{const n=glowNext(a.id);retur
 function glowAutoSpend(){let b=true;while(b){b=false;const c=AFTERGLOW.map(a=>[a.id,glowNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.L).sort((x,y)=>x[1].cost-y[1].cost)[0];if(c){buyGlow(c[0]);b=true;}}}
 // 合間に開いたとき、いま終えた周の結果を一行で出す
 function glowResult(){const r=S.lastRun;if(!r||Date.now()-r.at>10*60*1000)return '';
-  return '<div class="gRes">'+(r.k==='home'?'<span><b>'+r.n+'</b> 周目</span><span>故郷まで '+durLong(r.sec)+'</span><span class="gGain">残光 +'+fmt(r.g)+'</span>':'<span>航路を引き直した</span><span>いちばん遠く '+lyText(r.far)+' 光年</span><span class="gGain">航跡 +'+fmt(r.g)+'</span>')+'</div>';}
+  return r.k==='home'?r.n+' 周目<i>·</i>故郷まで '+durLong(r.sec)+'<i>·</i><em>+'+fmt(r.g)+'</em>':'航路を引き直した<i>·</i>いちばん遠く '+lyText(r.far)+' 光年<i>·</i><em>航跡 +'+fmt(r.g)+'</em>';}
 function openGlow(after){if(!glowAffordable()){after();return;}glowOpen=true;glowAfter=after;glowFlow=true;document.getElementById('glowOv').classList.add('on');renderGlowOv();}
 function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.remove('on');const f=glowAfter;glowAfter=null;if(f)f();}
 // 景色は小窓いっぱい。下の説明の高さを測ってから、その上に地平線を引く
 function renderGlowOv(){const ov=document.getElementById('glowOv'),b=document.getElementById('glowBody');
-  b.innerHTML='<div class="gTop"><div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+glowResult()+'<div class="note" style="margin:0">船を出す前に、残光で灯しておける。</div></div>'+
+  b.innerHTML='<div class="gTop"><div class="gLab">AFTERGLOW</div><div class="gL"><span>残光</span><b>'+fmt(S.L)+'</b></div><div class="gRes">'+(glowResult()||'船を出す前に、残光で灯しておける。')+'</div></div>'+
     '<div class="gBot">'+glowDetail()+'<button class="act" id="glowGo" style="margin-top:10px">船を出す</button></div><div class="gSky"></div>';
   const W=ov.clientWidth,H=ov.clientHeight,bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height,hz=Math.round(Math.max(top+150,H-bot-70));
   b.querySelector('.gSky').innerHTML=glowScene(W,H,hz);
