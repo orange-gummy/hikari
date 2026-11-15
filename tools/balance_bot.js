@@ -3,6 +3,7 @@
 //         node tools/balance_bot.js --loops 3    （故郷に着いたら再出発して、さらに3周する。残光は安い順に使う）
 //         node tools/balance_bot.js --days A     （放置込みで1週間。A＝1日3回×15分（8時・13時・21時）、B＝1日1回×30分（21時）。
 //                                                   遊んでいない間は放置の上限まで進む。着いたらすぐ再出発する）
+//         --gaps で、触っている間の「暇な時間」（手応えのある出来事の間隔）を出す
 //         --week 10 で日数を変えられる（既定は7日）。上位の星が8つ灯ったあと着くと、③の航海に出る
 const fs=require('fs'),path=require('path');
 const CORE_FILES=['data','state','economy','story'];
@@ -25,10 +26,26 @@ const LOG=[],RLOG=[];
 const PATH=['p1','e1','c1','p2','e2','c2','p3','e3','c3','pB','pA','eA','eB','cB','cA','p5','e5','c5','pS','eC','cS','cL','pI','eR','cC','cM','pW'];
 function best(){let b=null;const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;for(const i of PRODI){if(!devOpen(i)||chalBlocksDevice(i))continue;const c=devCost(i,1);if(c>S.E||c>0.12*nxt)continue;const P0=prodRate();S.dev[i]++;const P1=prodRate();S.dev[i]--;const r=(P1-P0)/c;if(!b||r>b.r)b={i,r};}return b;}
 let lastP=0;
+// 暇な時間を測る（--gaps）：触っている間の秒だけを数え、手応えのある出来事（加速・TIER・新しい装置・緊急停止とスキル・色を失う・
+// 再出発・チャレンジ・目的地・引き直し・宇宙を畳む）の間隔を記録する。装置を買い足すだけの時間は「暇」に数える
+let aT=0,lastEv=0,evPrev=null,evWhat='';const GAPS=[];
+function evSnap(){return {stage:S.stage,tier:S.tier.reduce((a,b)=>a+b,0),dev:PRODI.filter(i=>devOpen(i)&&!chalBlocksDevice(i)).length,stop:S.prestiges,lost:S.lost+(S.greyLost?1:0),loop:S.restarts,chal:(S.chal||'')+(S.chalLv||0),found:S.found,redraw:S.st.redraws,uni:S.uni};}
+const EV_NAME={stage:'加速',tier:'TIER',dev:'新しい装置',stop:'緊急停止',lost:'色を失う',loop:'再出発',chal:'チャレンジ',found:'目的地',redraw:'引き直し',uni:'宇宙を畳む'};
+function gapTick(){aT++;const s=evSnap();if(evPrev){const ch=Object.keys(s).filter(k=>s[k]!==evPrev[k]&&!(k==='stage'&&s.stop!==evPrev.stop)&&!(k==='tier'&&s.stop!==evPrev.stop));
+    if(ch.length){GAPS.push({g:aT-lastEv,at:stamp(),loop:S.restarts+1,stage:evPrev.stage,voy:!!S.voy,dist:Math.round(S.voy?S.vdist:S.dist),before:evWhat,after:ch.map(k=>EV_NAME[k]).join('・')});lastEv=aT;evWhat=ch.map(k=>EV_NAME[k]).join('・');}}
+  evPrev=s;}
+function gapReport(){const L=x=>x>=3600?(x/3600).toFixed(1)+'時間':Math.round(x/60)+'分';
+  console.log('');console.log('― 暇な時間（触っている間に、次の手応えのある出来事まで待った時間）―');
+  console.log('触っていた時間 '+(aT/3600).toFixed(1)+'時間、出来事 '+GAPS.length+'回、平均の間隔 '+(aT/Math.max(1,GAPS.length)/60).toFixed(1)+'分');
+  const loops=[...new Set(GAPS.map(g=>g.loop))];
+  for(const lp of loops){const G=GAPS.filter(g=>g.loop===lp),c=m=>G.filter(g=>g.g>=m*60).length,w=G.filter(g=>g.g>=300).reduce((a,g)=>a+g.g,0),tot=G.reduce((a,g)=>a+g.g,0);
+    console.log('周'+lp+(G[0].voy?'（航海）':'')+'：5分以上 '+c(5)+'回・10分以上 '+c(10)+'回・20分以上 '+c(20)+'回　5分以上の待ちの合計 '+L(w)+'（触った時間の'+Math.round(100*w/Math.max(1,tot))+'%）');}
+  console.log('長い待ち（上位15）：');
+  GAPS.slice().sort((a,b)=>b.g-a.g).slice(0,15).forEach(g=>console.log('  '+L(g.g).padStart(6)+'  '+g.at+(DAYS?'日':'分')+'　周'+g.loop+' 段階'+g.stage+(g.voy?' 航海':'')+' 距離'+g.dist+'　'+(g.before||'はじめ')+' → '+g.after));}
 // 画面を触っている1秒
 function act(){
   tick(1);const P=prodRate();if(S.chal!=='c7'&&(P<2000||t%10<3)){S.E+=tapGain()*2;S.Erun+=tapGain()*2;S.pulse=10;}
-  checkStory();chalWatch();if(t%5===0)achCheck();
+  checkStory();chalWatch();if(t%5===0)achCheck();gapTick();
   let g=true,gi=0;while(g&&gi++<300){g=false;
     if(S.stage<maxStage()&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
     const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;
@@ -79,6 +96,7 @@ if(!DAYS){
     arrive();
   }
   console.log('stage',S.stage,'min',(t/60).toFixed(1),'years',Math.round(S.years),'prest',S.prestiges,'loses',LOSES.join(' '));
+  if(argv.includes('--gaps'))gapReport();
   if(LOOPS){for(const r of RLOG)console.log(r);summary();console.log('total',(t/60).toFixed(1)+'分');}
 }else{
   let lastEnd=0,played=0;
@@ -92,7 +110,7 @@ if(!DAYS){
   console.log('遊び方 '+DAYS+'：'+WEEK+'日で画面を触った時間 '+(played/3600).toFixed(1)+'時間');
   for(const r of RLOG)console.log(r);
   console.log('いまの周回 '+(S.restarts+1)+'周目 段階'+S.stage+' 距離'+Math.round(S.dist)+'光年 停止'+S.prestiges+' 色 '+LOSES.join(' '));
-  summary();
+  summary();if(argv.includes('--gaps'))gapReport();
   if(S.voy||voyDay){console.log('航海に出た日',voyDay);console.log('目的地',FOUND.join('、')||'まだ');console.log('引き直し',REDRAW.length+'回 '+REDRAW.slice(0,12).join('、'));console.log('航跡の強化',JSON.stringify(S.tg),'残り航跡',S.T,'いちばん遠く',fmtN(S.vbest)+'光年');}
 }
 `;
