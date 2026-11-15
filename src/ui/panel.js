@@ -140,20 +140,33 @@ function glowScene(W,H,hz){const n=AFTERGLOW.length,span=Math.min(W-48,Math.max(
     '<radialGradient id="gSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgb(255,150,90)" stop-opacity=".30"/><stop offset=".6" stop-color="rgb(255,150,90)" stop-opacity=".08"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity="0"/></radialGradient>'+
     '<linearGradient id="gRay" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".85"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></linearGradient>'+
     '<linearGradient id="gLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgb(255,200,150)" stop-opacity="0"/><stop offset=".2" stop-color="rgb(255,200,150)" stop-opacity=".5"/><stop offset=".8" stop-color="rgb(255,200,150)" stop-opacity=".5"/><stop offset="1" stop-color="rgb(255,200,150)" stop-opacity="0"/></linearGradient>'+
-    '<radialGradient id="gDot"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".6"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></radialGradient></defs>'+
-    '<rect x="0" y="0" width="'+W+'" height="'+hz+'" fill="url(#gSky)"/><ellipse cx="'+(W/2)+'" cy="'+hz+'" rx="'+(W*0.62)+'" ry="'+Math.min(220,hz*0.5)+'" fill="url(#gSun)"/>';
+    '<linearGradient id="gTail" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient><radialGradient id="gDot"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".6"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></radialGradient></defs>'+
+    '<rect x="0" y="0" width="'+W+'" height="'+hz+'" fill="url(#gSky)"/><ellipse class="gBreath" cx="'+(W/2)+'" cy="'+hz+'" rx="'+(W*0.62)+'" ry="'+Math.min(220,hz*0.5)+'" fill="url(#gSun)"/>';
   // 日が沈んだあとの星（地平線に近いほど少ない）
   {let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};const top=Math.max(0,hz-120),m=Math.round(W*top/5200);
-    for(let k=0;k<m;k++){const y=rnd()*top,a=(0.15+0.55*rnd())*(1-0.6*y/Math.max(1,top));v+='<circle cx="'+(rnd()*W).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(0.35+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+a.toFixed(2)+'"/>';}}
+    for(let k=0;k<m;k++){const y=rnd()*top,a=(0.15+0.55*rnd())*(1-0.6*y/Math.max(1,top));const tw=rnd()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(rnd()*5).toFixed(1)+'s"':'')+' cx="'+(rnd()*W).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(0.35+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+a.toFixed(2)+'"/>';}
+    // これまでの周：故郷に着いた回数だけ、少し大きな星が灯る。続く周どうしは細い線でつなぐ（旅の星座）
+    const N=Math.min(80,S.restarts+(S.voy?1:0)),y0=Math.min(top*0.25,140),yr=Math.max(60,top-y0-30),P=[];
+    for(let i=0;i<N;i++){const row=Math.floor(i/6),u=0.1+(i%6)*0.15+((row*0.053)%0.1),w=0.8-(row%3)*0.33+0.11*Math.sin(i*1.7+row);P.push([u*W,y0+w*yr]);}   // 6つで一列。列ごとに少し上へ、ずらして重ならないように
+    for(let i=1;i<N;i++){const [ax,ay]=P[i-1],[bx,by]=P[i];if(i%6)v+='<line x1="'+ax.toFixed(1)+'" y1="'+ay.toFixed(1)+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="rgb(255,226,190)" stroke-opacity=".3" stroke-width=".7"/>';}
+    P.forEach(([x,y],i)=>{const last=i===N-1;v+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(last?9:6)+'" fill="url(#gDot)" opacity="'+(last?0.9:0.45)+'"/><circle'+(last&&glowFlow?' class="gNew"':'')+' cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(last?2:1.5)+'" fill="#fff4e6"/>';});
+    if(N)v+='<text x="'+P[N-1][0].toFixed(1)+'" y="'+(P[N-1][1]+18).toFixed(1)+'" text-anchor="middle" font-size="10" fill="rgba(255,226,190,.55)">'+N+'</text>';}
+  // ときどき横切る流れ星
+  v+='<g class="gShoot"><line x1="'+(W*0.72)+'" y1="'+(hz*0.12)+'" x2="'+(W*0.72-70)+'" y2="'+(hz*0.12+38)+'" stroke="url(#gTail)" stroke-width="1.2"/></g>';
   v+='<line x1="0" y1="'+hz+'" x2="'+W+'" y2="'+hz+'" stroke="url(#gLine)" stroke-width=".8"/>';
   AFTERGLOW.forEach((a,i)=>{const l=glow(a.id),x=xs[i],sel=a.id===glowSel,steps=Math.min(l,8),h=st+steps*st+(l>8?Math.min(st,Math.log2(l-7)*6):0),fx=GLOWFX&&GLOWFX.id===a.id&&Date.now()-GLOWFX.t<1200,nq=glowNext(a.id),can=nq&&S.L>=nq.cost;
     v+='<g data-gs="'+a.id+'" style="cursor:pointer"><rect x="'+(x-sp/2)+'" y="'+Math.max(0,hz-h-40)+'" width="'+sp+'" height="'+(h+100)+'" fill="transparent"/>'+
-      '<rect x="'+(x-(sel?1:0.7))+'" y="'+(hz-h)+'" width="'+(sel?2:1.4)+'" height="'+h+'" fill="url(#gRay)" opacity="'+(sel?1:0.65)+'"/>'+
+      (l?'<rect x="'+(x-4-Math.min(l,20)*0.4)+'" y="'+(hz-h)+'" width="'+(8+Math.min(l,20)*0.8)+'" height="'+h+'" fill="url(#gRay)" opacity="'+(0.18+Math.min(l,20)*0.015)+'"/>':'')+
+      '<rect x="'+(x-(sel?1:0.7)-Math.min(l,20)*0.06)+'" y="'+(hz-h)+'" width="'+((sel?2:1.4)+Math.min(l,20)*0.12)+'" height="'+h+'" fill="url(#gRay)" opacity="'+(sel?1:0.7)+'">'+(fx?'<animate attributeName="y" from="'+(hz-h+st)+'" to="'+(hz-h)+'" dur=".9s" calcMode="spline" keySplines=".2 .8 .3 1"/><animate attributeName="height" from="'+(h-st)+'" to="'+h+'" dur=".9s" calcMode="spline" keySplines=".2 .8 .3 1"/>':'')+'</rect>'+
       '<circle cx="'+x+'" cy="'+hz+'" r="14" fill="url(#gDot)"'+(fx?' class="gPop"':'')+'/><circle cx="'+x+'" cy="'+hz+'" r="3.2" fill="rgb(255,226,190)"/>';
     for(let k=1;k<=steps;k++)v+='<circle cx="'+x+'" cy="'+(hz-k*st)+'" r="1.5" fill="rgb(255,214,170)" opacity=".8"/>';
     if(can)v+='<circle class="gTip" cx="'+x+'" cy="'+(hz-h)+'" r="2.8" fill="rgb(255,236,210)"/>';
+    for(let k=0;k<Math.min(4,Math.ceil(l/2));k++){const dx=((k%2?1:-1)*(3+k*2)).toFixed(1),d=(k*0.9+i*0.37).toFixed(2);   // 先端からこぼれる光
+      v+='<circle cx="'+x+'" cy="'+(hz-h)+'" r="1" fill="rgb(255,226,190)" opacity="0"><animate attributeName="cy" from="'+(hz-h)+'" to="'+(hz-h+40)+'" dur="2.6s" begin="'+d+'s" repeatCount="indefinite"/><animate attributeName="cx" from="'+x+'" to="'+(x+ +dx)+'" dur="2.6s" begin="'+d+'s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;0" dur="2.6s" begin="'+d+'s" repeatCount="indefinite"/></circle>';}
     if(sel)v+='<circle cx="'+x+'" cy="'+hz+'" r="10" fill="none" stroke="rgb(255,214,170)" stroke-opacity=".8" stroke-width=".8"/>';
     v+='<text x="'+x+'" y="'+(hz+26)+'" text-anchor="middle" font-size="12" fill="'+(sel?'#eceef2':'rgba(236,238,242,.6)')+'">'+a.name+'</text><text x="'+x+'" y="'+(hz+44)+'" text-anchor="middle" font-size="11" fill="'+(can?'rgba(255,214,170,.95)':'rgba(236,238,242,.4)')+'">'+(nq?'残光 '+fmt(nq.cost):'灯りきった')+'</text></g>';});
+  for(let k=0;k<14;k++){const x=x0+((k*0.618)%1)*span,d=(k*0.71).toFixed(2),dur=(6+(k%4)).toFixed(1);   // 地平線から、光の粒がゆっくり立ちのぼる
+    v+='<circle cx="'+x.toFixed(1)+'" cy="'+hz+'" r="'+(0.6+(k%3)*0.3).toFixed(1)+'" fill="rgb(255,214,170)" opacity="0"><animate attributeName="cy" from="'+hz+'" to="'+(hz-180)+'" dur="'+dur+'s" begin="'+d+'s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.6;0" dur="'+dur+'s" begin="'+d+'s" repeatCount="indefinite"/></circle>';}
   if(glowFlow){glowFlow=false;for(let k=0;k<18;k++){const x=x0+Math.random()*span,d=(0.2+k*0.1).toFixed(2),r=(0.8+Math.random()*1.1).toFixed(1);
     v+='<circle cx="'+x.toFixed(1)+'" cy="-4" r="'+r+'" fill="rgb(255,226,190)" opacity="0"><animate attributeName="cy" from="-4" to="'+hz+'" dur="1.8s" begin="'+d+'s" fill="freeze" calcMode="spline" keySplines=".4 0 .9 .6"/><animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.15;.85;1" dur="1.8s" begin="'+d+'s" fill="freeze"/></circle>';}}
   return v+'</svg>';}
