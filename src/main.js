@@ -9,7 +9,7 @@ function prologue(){story('pro1',LINES.pro1);setTimeout(()=>story('pro2',LINES.p
 let lastT=performance.now(),acc=0,secAcc=0,saveAcc=0,lastStage=-1,paused=false,panelHold=false;
 pbody.addEventListener('pointerdown',()=>{panelHold=true;});addEventListener('pointerup',()=>{setTimeout(()=>{panelHold=false;},60);});addEventListener('pointercancel',()=>{panelHold=false;});
 function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);lastT=now;if(!document.hidden)S.st.play+=dt;
-  if(paused)return;
+  if(paused||bootOn)return;
   // 緊急停止の演出から、星図、帆を張る演出が終わるまでは、ゲームの時間を止める（航海の自動の停止も含む）
   const halted=!!BRK||!!RST||(skillOpen&&skillPick)||glowOpen;
   if(!climax&&!halted){const steps=timeMult>=100?10:1;for(let k=0;k<steps;k++)tick(dt*timeMult/steps);checkStory();}
@@ -54,11 +54,49 @@ function offline(){const el2=(Date.now()-(S.last||Date.now()))/1000;if(el2<30||S
   if(el2>=600)S.idleBack=true;checkStory();
   const h=Math.floor(t/3600),m=Math.floor(t%3600/60);document.getElementById('wBody').innerHTML='<div class="row"><span class="note" style="margin:0">船内で過ぎた時間</span><span class="num">'+(h?h+'時間':'')+m+'分</span></div><div class="row"><span class="note" style="margin:0">故郷で過ぎた年月</span><span class="num">'+fmtY(S.years-y0)+'年</span></div><div class="row"><span class="note" style="margin:0">集めたエネルギー</span><span class="num">'+fmt(Math.max(0,S.Erun-e0))+'</span></div>'+(el2>t?'<div class="note">放置できる上限（'+(offlineCap()/3600)+'時間）までの分を受け取る。</div>':'');
   const m2=document.getElementById('mWelcome');m2.classList.add('on');document.getElementById('wOk').onclick=()=>{m2.classList.remove('on');logLine(IDLE_LINES[Math.floor(Math.random()*IDLE_LINES.length)],-1);};}
+/* 起動時のタイトル（2026-11-15）：開くたびに出る。暗い宇宙に船の丸い窓が浮かび、中を星が流れる。
+   窓の中の7色の星座は、まだ持っている色だけが灯る。出ている間はゲームの時間を進めず、入ったときに留守の分を受け取る */
+let bootOn=false;
+function bootStatus(){if(S.voy){const d=nextDest();return d?d.name+'まで あと '+lyText(Math.max(0,d.ly-S.vdist))+' 光年':'宇宙の果ての先へ '+lyText(S.vdist)+' 光年';}
+  if(S.cleared)return '故郷に着いている。';let lost=0;for(let i=0;i<7;i++)if(!memHas(i))lost++;
+  return '故郷まで '+Math.max(0,Math.ceil(GOAL_LY-S.dist)).toLocaleString('ja-JP')+' 光年'+(lost?'<i>·</i>失った色 '+lost:'');}
+function paintBoot(){const W=innerWidth,H=innerHeight,cxp=W/2,cyp=Math.round(H*0.36),r=Math.round(Math.min(W*0.34,H*0.2,190));
+  let sd=23;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},f=n=>n.toFixed(1);
+  let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs><clipPath id="bClip"><circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'"/></clipPath>'+
+    '<radialGradient id="bIn"><stop offset="0" stop-color="rgb(120,140,200)" stop-opacity=".10"/><stop offset=".7" stop-color="rgb(120,140,200)" stop-opacity=".03"/><stop offset="1" stop-color="rgb(120,140,200)" stop-opacity=".09"/></radialGradient>'+
+    COLORS.map((c,i)=>'<radialGradient id="bC'+i+'"><stop offset="0" stop-color="rgb('+c.rgb.join(',')+')" stop-opacity=".55"/><stop offset="1" stop-color="rgb('+c.rgb.join(',')+')" stop-opacity="0"/></radialGradient>').join('')+'</defs>';
+  // 窓の外：遠い星がまばらに
+  const no=Math.round(W*H/9000);for(let k=0;k<no;k++){const tw=rnd()<0.25;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+f(rnd()*5)+'s"':'')+' cx="'+f(rnd()*W)+'" cy="'+f(rnd()*H)+'" r="'+(0.3+rnd()*0.6).toFixed(2)+'" fill="#eceef2" opacity="'+(0.12+0.38*rnd()).toFixed(2)+'"/>';}
+  // 窓の中：星が中心から流れる（速いほど速く）。故郷に着いているときは止まっている
+  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'" fill="#04050C"/><circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'" fill="url(#bIn)"/><g clip-path="url(#bClip)">';
+  const base=S.cleared?0:13-9*Math.min(1,S.stage/22),ns=54;
+  for(let k=0;k<ns;k++){const a=rnd()*6.283,ex=cxp+Math.cos(a)*r*1.08,ey=cyp+Math.sin(a)*r*1.08,sz=(0.5+rnd()*0.9).toFixed(2);
+    if(!base){const q=0.15+rnd()*0.85;v+='<circle cx="'+f(cxp+Math.cos(a)*r*q)+'" cy="'+f(cyp+Math.sin(a)*r*q)+'" r="'+sz+'" fill="#eceef2" opacity="'+(0.3+rnd()*0.5).toFixed(2)+'"/>';continue;}
+    const dur=(base*(0.6+rnd()*0.9)).toFixed(1),bg='-'+(rnd()*base*1.5).toFixed(1)+'s',at=' dur="'+dur+'s" begin="'+bg+'" repeatCount="indefinite"';
+    v+='<circle r="'+sz+'" fill="#eceef2"><animate attributeName="cx" from="'+f(cxp+Math.cos(a)*4)+'" to="'+f(ex)+'"'+at+' calcMode="spline" keyTimes="0;1" keySplines=".6 0 1 .6"/><animate attributeName="cy" from="'+f(cyp+Math.sin(a)*4)+'" to="'+f(ey)+'"'+at+' calcMode="spline" keyTimes="0;1" keySplines=".6 0 1 .6"/><animate attributeName="opacity" values="0;.35;.95"'+at+'/></circle>';}
+  v+='</g>';
+  // 7色の星座：持っている色だけが灯る
+  const s=r*1.25/114,P=CONS_PTS.map(p=>[cxp+(p[0]-65)*s,cyp+(p[1]-21)*s*1.15]),on=COLORS.map((_,i)=>memHas(i));
+  for(let i=0;i<6;i++){const b=on[i]&&on[i+1];v+='<line x1="'+f(P[i][0])+'" y1="'+f(P[i][1])+'" x2="'+f(P[i+1][0])+'" y2="'+f(P[i+1][1])+'" stroke="rgba(236,238,242,'+(b?0.45:0.13)+')" stroke-width=".7"'+(b?'':' stroke-dasharray="1.5 4"')+'/>';}
+  P.forEach(([x,y],i)=>{const c=COLORS[i].rgb,col='rgb('+c.join(',')+')';
+    v+=on[i]?'<circle cx="'+f(x)+'" cy="'+f(y)+'" r="'+f(Math.max(12,r*0.11))+'" fill="url(#bC'+i+')"/><circle class="bStar" style="animation-delay:-'+(i*0.7)+'s" cx="'+f(x)+'" cy="'+f(y)+'" r="'+f(Math.max(2.4,r*0.022))+'" fill="'+col+'"/>'
+      :'<circle cx="'+f(x)+'" cy="'+f(y)+'" r="2" fill="none" stroke="rgba(236,238,242,.28)" stroke-width=".7"/>';});
+  // 窓の枠
+  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'" fill="none" stroke="rgba(236,238,242,.6)" stroke-width="1"/><circle cx="'+cxp+'" cy="'+cyp+'" r="'+(r+7)+'" fill="none" stroke="rgba(236,238,242,.14)" stroke-width=".6"/></svg>';
+  document.getElementById('bSky').innerHTML=v;document.getElementById('bBody').style.top=(cyp+r+34)+'px';
+  document.getElementById('bStat').innerHTML=bootStatus();document.getElementById('bGo').textContent=S.flags.start?'船に戻る':'船を出す';}
+function showBoot(){bootOn=true;paintBoot();document.getElementById('boot').classList.add('on');}
+// 入る：留守の分を受け取る（はじめてなら最初の3行）。quiet＝設定から確認用の場面に移るとき
+function bootGo(quiet){if(!bootOn)return;bootOn=false;const b=document.getElementById('boot');b.classList.add('out');setTimeout(()=>{b.classList.remove('on','out');document.getElementById('bSky').innerHTML='';},900);
+  lastT=performance.now();if(quiet)return;SND.play('resail');if(!S.flags.start)setTimeout(prologue,900);else offline();}
+document.getElementById('bGo').onclick=()=>bootGo();document.getElementById('bGear').onclick=()=>openSettings();
+addEventListener('resize',()=>{if(bootOn)paintBoot();});
 function boot(){const had=load();initScene();resize();applyLoadedVisuals();S.region=regionIndex(S.dist);renderPanel(true);paintGoal();
-  if(!had||!S.flags.start)setTimeout(prologue,700);else offline();
+  showBoot();
   addEventListener('resize',resize);new ResizeObserver(measure).observe(frameEl);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){paused=true;save();}else{offline();lastT=performance.now();paused=false;}});
-  addEventListener('pagehide',save);
+  // タイトルが出ている間は保存しない（保存すると「最後に遊んだ時刻」が進み、留守の分を受け取れなくなる）
+  document.addEventListener('visibilitychange',()=>{if(bootOn)return;if(document.hidden){paused=true;save();}else{offline();lastT=performance.now();paused=false;}});
+  addEventListener('pagehide',()=>{if(!bootOn)save();});
   setInterval(loop,50);requestAnimationFrame(frame);}
 boot();
 // iPhone は viewport と touch-action だけではピンチの拡大を止められないため
