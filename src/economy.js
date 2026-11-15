@@ -130,7 +130,7 @@ function prestige(respec){
 function lGain(){return S.cleared&&!S.voy?Math.floor(RESTART_BASE*(1+0.1*S.restarts)):0;}
 function rebirth(){
   const g=lGain();if(g<1)return 0;
-  S.L+=g;S.lTotal+=g;S.restarts++;resetRun();
+  S.L+=g;S.lTotal+=g;S.restarts++;const lp=S.st.loops[S.st.loops.length-1];S.lastRun={k:'home',n:S.restarts,sec:lp?lp.sec:S.loopTime,g,at:Date.now()};resetRun();
   FXQ.restart=g;return g;
 }
 function resetRun(){   // 再出発・航海の開始・航路の引き直しで共通：①の中身と、距離・年月・歪み・スキルを戻す
@@ -155,7 +155,7 @@ function voyAdvance(d){S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>
   const n=voyDoublings(S.vdist);if(n>S.vL){const g=(n-S.vL)*lPer();S.L+=g;S.lTotal+=g;S.vL=n;}
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)):0;}
-function redraw(){const g=tGain();if(g<1)return 0;S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
+function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
 function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=DEST[DEST.length-1].ly;}   // この宇宙で宇宙の果てに着いたら
 function uGain(){if(!canFold())return 0;return 2+Math.floor(Math.log2(Math.max(1,S.ubest/DEST[DEST.length-1].ly)));}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1

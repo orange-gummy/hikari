@@ -138,10 +138,10 @@ const RESTART_BASE=30;   // 1回着くごとの残光。再出発の回数1回�
 function stageMultAt(l){return Math.max(50,STAGE_MULT*Math.pow(0.75,l));}
 function wMultAt(l){return l<=3?[1,2,5,10][l]:10*Math.pow(2,l-3);}
 const AFTERGLOW=[  // max:0 は上限なし
-  {id:'wm',name:'歪みの増幅',max:0,cost:l=>5*Math.pow(2,l),text:l=>'得られる歪み ×'+wMultAt(l)},
-  {id:'sk',name:'船内時間',max:0,cost:l=>5*Math.pow(2,l),text:l=>'船内時間 ×'+(1+0.25*l)+'。生産も故郷の時間も速くなる'},
-  {id:'rm',name:'航路の記憶',max:0,cost:l=>5*Math.pow(2,l),text:l=>'光速の99%より先の加速コストの上がり方 ×'+Math.round(stageMultAt(l))},
-  {id:'am',name:'自動化の記憶',max:2,cost:l=>[5,10][l],text:l=>['','自動購入（太陽帆〜真空エネルギー炉）を覚えた状態で始まる','加速・TIER・流星群の自動化も覚えた状態で始まる'][l]}
+  {id:'wm',name:'歪みの増幅',max:0,cost:l=>5*Math.pow(2,l),text:l=>'得られる歪み ×'+wMultAt(l),what:'緊急停止で得る歪み',val:l=>'×'+wMultAt(l),hint:'スキルを早く覚えられる'},
+  {id:'sk',name:'船内時間',max:0,cost:l=>5*Math.pow(2,l),text:l=>'船内時間 ×'+(1+0.25*l)+'。生産も故郷の時間も速くなる',what:'船内時間',val:l=>'×'+(1+0.25*l),hint:'生産も故郷の時間も速くなる'},
+  {id:'rm',name:'航路の記憶',max:0,cost:l=>5*Math.pow(2,l),text:l=>'光速の99%より先の加速コストの上がり方 ×'+Math.round(stageMultAt(l)),what:'99%より先の加速、1段ごとの値段',val:l=>'×'+Math.round(stageMultAt(l)),hint:'周回が短くなる'},
+  {id:'am',name:'自動化の記憶',max:2,cost:l=>[5,10][l],text:l=>['','自動購入（太陽帆〜真空エネルギー炉）を覚えた状態で始まる','加速・TIER・流星群の自動化も覚えた状態で始まる'][l],what:'はじめから覚えている自動化',val:l=>['なし','装置の購入','加速・TIER・流星群も'][l],hint:'手を動かさなくても進む'}
 ];
 const AM_GRANT=[[],['a0','a1','a2','a3','a4','a5','a6','a7'],['aA','aT','aR']];
 // ② 上位の星8つは、チャレンジを越えると灯る（Revolution Idle のチャレンジのように、縛り付きで出直して目標に届く）
