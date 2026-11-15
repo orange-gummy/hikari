@@ -235,10 +235,10 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 .gVal{font-family:var(--ui);font-size:20px;color:var(--ink-strong);margin:2px 0 2px;letter-spacing:.02em}
 .gVal b{font-weight:400;color:#ffd6aa}.gVal .gArr{color:var(--ink-dim);font-size:14px;margin:0 10px}
 .gTop{text-align:center}
-.gLab{font-family:var(--ui);font-size:11px;letter-spacing:.42em;color:var(--ink-dim);padding-left:.42em}
+.gLab{font-family:var(--label);font-size:11px;letter-spacing:.3em;color:var(--ink-dim);padding-left:.3em}
 .gL{margin:8px 0 2px;display:flex;align-items:baseline;justify-content:center;gap:10px}
 .gL span{font-size:12px;color:var(--ink-dim);letter-spacing:.2em}
-.gL b{font-family:var(--ui);font-weight:300;font-size:40px;line-height:1;color:#ffe2be;text-shadow:0 0 18px rgba(255,190,130,.35)}
+.gL b{font-family:var(--num);font-weight:400;font-size:30px;line-height:1;letter-spacing:.04em;color:#ffe2be}
 .gRes{font-size:12px;color:var(--ink-dim);letter-spacing:.04em}
 .gRes i{font-style:normal;margin:0 .7em;opacity:.5}.gRes em{font-style:normal;color:#ffd6aa}
 .uniSky{display:block;width:100%;max-width:420px;margin:4px auto 0;font-family:var(--ui)}
