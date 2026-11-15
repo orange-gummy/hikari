@@ -72,7 +72,7 @@ function goal(){const s=S.stage,nx=s+1;
   if(S.flags.bat&&!S.deposited&&S.chal!=='c7')return['窓を横切る流れ星をタップで捕まえる',null,false];
   if(S.flags.bat&&!S.released&&canShower())return['METEORで、流星群を呼ぶ','battery',false];
   if(canFold())return['UNIVERSEで宇宙を畳むと 法則 +'+uGain(),'uni',false];
-  if(S.voy&&S.stage>=maxStage()){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
+  if(S.voy&&(S.stage>=maxStage()||(S.stage>=MAX_STAGE&&tGain()>=Math.max(3,S.tTotal)))){const g=tGain();return[g>=Math.max(3,S.tTotal)?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),g>=Math.max(3,S.tTotal)?'voy':null,false];}
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];
   if(S.dev[0]===0)return['DRIVEで太陽帆を買う','drive',false];
   if(S.maxStage===0)return['BOOSTで秒速10kmまで加速する'+(S.E<accelCost(1)?'（あと'+fmt(accelCost(1)-S.E)+'）':''),S.E>=accelCost(1)?'boost':null,false];
