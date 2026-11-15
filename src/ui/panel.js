@@ -133,33 +133,35 @@ function renderReset(){const g=wGain();let h='<div class="phead"><span class="la
   document.getElementById('rGo').onclick=()=>confirmBox('緊急停止','歪みを '+fmt(g)+' 得て、速度0からやり直す。距離と年月はそのまま残る。このあとスキルを選べる。',()=>{startBrake(g);});}
 /* ② 再出発と残光（STAR タブ）。強化は「残照の地平」：日が沈んだあとの地平線に、強化ごとの光の筋が段に応じて空へ伸びる */
 let glowSel='rm',GLOWFX=null;
-function glowHorizon(H=210){const W=360,hz=H-60,n=AFTERGLOW.length,xs=AFTERGLOW.map((_,i)=>W*(i+0.5)/n);
-  let v='<svg class="gHz" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="残光の強化"><defs><linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgb(150,80,90)" stop-opacity="0"/><stop offset=".6" stop-color="rgb(150,80,90)" stop-opacity=".12"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity=".32"/></linearGradient>'+
-    '<radialGradient id="gSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgb(255,150,90)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity="0"/></radialGradient>'+
+/* 残照の地平（2026-11-15 作り直し）：夕焼けの地平線を小窓いっぱいの景色にし、強化ごとの光の筋をその上に並べる。
+   見出しと結果は上、選んだ強化の説明と「灯す」「帆を張る」は下の中央に、枠なしで重ねる */
+function glowScene(W,H,hz){const n=AFTERGLOW.length,span=Math.min(W-48,Math.max(320,W*0.7),980),x0=(W-span)/2,sp=span/n,xs=AFTERGLOW.map((_,i)=>x0+sp*(i+0.5)),st=Math.max(18,Math.min(30,(hz-140)/9));
+  let v='<svg class="gScene" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="残光の強化"><defs><linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgb(150,80,90)" stop-opacity="0"/><stop offset=".55" stop-color="rgb(150,80,90)" stop-opacity=".07"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity=".30"/></linearGradient>'+
+    '<radialGradient id="gSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgb(255,150,90)" stop-opacity=".30"/><stop offset=".6" stop-color="rgb(255,150,90)" stop-opacity=".08"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity="0"/></radialGradient>'+
     '<linearGradient id="gRay" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".85"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></linearGradient>'+
-    '<linearGradient id="gEdge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".18" stop-color="#fff"/><stop offset=".82" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="gFade"><rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#gEdge)"/></mask>'+
+    '<linearGradient id="gLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgb(255,200,150)" stop-opacity="0"/><stop offset=".2" stop-color="rgb(255,200,150)" stop-opacity=".5"/><stop offset=".8" stop-color="rgb(255,200,150)" stop-opacity=".5"/><stop offset="1" stop-color="rgb(255,200,150)" stop-opacity="0"/></linearGradient>'+
     '<radialGradient id="gDot"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".6"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></radialGradient></defs>'+
-    '<g mask="url(#gFade)"><rect x="0" y="'+Math.max(0,hz-130-(H-210)*0.6)+'" width="'+W+'" height="'+Math.min(hz,130+(H-210)*0.6)+'" fill="url(#gSky)"/><rect x="0" y="'+(hz-60)+'" width="'+W+'" height="'+(H-hz+60)+'" fill="url(#gSun)"/></g>'+
-    '<line x1="6" y1="'+hz+'" x2="'+(W-6)+'" y2="'+hz+'" stroke="rgb(255,200,150)" stroke-opacity=".5" stroke-width=".8"/>';
-  if(H>230){let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};const top=hz-150,n=Math.round(top*0.22);   // 空いた空に、日が沈んだあとの星
-    for(let k=0;k<n;k++){const y=rnd()*top,a=(0.15+0.55*rnd())*(1-y/top*0.15);v+='<circle cx="'+(rnd()*W).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(0.35+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+a.toFixed(2)+'"/>';}}
-  AFTERGLOW.forEach((a,i)=>{const l=glow(a.id),x=xs[i],sel=a.id===glowSel,steps=Math.min(l,6),h=18+steps*18+(l>6?Math.min(12,Math.log2(l-5)*4):0),fx=GLOWFX&&GLOWFX.id===a.id&&Date.now()-GLOWFX.t<1200;
-    v+='<g data-gs="'+a.id+'" style="cursor:pointer"><rect x="'+(x-W/n/2)+'" y="0" width="'+(W/n)+'" height="'+H+'" fill="transparent"/>'+
+    '<rect x="0" y="0" width="'+W+'" height="'+hz+'" fill="url(#gSky)"/><ellipse cx="'+(W/2)+'" cy="'+hz+'" rx="'+(W*0.62)+'" ry="'+Math.min(220,hz*0.5)+'" fill="url(#gSun)"/>';
+  // 日が沈んだあとの星（地平線に近いほど少ない）
+  {let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};const top=Math.max(0,hz-120),m=Math.round(W*top/5200);
+    for(let k=0;k<m;k++){const y=rnd()*top,a=(0.15+0.55*rnd())*(1-0.6*y/Math.max(1,top));v+='<circle cx="'+(rnd()*W).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(0.35+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+a.toFixed(2)+'"/>';}}
+  v+='<line x1="0" y1="'+hz+'" x2="'+W+'" y2="'+hz+'" stroke="url(#gLine)" stroke-width=".8"/>';
+  AFTERGLOW.forEach((a,i)=>{const l=glow(a.id),x=xs[i],sel=a.id===glowSel,steps=Math.min(l,8),h=st+steps*st+(l>8?Math.min(st,Math.log2(l-7)*6):0),fx=GLOWFX&&GLOWFX.id===a.id&&Date.now()-GLOWFX.t<1200,nq=glowNext(a.id),can=nq&&S.L>=nq.cost;
+    v+='<g data-gs="'+a.id+'" style="cursor:pointer"><rect x="'+(x-sp/2)+'" y="'+Math.max(0,hz-h-40)+'" width="'+sp+'" height="'+(h+100)+'" fill="transparent"/>'+
       '<rect x="'+(x-(sel?1:0.7))+'" y="'+(hz-h)+'" width="'+(sel?2:1.4)+'" height="'+h+'" fill="url(#gRay)" opacity="'+(sel?1:0.65)+'"/>'+
-      '<circle cx="'+x+'" cy="'+hz+'" r="12" fill="url(#gDot)"'+(fx?' class="gPop"':'')+'/><circle cx="'+x+'" cy="'+hz+'" r="3" fill="rgb(255,226,190)"/>';
-    for(let k=1;k<=steps;k++)v+='<circle cx="'+x+'" cy="'+(hz-k*18)+'" r="1.4" fill="rgb(255,214,170)" opacity=".8"/>';
-    const nq=glowNext(a.id),can=nq&&S.L>=nq.cost;if(can)v+='<circle class="gTip" cx="'+x+'" cy="'+(hz-h)+'" r="2.6" fill="rgb(255,236,210)"/>';
-    if(sel)v+='<circle cx="'+x+'" cy="'+hz+'" r="9" fill="none" stroke="rgb(255,214,170)" stroke-opacity=".8" stroke-width=".8"/>';
-    v+='<text x="'+x+'" y="'+(hz+24)+'" text-anchor="middle" font-size="11" fill="'+(sel?'#eceef2':'rgba(236,238,242,.6)')+'">'+a.name+'</text><text x="'+x+'" y="'+(hz+40)+'" text-anchor="middle" font-size="10" fill="'+(can?'rgba(255,214,170,.95)':'rgba(236,238,242,.4)')+'">'+(nq?'残光 '+fmt(nq.cost):'灯りきった')+'</text></g>';});
-  if(glowFlow){glowFlow=false;for(let k=0;k<14;k++){const x=30+Math.random()*(W-60),d=(0.2+k*0.12).toFixed(2),r=(0.8+Math.random()*1.1).toFixed(1);
-    v+='<circle cx="'+x.toFixed(1)+'" cy="-4" r="'+r+'" fill="rgb(255,226,190)" opacity="0"><animate attributeName="cy" from="-4" to="'+hz+'" dur="1.6s" begin="'+d+'s" fill="freeze" calcMode="spline" keySplines=".4 0 .9 .6"/><animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.15;.85;1" dur="1.6s" begin="'+d+'s" fill="freeze"/></circle>';}}
-  v+='</svg>';
-  const a=AFTERGLOW.find(x=>x.id===glowSel)||AFTERGLOW[0],l=glow(a.id),nx=glowNext(a.id);
-  v+='<div class="gDet"><div class="row" style="padding:0"><span style="font-size:14px">'+a.name+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">Lv '+l+(a.max?' / '+a.max:'')+'</span></div>'+
+      '<circle cx="'+x+'" cy="'+hz+'" r="14" fill="url(#gDot)"'+(fx?' class="gPop"':'')+'/><circle cx="'+x+'" cy="'+hz+'" r="3.2" fill="rgb(255,226,190)"/>';
+    for(let k=1;k<=steps;k++)v+='<circle cx="'+x+'" cy="'+(hz-k*st)+'" r="1.5" fill="rgb(255,214,170)" opacity=".8"/>';
+    if(can)v+='<circle class="gTip" cx="'+x+'" cy="'+(hz-h)+'" r="2.8" fill="rgb(255,236,210)"/>';
+    if(sel)v+='<circle cx="'+x+'" cy="'+hz+'" r="10" fill="none" stroke="rgb(255,214,170)" stroke-opacity=".8" stroke-width=".8"/>';
+    v+='<text x="'+x+'" y="'+(hz+26)+'" text-anchor="middle" font-size="12" fill="'+(sel?'#eceef2':'rgba(236,238,242,.6)')+'">'+a.name+'</text><text x="'+x+'" y="'+(hz+44)+'" text-anchor="middle" font-size="11" fill="'+(can?'rgba(255,214,170,.95)':'rgba(236,238,242,.4)')+'">'+(nq?'残光 '+fmt(nq.cost):'灯りきった')+'</text></g>';});
+  if(glowFlow){glowFlow=false;for(let k=0;k<18;k++){const x=x0+Math.random()*span,d=(0.2+k*0.1).toFixed(2),r=(0.8+Math.random()*1.1).toFixed(1);
+    v+='<circle cx="'+x.toFixed(1)+'" cy="-4" r="'+r+'" fill="rgb(255,226,190)" opacity="0"><animate attributeName="cy" from="-4" to="'+hz+'" dur="1.8s" begin="'+d+'s" fill="freeze" calcMode="spline" keySplines=".4 0 .9 .6"/><animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.15;.85;1" dur="1.8s" begin="'+d+'s" fill="freeze"/></circle>';}}
+  return v+'</svg>';}
+function glowDetail(){const a=AFTERGLOW.find(x=>x.id===glowSel)||AFTERGLOW[0],l=glow(a.id),nx=glowNext(a.id);
+  return '<div class="gDet"><div class="row" style="padding:0"><span style="font-size:14px">'+a.name+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">Lv '+l+(a.max?' / '+a.max:'')+'</span></div>'+
     '<div class="note" style="margin:4px 0 0">'+a.what+'</div><div class="gVal">'+a.val(l)+(nx?'<span class="gArr">→</span><b>'+a.val(l+1)+'</b>':'')+'</div>'+
     '<div class="note" style="margin:0 0 2px">'+(nx?a.hint+'。':'これ以上は灯せない。')+'</div>'+
-    (nx?'<button class="act" id="gBuy"'+(S.L<nx.cost?' disabled':'')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">灯す　残光 '+fmt(nx.cost)+'</button>':'')+'</div>';
-  return v;}
+    (nx?'<button class="act" id="gBuy"'+(S.L<nx.cost?' disabled':'')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">灯す　残光 '+fmt(nx.cost)+'</button>':'')+'</div>';}
 /* 残光の強化は合間に開く（2026-11-09）：故郷に着いて再出発するときと、航路を引き直すときに「残照の地平」が開き、閉じると帆を張る */
 let glowOpen=false,glowAfter=null,glowFlow=false;
 function glowAffordable(){return AFTERGLOW.some(a=>{const n=glowNext(a.id);return n&&S.L>=n.cost;});}
@@ -169,12 +171,12 @@ function glowResult(){const r=S.lastRun;if(!r||Date.now()-r.at>10*60*1000)return
   return '<div class="gRes">'+(r.k==='home'?'<span><b>'+r.n+'</b> 周目</span><span>故郷まで '+durLong(r.sec)+'</span><span class="gGain">残光 +'+fmt(r.g)+'</span>':'<span>航路を引き直した</span><span>いちばん遠く '+lyText(r.far)+' 光年</span><span class="gGain">航跡 +'+fmt(r.g)+'</span>')+'</div>';}
 function openGlow(after){if(!glowAffordable()){after();return;}glowOpen=true;glowAfter=after;glowFlow=true;document.getElementById('glowOv').classList.add('on');renderGlowOv();}
 function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.remove('on');const f=glowAfter;glowAfter=null;if(f)f();}
-// 小窓の高さに合わせて、地平線の上の空を伸ばす（上下が空かないように）
-let glowH=210;
-function renderGlowOv(){const flow=glowFlow;glowFlow=false;glowOvHtml(glowH);const b=document.getElementById('glowBody'),ov=document.getElementById('glowOv'),cs=getComputedStyle(ov),sv=b.querySelector('.gHz');
-  if(sv){const room=ov.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-b.scrollHeight,w=sv.getBoundingClientRect().width||360;glowH=Math.max(210,Math.min(760,glowH+room*360/w-2));}
-  glowFlow=flow;glowOvHtml(glowH);}
-function glowOvHtml(H){const b=document.getElementById('glowBody');b.innerHTML='<div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+glowResult()+'<div class="note" style="margin:0 0 4px">船を出す前に、残光で灯しておける。</div>'+glowHorizon(H)+'<button class="act" id="glowGo" style="margin-top:12px">帆を張る</button>';
+// 景色は小窓いっぱい。下の説明の高さを測ってから、その上に地平線を引く
+function renderGlowOv(){const ov=document.getElementById('glowOv'),b=document.getElementById('glowBody');
+  b.innerHTML='<div class="gTop"><div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+glowResult()+'<div class="note" style="margin:0">船を出す前に、残光で灯しておける。</div></div>'+
+    '<div class="gBot">'+glowDetail()+'<button class="act" id="glowGo" style="margin-top:10px">帆を張る</button></div><div class="gSky"></div>';
+  const W=ov.clientWidth,H=ov.clientHeight,bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height,hz=Math.round(Math.max(top+150,H-bot-70));
+  b.querySelector('.gSky').innerHTML=glowScene(W,H,hz);
   b.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;renderGlowOv();});
   const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){SND.play('light');GLOWFX={id:glowSel,t:Date.now()};renderGlowOv();}};
   document.getElementById('glowGo').onclick=closeGlow;}
@@ -187,7 +189,7 @@ function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';
     '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、残光は残る。</div>'+
     '<button class="act" id="rsGo"'+(lg<1?' disabled':'')+'>再出発する</button>'+(!S.cleared?'<div class="note">故郷に着くと使える。</div>':'')+
     '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの再出発</span><span class="num">'+S.restarts+' 回</span></div>';}
-  else h+='<div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+glowHorizon();
+  else h+='<div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+glowScene(360,210,150)+glowDetail();
   pbody.dataset.k=key;pbody.innerHTML=h;
   pbody.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;pbody.dataset.k='';renderGlow();});
   const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){fla=Math.max(fla,0.1);GLOWFX={id:glowSel,t:Date.now()};pbody.dataset.k='';renderGlow();}};
