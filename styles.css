@@ -203,7 +203,11 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #ending{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(to bottom,#7fb1ea 0%,#b8d4f1 45%,#f2dcc0 100%);opacity:0;transition:opacity 4s;color:#1d2a3c}
 #ending.on{display:flex;cursor:pointer}
 #endLine{font-family:var(--log);font-size:18px;letter-spacing:.12em;margin-top:0;opacity:0;transition:opacity 3s}
-#title{position:fixed;inset:0;z-index:11;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg)}
+#title{position:fixed;inset:0;z-index:11;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg);padding-bottom:24vh}
+#title>*:not(#tSky):not(#tGear){position:relative;z-index:1}#tGear{z-index:2}
+#tSky{position:absolute;inset:0;z-index:0;pointer-events:none}
+#tSky .gTw{animation:gTw 4.5s ease-in-out infinite}
+#tSky .tBand{animation:tBand 9s ease-in-out infinite}@keyframes tBand{0%,100%{opacity:.2}50%{opacity:.3}}
 #title.on{display:flex}
 #tGear{position:absolute;right:max(16px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));width:32px;height:32px;display:flex;align-items:center;justify-content:center;opacity:.55;background:none;border:0;color:var(--ink)}
 #title h1{font-family:var(--log);font-weight:500;font-size:28px;letter-spacing:.3em;margin:0 0 20px;color:var(--ink-strong)}

@@ -16,7 +16,7 @@ function landing(){SND.play('land');logLine(LINES.land,-1);if(!PREVIEW){if(!S.cl
   END.push(setTimeout(()=>{e.classList.add('on');requestAnimationFrame(()=>{e.style.opacity='1';});},3500));
   END.push(setTimeout(()=>{document.getElementById('endLine').style.opacity='1';endShown=performance.now();},3500+5000));END.push(setTimeout(showTitle,3500+14500));}
 let END=[],endShown=0;
-function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';paintTitle();document.getElementById('title').classList.add('on');}
+function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';paintTitle();titleScene();document.getElementById('title').classList.add('on');}
 // 「空は、こんな色だった。」はタップで飛ばせる（文字が出てから）
 // iPhone では div の click が届かないことがあるので pointerup で受ける。文字が見えてから（出始めて1.5秒後から）飛ばせる
 document.getElementById('ending').addEventListener('pointerup',()=>{if(!END.length||document.getElementById('title').classList.contains('on'))return;if(!endShown||performance.now()-endShown<1500)return;showTitle();});
@@ -29,9 +29,48 @@ document.getElementById('tAgain').onclick=()=>{if(PREVIEW||!S.cleared)return;doc
 function goFarther(){if(!canVoyage())return;if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();startVoyage();applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}
 document.getElementById('tGear').onclick=()=>openSettings();
 document.getElementById('tFar').onclick=()=>{if(!PREVIEW)goFarther();};
-document.getElementById('tNew').onclick=()=>confirmBox('最初から遊ぶ','すべての進行が消える。残光、灯した星、実績も残らない。',()=>{S=freshState();applyLoadedVisuals();save();document.getElementById('tBack').onclick();renderPanel(true);prologue();});
+// 「最初から遊ぶ」はタイトルから外した（2026-11-15）。最初からやり直すのは設定から
 // 2回目以降の到着は、演出を飛ばしてタイトルへ進める
 function skipClimax(){if(!climax)return;CLT.forEach(id=>{clearTimeout(id);clearInterval(id);});CLT=[];VQ.length=0;if(vqTimer){clearTimeout(vqTimer);vqTimer=null;}
   HOMEA=null;HEARD=null;STILL=false;SPDF=0;GAP=3700;LANDED=true;document.getElementById('app').classList.add('landed');document.getElementById('ringWrap').style.opacity='0';
   landing();for(let i=0;i<7;i++){TG[i]=1;A[i]=1;RV[i]=1;}showTitle();}
 document.getElementById('skipC').onclick=skipClimax;
+/* タイトルの景色（2026-11-15）：着いたばかりの故郷の空。地平線ぞいに家並みと窓の明かり、木々、電線を光の点と線で描き、
+   空には戻ってきた7色が淡い帯になって残る。題名はその空に浮かぶ */
+function titleScene(){const el=document.getElementById('tSky');if(!el)return;const W=innerWidth,H=innerHeight,hz=Math.round(H*0.8);
+  let sd=11;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},C=COLORS.map(c=>c.rgb),rg=(c,a)=>'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')';
+  let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs>'+
+    '<linearGradient id="tBand" x1="0" y1="0" x2="0" y2="1">'+C.map((c,i)=>'<stop offset="'+(i/6).toFixed(3)+'" stop-color="'+rg(c,1)+'"/>').join('')+'</linearGradient>'+
+    '<linearGradient id="tFadeX" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".25" stop-color="#fff"/><stop offset=".75" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'+
+    '<linearGradient id="tFadeY" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity="1"/><stop offset="1" stop-color="#fff" stop-opacity=".4"/></linearGradient>'+
+    '<mask id="tBandM"><rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#tFadeX)"/></mask><mask id="tBandY" maskContentUnits="objectBoundingBox"><rect x="0" y="0" width="1" height="1" fill="url(#tFadeY)"/></mask>'+
+    '<radialGradient id="tGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgb(255,190,140)" stop-opacity=".16"/><stop offset="1" stop-color="rgb(255,190,140)" stop-opacity="0"/></radialGradient>'+
+    '<radialGradient id="tWin"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>';
+  // 星（空の上ほど多い）
+  const ns=Math.round(W*hz/4200);for(let k=0;k<ns;k++){const y=Math.pow(rnd(),1.6)*(hz-60),tw=rnd()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(rnd()*5).toFixed(1)+'s"':'')+' cx="'+(rnd()*W).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(0.35+rnd()*0.75).toFixed(2)+'" fill="#eceef2" opacity="'+(0.2+0.6*rnd()*(1-y/hz)).toFixed(2)+'"/>';}
+  // 戻ってきた7色：地平線の上に、淡い帯
+  const bh=Math.min(170,hz*0.28);v+='<g mask="url(#tBandM)"><g mask="url(#tBandY)"><rect class="tBand" x="0" y="'+(hz-bh*1.3)+'" width="'+W+'" height="'+(bh*1.3)+'" fill="url(#tBand)" opacity=".24"/></g></g>'+
+    '<ellipse cx="'+(W/2)+'" cy="'+hz+'" rx="'+(W*0.6)+'" ry="'+(bh*0.9)+'" fill="url(#tGlow)"/>';
+  // 地平線と家並み
+  const ln='rgba(236,238,242,.32)';let x=-10,h='';
+  while(x<W+20){const r=rnd();
+    if(r<0.58){const w=26+rnd()*40,ht=18+rnd()*34,roof=rnd()<0.55,top=hz-ht;   // 家：屋根の線と、窓の明かり
+      h+='<path d="M'+x.toFixed(1)+' '+hz+'V'+top.toFixed(1)+(roof?'L'+(x+w/2).toFixed(1)+' '+(top-10-rnd()*6).toFixed(1)+'L'+(x+w).toFixed(1)+' '+top.toFixed(1):'H'+(x+w).toFixed(1))+'V'+hz+'" fill="#04050C" stroke="'+ln+'" stroke-width=".7"/>';
+      const cols=Math.max(1,Math.floor((w-8)/11)),rows=Math.max(1,Math.floor((ht-8)/11));
+      for(let a=0;a<cols;a++)for(let b=0;b<rows;b++){if(rnd()<0.45)continue;const wx=x+6+a*11+3,wy=top+6+b*11+3,c=rnd()<0.7?[255,214,140]:C[Math.floor(rnd()*7)];
+        h+='<circle cx="'+wx.toFixed(1)+'" cy="'+wy.toFixed(1)+'" r="5" fill="url(#tWin)" opacity=".12"/><rect x="'+(wx-1.6).toFixed(1)+'" y="'+(wy-2).toFixed(1)+'" width="3.2" height="4" fill="'+rg(c,0.85)+'"/>';}
+      x+=w+2+rnd()*6;}
+    else if(r<0.85){const n=4+Math.floor(rnd()*5),cx0=x+12,ht=16+rnd()*24;   // 木：光の点の集まり
+      h+='<line x1="'+cx0.toFixed(1)+'" y1="'+hz+'" x2="'+cx0.toFixed(1)+'" y2="'+(hz-ht*0.5).toFixed(1)+'" stroke="'+ln+'" stroke-width=".7"/>';
+      for(let k=0;k<n*3;k++){const a=rnd()*6.283,rr=rnd()*ht*0.45;h+='<circle cx="'+(cx0+Math.cos(a)*rr).toFixed(1)+'" cy="'+(hz-ht*0.62+Math.sin(a)*rr*0.8).toFixed(1)+'" r="'+(0.6+rnd()*0.8).toFixed(2)+'" fill="'+rg(rnd()<0.75?C[1]:C[2],0.55)+'"/>';}
+      x+=26+rnd()*10;}
+    else{x+=18+rnd()*30;}}
+  // 電柱と電線
+  const poles=[];for(let px=W*0.08+rnd()*40;px<W;px+=150+rnd()*90)poles.push(px);
+  poles.forEach(px=>{h+='<line x1="'+px.toFixed(1)+'" y1="'+hz+'" x2="'+px.toFixed(1)+'" y2="'+(hz-74)+'" stroke="'+ln+'" stroke-width=".8"/><line x1="'+(px-9).toFixed(1)+'" y1="'+(hz-68)+'" x2="'+(px+9).toFixed(1)+'" y2="'+(hz-68)+'" stroke="'+ln+'" stroke-width=".8"/>';});
+  for(let i=1;i<poles.length;i++){const a=poles[i-1],b=poles[i];for(const dy of [-68,-62])h+='<path d="M'+a.toFixed(1)+' '+(hz+dy)+'Q'+((a+b)/2).toFixed(1)+' '+(hz+dy+16)+' '+b.toFixed(1)+' '+(hz+dy)+'" fill="none" stroke="rgba(236,238,242,.2)" stroke-width=".6"/>';}
+  v+=h+'<line x1="0" y1="'+hz+'" x2="'+W+'" y2="'+hz+'" stroke="rgba(236,238,242,.4)" stroke-width=".7"/><rect x="0" y="'+(hz+0.5)+'" width="'+W+'" height="'+(H-hz)+'" fill="#04050C"/>';
+  // 地面の上に、点々と街灯
+  for(let k=0;k<Math.round(W/90);k++){const lx=rnd()*W,ly=hz+10+rnd()*(H-hz-20);v+='<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="6" fill="url(#tWin)" opacity=".08"/><circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r=".9" fill="rgb(255,214,140)" opacity=".7"/>';}
+  el.innerHTML=v+'</svg>';}
+addEventListener('resize',()=>{if(document.getElementById('title').classList.contains('on'))titleScene();});
