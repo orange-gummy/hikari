@@ -60,30 +60,50 @@ let bootOn=false;
 function bootStatus(){if(S.voy){const d=nextDest();return d?d.name+'まで あと '+lyText(Math.max(0,d.ly-S.vdist))+' 光年':'宇宙の果ての先へ '+lyText(S.vdist)+' 光年';}
   if(S.cleared)return '故郷に着いている。';let lost=0;for(let i=0;i<7;i++)if(!memHas(i))lost++;
   return '故郷まで '+Math.max(0,Math.ceil(GOAL_LY-S.dist)).toLocaleString('ja-JP')+' 光年'+(lost?'<i>·</i>失った色 '+lost:'');}
-function paintBoot(){const W=innerWidth,H=innerHeight,cxp=W/2,cyp=Math.round(H*0.36),r=Math.round(Math.min(W*0.34,H*0.2,190));
-  let sd=23;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},f=n=>n.toFixed(1);
-  let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs><clipPath id="bClip"><circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'"/></clipPath>'+
-    '<radialGradient id="bIn"><stop offset="0" stop-color="rgb(120,140,200)" stop-opacity=".10"/><stop offset=".7" stop-color="rgb(120,140,200)" stop-opacity=".03"/><stop offset="1" stop-color="rgb(120,140,200)" stop-opacity=".09"/></radialGradient>'+
+function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math.max(120,H*0.19)),cy0=H-ch,cxp=W/2,cyp=Math.round(H*(ch?0.30:0.36)),r=Math.round(Math.min(W*0.3,H*0.17,170));
+  let sd=23;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},f=n=>n.toFixed(1),on=COLORS.map((_,i)=>memHas(i)),ink=a=>'rgba(236,238,242,'+a+')';
+  let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs>'+
+    '<linearGradient id="bTail" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient>'+
+    '<radialGradient id="bHome"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".7"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></radialGradient>'+
+    '<radialGradient id="bGrey"><stop offset="0" stop-color="rgb(130,134,146)" stop-opacity=".5"/><stop offset="1" stop-color="rgb(130,134,146)" stop-opacity="0"/></radialGradient>'+
     COLORS.map((c,i)=>'<radialGradient id="bC'+i+'"><stop offset="0" stop-color="rgb('+c.rgb.join(',')+')" stop-opacity=".55"/><stop offset="1" stop-color="rgb('+c.rgb.join(',')+')" stop-opacity="0"/></radialGradient>').join('')+'</defs>';
-  // 窓の外：遠い星がまばらに
-  const no=Math.round(W*H/9000);for(let k=0;k<no;k++){const tw=rnd()<0.25;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+f(rnd()*5)+'s"':'')+' cx="'+f(rnd()*W)+'" cy="'+f(rnd()*H)+'" r="'+(0.3+rnd()*0.6).toFixed(2)+'" fill="#eceef2" opacity="'+(0.12+0.38*rnd()).toFixed(2)+'"/>';}
-  // 窓の中：星が中心から流れる（速いほど速く）。故郷に着いているときは止まっている
-  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'" fill="#04050C"/><circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'" fill="url(#bIn)"/><g clip-path="url(#bClip)">';
-  const base=S.cleared?0:13-9*Math.min(1,S.stage/22),ns=54;
-  for(let k=0;k<ns;k++){const a=rnd()*6.283,ex=cxp+Math.cos(a)*r*1.08,ey=cyp+Math.sin(a)*r*1.08,sz=(0.5+rnd()*0.9).toFixed(2);
-    if(!base){const q=0.15+rnd()*0.85;v+='<circle cx="'+f(cxp+Math.cos(a)*r*q)+'" cy="'+f(cyp+Math.sin(a)*r*q)+'" r="'+sz+'" fill="#eceef2" opacity="'+(0.3+rnd()*0.5).toFixed(2)+'"/>';continue;}
-    const dur=(base*(0.6+rnd()*0.9)).toFixed(1),bg='-'+(rnd()*base*1.5).toFixed(1)+'s',at=' dur="'+dur+'s" begin="'+bg+'" repeatCount="indefinite"';
-    v+='<circle r="'+sz+'" fill="#eceef2"><animate attributeName="cx" from="'+f(cxp+Math.cos(a)*4)+'" to="'+f(ex)+'"'+at+' calcMode="spline" keyTimes="0;1" keySplines=".6 0 1 .6"/><animate attributeName="cy" from="'+f(cyp+Math.sin(a)*4)+'" to="'+f(ey)+'"'+at+' calcMode="spline" keyTimes="0;1" keySplines=".6 0 1 .6"/><animate attributeName="opacity" values="0;.35;.95"'+at+'/></circle>';}
-  v+='</g>';
-  // 7色の星座：持っている色だけが灯る
-  const s=r*1.25/114,P=CONS_PTS.map(p=>[cxp+(p[0]-65)*s,cyp+(p[1]-21)*s*1.15]),on=COLORS.map((_,i)=>memHas(i));
-  for(let i=0;i<6;i++){const b=on[i]&&on[i+1];v+='<line x1="'+f(P[i][0])+'" y1="'+f(P[i][1])+'" x2="'+f(P[i+1][0])+'" y2="'+f(P[i+1][1])+'" stroke="rgba(236,238,242,'+(b?0.45:0.13)+')" stroke-width=".7"'+(b?'':' stroke-dasharray="1.5 4"')+'/>';}
-  P.forEach(([x,y],i)=>{const c=COLORS[i].rgb,col='rgb('+c.join(',')+')';
+  // 空に漂う星雲：持っている色は色のまま、失った色は灰色に
+  const NB=[[0.16,0.20,0],[0.84,0.14,4],[0.10,0.62,1],[0.90,0.56,2],[0.50,0.08,3],[0.34,0.74,5]];
+  NB.forEach(([nx,ny,ci],k)=>{const rr=Math.max(W,H)*(0.16+0.05*(k%3));v+='<ellipse class="bNeb" style="animation-delay:-'+(k*4)+'s" cx="'+f(nx*W)+'" cy="'+f(ny*(cy0||H))+'" rx="'+f(rr)+'" ry="'+f(rr*0.62)+'" fill="url(#'+(on[ci]?'bC'+ci:'bGrey')+')" opacity="'+(on[ci]?0.16:0.10)+'"/>';});
+  // 星：窓の向こうを、進む先（輪の中心）から外へ流れる。速いほど速い。故郷に着いているときは止まっている
+  const base=S.cleared?0:16-11*Math.min(1,S.stage/22),far=Math.hypot(W,H)*0.62,ns=Math.round(Math.min(220,W*H/5200));
+  for(let k=0;k<ns;k++){const a=rnd()*6.283,q0=0.03+rnd()*0.25,sz=(0.4+rnd()*0.9).toFixed(2),x0=cxp+Math.cos(a)*far*q0,y0=cyp+Math.sin(a)*far*q0,x1=cxp+Math.cos(a)*far*1.05,y1=cyp+Math.sin(a)*far*1.05;
+    if(!base){const q=0.05+rnd()*0.95;v+='<circle'+(rnd()<0.3?' class="gTw" style="animation-delay:-'+f(rnd()*5)+'s"':'')+' cx="'+f(cxp+Math.cos(a)*far*q)+'" cy="'+f(cyp+Math.sin(a)*far*q)+'" r="'+sz+'" fill="#eceef2" opacity="'+(0.25+rnd()*0.55).toFixed(2)+'"/>';continue;}
+    const dur=(base*(0.7+rnd()*1.1)).toFixed(1),at=' dur="'+dur+'s" begin="-'+(rnd()*base*2).toFixed(1)+'s" repeatCount="indefinite"';
+    v+='<circle r="'+sz+'" fill="#eceef2"><animate attributeName="cx" from="'+f(x0)+'" to="'+f(x1)+'"'+at+' calcMode="spline" keyTimes="0;1" keySplines=".7 0 1 .5"/><animate attributeName="cy" from="'+f(y0)+'" to="'+f(y1)+'"'+at+' calcMode="spline" keyTimes="0;1" keySplines=".7 0 1 .5"/><animate attributeName="opacity" values="0;.3;.95"'+at+'/></circle>';}
+  v+='<g class="bShoot"><line x1="'+f(W*0.78)+'" y1="'+f(H*0.10)+'" x2="'+f(W*0.78-70)+'" y2="'+f(H*0.10+38)+'" stroke="url(#bTail)" stroke-width="1.2"/></g>';
+  // 進む先を示す輪と、7色の星座（持っている色だけが灯る）
+  const s=r*1.25/114,P=CONS_PTS.map(p=>[cxp+(p[0]-65)*s,cyp+(p[1]-21)*s*1.15]);
+  for(let i=0;i<6;i++){const b=on[i]&&on[i+1];v+='<line x1="'+f(P[i][0])+'" y1="'+f(P[i][1])+'" x2="'+f(P[i+1][0])+'" y2="'+f(P[i+1][1])+'" stroke="'+ink(b?0.45:0.13)+'" stroke-width=".7"'+(b?'':' stroke-dasharray="1.5 4"')+'/>';}
+  P.forEach(([x,y],i)=>{const col='rgb('+COLORS[i].rgb.join(',')+')';
     v+=on[i]?'<circle cx="'+f(x)+'" cy="'+f(y)+'" r="'+f(Math.max(12,r*0.11))+'" fill="url(#bC'+i+')"/><circle class="bStar" style="animation-delay:-'+(i*0.7)+'s" cx="'+f(x)+'" cy="'+f(y)+'" r="'+f(Math.max(2.4,r*0.022))+'" fill="'+col+'"/>'
-      :'<circle cx="'+f(x)+'" cy="'+f(y)+'" r="2" fill="none" stroke="rgba(236,238,242,.28)" stroke-width=".7"/>';});
-  // 窓の枠
-  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'" fill="none" stroke="rgba(236,238,242,.6)" stroke-width="1"/><circle cx="'+cxp+'" cy="'+cyp+'" r="'+(r+7)+'" fill="none" stroke="rgba(236,238,242,.14)" stroke-width=".6"/></svg>';
-  document.getElementById('bSky').innerHTML=v;document.getElementById('bBody').style.top=(cyp+r+34)+'px';
+      :'<circle cx="'+f(x)+'" cy="'+f(y)+'" r="2" fill="none" stroke="'+ink(0.28)+'" stroke-width=".7"/>';});
+  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+r+'" fill="none" stroke="'+ink(0.5)+'" stroke-width="1"/><circle cx="'+cxp+'" cy="'+cyp+'" r="'+(r+7)+'" fill="none" stroke="'+ink(0.13)+'" stroke-width=".6"/>';
+  for(let k=0;k<4;k++){const a=k*Math.PI/2;v+='<line x1="'+f(cxp+Math.cos(a)*(r+7))+'" y1="'+f(cyp+Math.sin(a)*(r+7))+'" x2="'+f(cxp+Math.cos(a)*(r+16))+'" y2="'+f(cyp+Math.sin(a)*(r+16))+'" stroke="'+ink(0.3)+'" stroke-width=".7"/>';}
+  // 船の中：窓の枠の柱と、手前の計器盤
+  const base2=cy0||H,st=(x,dx)=>'<path d="M'+f(cxp+dx*0.2)+' -10Q'+f(x)+' '+f(base2*0.3)+' '+f(x-dx*0.04)+' '+base2+'" fill="none" stroke="'+ink(0.2)+'" stroke-width="1"/><path d="M'+f(cxp+dx*0.2+dx*0.03)+' -10Q'+f(x+dx*0.035)+' '+f(base2*0.3)+' '+f(x-dx*0.005)+' '+base2+'" fill="none" stroke="'+ink(0.09)+'" stroke-width=".7"/>';
+  v+=st(W*0.07,-W)+st(W*0.93,W)+'<path d="M'+f(W*0.02)+' '+f(base2*0.08)+'Q'+cxp+' '+f(-base2*0.05)+' '+f(W*0.98)+' '+f(base2*0.08)+'" fill="none" stroke="'+ink(0.12)+'" stroke-width=".8"/>';
+  if(ch){v+='<rect x="0" y="'+cy0+'" width="'+W+'" height="'+ch+'" fill="#05060e"/><line x1="0" y1="'+cy0+'" x2="'+W+'" y2="'+cy0+'" stroke="'+ink(0.38)+'" stroke-width=".8"/><line x1="0" y1="'+(cy0+5)+'" x2="'+W+'" y2="'+(cy0+5)+'" stroke="'+ink(0.1)+'" stroke-width=".6"/>';
+    for(let x=14;x<W;x+=46)v+='<circle cx="'+x+'" cy="'+(cy0+12)+'" r=".9" fill="'+ink(0.3)+'"/>';
+    // 航路の計器：遠い宙域から故郷まで（航海中は故郷から宇宙の果てまで）。区域の節目と、いまの船
+    const x0=Math.max(34,W*0.14),x1=W-x0,ry=cy0+ch*0.52,lg=d=>Math.log10(1+d),px=p=>x0+(x1-x0)*Math.max(0,Math.min(1,p));
+    const nR=REGIONS.length,rp=d=>{const i=regionIndex(d),a=REGIONS[i].from,b=i+1<nR?REGIONS[i+1].from:GOAL_LY;return (i+Math.min(1,(d-a)/(b-a)))/nR;};   // 区域ごとに同じ幅（区域の中は距離に比例）
+    const marks=S.voy?DEST.map(d=>[lg(d.ly)/lg(DEST[DEST.length-1].ly),d.name]):REGIONS.slice(1).map((g,i)=>[(i+1)/nR,g.name]),p=S.voy?lg(S.vdist)/lg(DEST[DEST.length-1].ly):S.cleared?1:rp(S.dist);
+    v+='<line x1="'+f(x0)+'" y1="'+f(ry)+'" x2="'+f(x1)+'" y2="'+f(ry)+'" stroke="'+ink(0.22)+'" stroke-width=".8" stroke-dasharray="1.5 4"/><line x1="'+f(x0)+'" y1="'+f(ry)+'" x2="'+f(px(p))+'" y2="'+f(ry)+'" stroke="'+ink(0.7)+'" stroke-width="1"/>';
+    marks.forEach(([m])=>{if(m<0.999)v+='<line x1="'+f(px(m))+'" y1="'+f(ry-4)+'" x2="'+f(px(m))+'" y2="'+f(ry+4)+'" stroke="'+ink(m<=p?0.6:0.25)+'" stroke-width=".7"/>';});
+    v+='<circle cx="'+f(x0)+'" cy="'+f(ry)+'" r="1.6" fill="'+ink(0.6)+'"/><circle cx="'+f(x1)+'" cy="'+f(ry)+'" r="13" fill="url(#bHome)" class="bStar"/><circle cx="'+f(x1)+'" cy="'+f(ry)+'" r="2.2" fill="rgb(255,226,190)"/>'+
+      '<path d="M'+f(px(p)-5)+' '+f(ry-4.5)+'L'+f(px(p)+5)+' '+f(ry)+'L'+f(px(p)-5)+' '+f(ry+4.5)+'Z" fill="#04050C" stroke="#f6f7fb" stroke-width=".9"/>'+
+      '<text x="'+f(x0)+'" y="'+f(ry+22)+'" text-anchor="middle" font-size="10" fill="'+ink(0.4)+'">'+(S.voy?'故郷':'遠い宙域')+'</text><text x="'+f(x1)+'" y="'+f(ry+22)+'" text-anchor="middle" font-size="10" fill="rgba(255,226,190,.7)">'+(S.voy?'宇宙の果て':'故郷')+'</text>';
+    // 小さな計器：速度の段階の針
+    const gx=Math.max(20,x0*0.45),gy=cy0+ch*0.52,gr=Math.min(13,x0*0.3),ga=Math.PI*(1-Math.min(1,S.stage/22));
+    [gx,W-gx].forEach((g,k)=>{const an=k?Math.PI*(1-Math.min(1,p)):ga;v+='<path d="M'+f(g-gr)+' '+f(gy)+'A'+gr+' '+gr+' 0 0 1 '+f(g+gr)+' '+f(gy)+'" fill="none" stroke="'+ink(0.3)+'" stroke-width=".7"/><line x1="'+f(g)+'" y1="'+f(gy)+'" x2="'+f(g+Math.cos(an)*gr*0.8)+'" y2="'+f(gy-Math.sin(an)*gr*0.8)+'" stroke="'+ink(0.75)+'" stroke-width=".8"/><circle cx="'+f(g)+'" cy="'+f(gy)+'" r="1" fill="'+ink(0.7)+'"/>';});}
+  v+='</svg>';
+  document.getElementById('bSky').innerHTML=v;document.getElementById('bBody').style.top=(cyp+r+30)+'px';
   document.getElementById('bStat').innerHTML=bootStatus();document.getElementById('bGo').textContent=S.flags.start?'船に戻る':'船を出す';}
 function showBoot(){bootOn=true;paintBoot();document.getElementById('boot').classList.add('on');}
 // 入る：留守の分を受け取る（はじめてなら最初の3行）。quiet＝設定から確認用の場面に移るとき

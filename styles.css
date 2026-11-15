@@ -214,6 +214,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #bSky{position:absolute;inset:0;pointer-events:none}
 #bSky .gTw{animation:gTw 4.5s ease-in-out infinite}
 #bSky .bStar{animation:bStar 5s ease-in-out infinite}@keyframes bStar{0%,100%{opacity:.75}50%{opacity:1}}
+#bSky .bNeb{animation:bNeb 24s ease-in-out infinite}@keyframes bNeb{0%,100%{transform:translate(0,0)}50%{transform:translate(18px,-10px)}}
+#bSky .bShoot{opacity:0;animation:gShoot 13s linear 4s infinite}
 #bGear{position:absolute;z-index:2;right:max(16px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));width:32px;height:32px;display:flex;align-items:center;justify-content:center;opacity:.55;background:none;border:0;color:var(--ink)}
 #bBody{position:absolute;z-index:1;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:12px}
 #bBody h1{font-family:var(--log);font-weight:500;font-size:28px;letter-spacing:.3em;padding-left:.3em;margin:0 0 6px;color:var(--ink-strong)}
