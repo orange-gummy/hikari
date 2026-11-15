@@ -226,7 +226,15 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #boot.on #bBody>*{animation:bIn 1.4s ease both}#boot.on #bBody>*:nth-child(2){animation-delay:.25s}#boot.on #bBody>*:nth-child(3){animation-delay:.5s}#boot.on #bBody>*:nth-child(4){animation-delay:.8s}
 @keyframes bIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 #boot.on #bSky{animation:bSkyIn 2s ease both}@keyframes bSkyIn{from{opacity:0}to{opacity:1}}
-#bBody #bGo{border-color:rgba(236,238,242,.6);letter-spacing:.3em;padding-left:calc(12px + .3em);box-shadow:0 0 22px rgba(170,190,255,.14)}
+/* 「船に戻る」：枠はなく、文字の両側に光の線。線はゆっくり息をし、押すと中心へ集まって光る */
+#bBody #bGo{position:relative;width:auto;min-width:0;border:0;border-radius:0;background:none;box-shadow:none;padding:14px 16px 14px calc(16px + .42em);font-size:15px;letter-spacing:.42em;color:#f6f7fb;text-shadow:0 0 14px rgba(190,205,255,.55)}
+#bBody #bGo:before,#bBody #bGo:after{content:'';position:absolute;top:50%;width:min(26vw,120px);height:1px;pointer-events:none;animation:bLine 3.6s ease-in-out infinite;transition:width .35s ease,opacity .35s}
+#bBody #bGo:before{right:100%;background:linear-gradient(90deg,transparent,rgba(236,238,242,.85));transform-origin:right}
+#bBody #bGo:after{left:100%;background:linear-gradient(270deg,transparent,rgba(236,238,242,.85));transform-origin:left}
+@keyframes bLine{0%,100%{opacity:.45}50%{opacity:1}}
+#bBody #bGo:hover:before,#bBody #bGo:hover:after,#bBody #bGo:focus-visible:before,#bBody #bGo:focus-visible:after{opacity:1;animation:none}
+#bBody #bGo:active:before,#bBody #bGo:active:after{width:18px;opacity:1;animation:none;box-shadow:0 0 8px rgba(220,230,255,.9)}
+#bBody #bGo:focus{outline:none}
 #bBody .note{margin:0 0 10px;text-align:center;letter-spacing:.04em}#bBody .note i{font-style:normal;margin:0 .7em;opacity:.5}
 #bBody .act{width:240px}
 #tGear{position:absolute;right:max(16px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));width:32px;height:32px;display:flex;align-items:center;justify-content:center;opacity:.55;background:none;border:0;color:var(--ink)}
