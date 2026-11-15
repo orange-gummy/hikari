@@ -83,7 +83,9 @@ function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&
 function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 
 function tick(dt,offMul){
-  const P=prodRate();const gain=P*(offMul||1)*dt;
+  const P=prodRate();let gain;
+  if(offMul){const g=P*offMul*dt;gain=g*OFF_NOW;S.wind=(S.wind||0)+g*(1-OFF_NOW);}   // 留守の間：一部だけすぐ入り、残りは追い風に
+  else{gain=P*dt;if(S.wind>0){const x=Math.min(S.wind,P*dt*(WIND_X-1));gain+=x;S.wind-=x;}}   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
   S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;
   autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
   for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
