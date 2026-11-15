@@ -92,7 +92,7 @@ function startRestart(rs,quiet){RST={t:0,rs:!!rs,quiet:!!quiet};if(!quiet)SND.pl
 function drawRst(){const r=RST;r.t++;const t=r.t;
   if(t<30){SPDF=0;}
   if(t>=30&&t<90){ROTV=2*(t-30)/60;}   /* 中心が白く光る演出はなくした（2026-11-06） */
-  if(t===60){const ln=r.rs&&RESTART_LINES[S.restarts];if(ln)story('rs'+S.restarts,ln);else subtitle('もう一度、帆を張る。');}
+  if(t===60){const ln=r.rs&&RESTART_LINES[S.restarts];if(ln)story('rs'+S.restarts,ln);else subtitle('もう一度、船を出す。');}
   if(t===80&&r.rs){for(let i=0;i<7;i++)TG[i]=memTarget(i);paintGoal();}
   if(t===80){['hud','route','panel'].forEach((id,i)=>{document.getElementById(id).style.transitionDelay=(i*0.25)+'s';});document.getElementById('app').classList.remove('rstDim');setTimeout(()=>{['hud','route','panel'].forEach(id=>document.getElementById(id).style.transitionDelay='');},1500);}
   if(t>=80){const p=cl((t-80)/70);SPDF=ei(p);ROTV=2*(1-p);}

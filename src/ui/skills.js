@@ -72,13 +72,13 @@ function renderSkill(){const box=document.getElementById('skBody');lastWShown=S.
   const own=has(k.id),av=skillAvailable(k),c=BR_COL[k.br],sib=k.fork&&SKILLS.some(z=>z.br===k.br&&z.step===k.step&&z.id!==k.id&&has(z.id));
   let act='';if(own)act='<div class="note">'+(k.glow?'チャレンジで灯した。周回しても消えない。':'習得済み')+'</div>';else if(!skillPick)act='<div class="note">スキルは緊急停止のときに覚えられる。</div>';else if(av)act='<button class="act" id="skBuy"'+(S.W<k.cost?' disabled':'')+'>覚える　歪み '+k.cost+'</button>';else act='<div class="note">'+(sib?'もう一方の道を選んでいる。振り直すと選び直せる。':'手前の星を先に覚える。')+'</div>';
   h+='<div class="skd" style="border-color:'+rgb(c,0.45)+'"><div class="skTxt"><div class="row" style="padding:0"><h3>'+k.name+'</h3><span class="meta">'+BRANCHES[k.br]+(k.fork?' ・ 分岐':' ・ '+(k.step+1)+'段目')+'</span></div><div class="note" style="margin:3px 0 4px;color:var(--ink)">'+k.desc+'</div>'+skillCompare(k)+'</div>'+act+'</div>';
-  h+=skillPick?'<div class="duo" style="max-width:640px"><button class="act" id="skRe"'+(S.skills.length?'':' disabled')+'>振り直す</button><button class="act" id="skGo">帆を張る</button></div>':'<div class="note" style="text-align:center;margin:4px 0 0">歪みは使わずに持っていると、1つにつき生産+1%。<br>塗りつぶし＝習得済み　光る輪＝覚えられる　点線＝歪みが足りない　灰色＝まだ先</div>';
+  h+=skillPick?'<div class="duo" style="max-width:640px"><button class="act" id="skRe"'+(S.skills.length?'':' disabled')+'>振り直す</button><button class="act" id="skGo">船を出す</button></div>':'<div class="note" style="text-align:center;margin:4px 0 0">歪みは使わずに持っていると、1つにつき生産+1%。<br>塗りつぶし＝習得済み　光る輪＝覚えられる　点線＝歪みが足りない　灰色＝まだ先</div>';
   box.innerHTML=h;
   const svgEl=document.getElementById('skMap');if(svgEl)skPanBind(svgEl);
   box.querySelectorAll('.node').forEach(n=>{const go=()=>{if(skMoved){skMoved=false;return;}const id=n.dataset.id,now=Date.now();if(skillPick&&lastTap.id===id&&now-lastTap.t<380){buySkill(id);lastTap={id:null,t:0};if(has(id)){SND.play('learn',SKILLS.find(z=>z.id===id).br);selSkill=nextSkillAfter(id);renderSkill();return;}}else lastTap={id,t:now};selSkill=id;renderSkill();};n.addEventListener('click',go);n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
   const b=document.getElementById('skBuy');if(b)b.onclick=()=>{buySkill(k.id);if(has(k.id)){SND.play('learn',k.br);}if(has(k.id))selSkill=nextSkillAfter(k.id);renderSkill();};
   const re=document.getElementById('skRe');if(re)re.onclick=()=>{S.W+=skillSpent();S.skills=[];NEWSK=[];renderSkill();};
-  const g=document.getElementById('skGo');if(g)g.onclick=()=>confirmBox('帆を張る',(S.W>=1?'歪みが '+fmt(S.W)+' 残っている。':'')+'星図を閉じて、出航する。',closeSkill);}
+  const g=document.getElementById('skGo');if(g)g.onclick=()=>confirmBox('船を出す',(S.W>=1?'歪みが '+fmt(S.W)+' 残っている。':'')+'星図を閉じて、出航する。',closeSkill);}
 function withSkill(id,f){const had=has(id);if(!had)S.skills.push(id);const v=f();if(!had)S.skills.pop();return v;}
 function paintWm(){document.getElementById('skWm').textContent='生産 ×'+fmtG(wMult());}   // 使わずに持っている歪みの倍率
 function skillCompare(k){if(has(k.id))return '';const rows=[];if(!k.glow&&k.cost>0)rows.push(['持っている歪みの倍率','×'+fmtG(wMult())+' → ×'+fmtG(1+0.01*Math.max(0,S.W-k.cost))]);const P0=prodRate(),P1=withSkill(k.id,prodRate);if(Math.abs(P1-P0)>P0*1e-6)rows.push(['生産',fmt(P0)+' → '+fmt(P1)+' / 秒']);
@@ -95,6 +95,6 @@ function skillCompare(k){if(has(k.id))return '';const rows=[];if(!k.glow&&k.cost
   if(id==='c5')rows.push(['停止後に持ち越す','0 → '+fmt(S.peakP*60)]);
   return rows.map(r=>'<div class="row"><span class="note" style="margin:0">'+r[0]+'</span><span class="num">'+r[1]+'</span></div>').join('');}
 
-// 見るだけで開いた星図は × か Esc で閉じる（緊急停止のあとは「帆を張る」で閉じる）
+// 見るだけで開いた星図は × か Esc で閉じる（緊急停止のあとは「船を出す」で閉じる）
 document.getElementById('skX').onclick=()=>{if(!skillPick)closeSkill();};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&skillOpen&&!skillPick&&!document.querySelector('.modal.on'))closeSkill();});

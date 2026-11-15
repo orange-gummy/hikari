@@ -134,7 +134,7 @@ function renderReset(){const g=wGain();let h='<div class="phead"><span class="la
 /* ② 再出発と残光（STAR タブ）。強化は「残照の地平」：日が沈んだあとの地平線に、強化ごとの光の筋が段に応じて空へ伸びる */
 let glowSel='rm',GLOWFX=null;
 /* 残照の地平（2026-11-15 作り直し）：夕焼けの地平線を小窓いっぱいの景色にし、強化ごとの光の筋をその上に並べる。
-   見出しと結果は上、選んだ強化の説明と「灯す」「帆を張る」は下の中央に、枠なしで重ねる */
+   見出しと結果は上、選んだ強化の説明と「灯す」「船を出す」は下の中央に、枠なしで重ねる */
 function glowScene(W,H,hz){const n=AFTERGLOW.length,span=Math.min(W-48,Math.max(320,W*0.7),980),x0=(W-span)/2,sp=span/n,xs=AFTERGLOW.map((_,i)=>x0+sp*(i+0.5)),st=Math.max(18,Math.min(30,(hz-140)/9));
   let v='<svg class="gScene" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="残光の強化"><defs><linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgb(150,80,90)" stop-opacity="0"/><stop offset=".55" stop-color="rgb(150,80,90)" stop-opacity=".07"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity=".30"/></linearGradient>'+
     '<radialGradient id="gSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgb(255,150,90)" stop-opacity=".30"/><stop offset=".6" stop-color="rgb(255,150,90)" stop-opacity=".08"/><stop offset="1" stop-color="rgb(255,150,90)" stop-opacity="0"/></radialGradient>'+
@@ -162,7 +162,7 @@ function glowDetail(){const a=AFTERGLOW.find(x=>x.id===glowSel)||AFTERGLOW[0],l=
     '<div class="note" style="margin:4px 0 0">'+a.what+'</div><div class="gVal">'+a.val(l)+(nx?'<span class="gArr">→</span><b>'+a.val(l+1)+'</b>':'')+'</div>'+
     '<div class="note" style="margin:0 0 2px">'+(nx?a.hint+'。':'これ以上は灯せない。')+'</div>'+
     (nx?'<button class="act" id="gBuy"'+(S.L<nx.cost?' disabled':'')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">灯す　残光 '+fmt(nx.cost)+'</button>':'')+'</div>';}
-/* 残光の強化は合間に開く（2026-11-09）：故郷に着いて再出発するときと、航路を引き直すときに「残照の地平」が開き、閉じると帆を張る */
+/* 残光の強化は合間に開く（2026-11-09）：故郷に着いて再出発するときと、航路を引き直すときに「残照の地平」が開き、閉じると船を出す */
 let glowOpen=false,glowAfter=null,glowFlow=false;
 function glowAffordable(){return AFTERGLOW.some(a=>{const n=glowNext(a.id);return n&&S.L>=n.cost;});}
 function glowAutoSpend(){let b=true;while(b){b=false;const c=AFTERGLOW.map(a=>[a.id,glowNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.L).sort((x,y)=>x[1].cost-y[1].cost)[0];if(c){buyGlow(c[0]);b=true;}}}
@@ -174,7 +174,7 @@ function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.
 // 景色は小窓いっぱい。下の説明の高さを測ってから、その上に地平線を引く
 function renderGlowOv(){const ov=document.getElementById('glowOv'),b=document.getElementById('glowBody');
   b.innerHTML='<div class="gTop"><div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+glowResult()+'<div class="note" style="margin:0">船を出す前に、残光で灯しておける。</div></div>'+
-    '<div class="gBot">'+glowDetail()+'<button class="act" id="glowGo" style="margin-top:10px">帆を張る</button></div><div class="gSky"></div>';
+    '<div class="gBot">'+glowDetail()+'<button class="act" id="glowGo" style="margin-top:10px">船を出す</button></div><div class="gSky"></div>';
   const W=ov.clientWidth,H=ov.clientHeight,bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height,hz=Math.round(Math.max(top+150,H-bot-70));
   b.querySelector('.gSky').innerHTML=glowScene(W,H,hz);
   b.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;renderGlowOv();});
