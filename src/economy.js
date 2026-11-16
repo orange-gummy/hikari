@@ -18,8 +18,8 @@ function milMult(n){let m=1;const b=has('eA')?3:2;for(const x of MILESTONES)if(n
 function synK(){return has('e5')?1.5:1;}
 const TIER_NEED=[0,0,10,25,50,100,200],TIER_COST=[0,0,300,1e5,3e7,1e10,3e12],ROMAN=['','I','II','III','IV','V','VI'];
 function upgA(i){return Math.pow(has('e5')?2.5:2,(S.tier[i]||1)-1);}
-// TIER は、装置が出てきた段階で II、そこから加速1回ごとに1つ上まで上げられる（2026-11-16。出てきた瞬間に V まで上がらないように）
-function tierStage(i,t){return (DEVICES[i].unlock||0)+(t-2);}
+const TIER_FREE=+((typeof process!=='undefined'&&process.env.TIER_FREE)||3);   // TIER は、装置が出てきた段階で TIER_FREE まで、そこから加速1回ごとに1つ上まで上げられる（2026-11-16。出てきた瞬間に V まで上がらないように）
+function tierStage(i,t){return (DEVICES[i].unlock||0)+Math.max(0,t-TIER_FREE);}
 function tierNext(i){const t=(S.tier[i]||1)+1;if(t>6)return null;const st=tierStage(i,t);return{t,need:TIER_NEED[t],cost:DEVICES[i].cost*TIER_COST[t],st,lock:S.stage<st};}
 function tierUp(i){const n=tierNext(i);if(!n||n.lock||S.dev[i]<n.need||S.E<n.cost)return;S.E-=n.cost;S.tier[i]=n.t;FXQ.tier=i;}
 function kinds(){let k=0;for(const i of PRODI)if(S.dev[i]>0)k++;return k;}
