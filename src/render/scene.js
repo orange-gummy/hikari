@@ -54,20 +54,19 @@ function ay(o,x,t){return o.ayp+Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*3
    in：上から青が満ち、雲が順に灯る／out：青が抜けて灰色になり、雲の線が右から粒になってほどける。
    PC の横長の窓では情景の上のほう（y<170 前後）が切れるので、雲は y 200〜260 に置く */
 const CLOUDS=[{x:62,y:240,s:1.0,b:[[-22,0,9],[-9,-7,13],[8,-5,11],[21,0,8]]},{x:178,y:226,s:1.25,b:[[-26,0,8],[-12,-8,13],[5,-10,15],[21,-3,10],[33,1,7]]},{x:262,y:256,s:0.8,b:[[-16,0,8],[-3,-6,11],[12,-2,9]]}];
-function cloudPath(c,ox){const b=c.b,s=c.s,x0=c.x+ox,l=b[0],r=b[b.length-1],xa=x0+(l[0]-l[2])*s,xb=x0+(r[0]+r[2])*s;cx.beginPath();cx.moveTo(xa,c.y);   // 丸の重なりの外側だけをなぞる
-  for(let x=xa;x<=xb;x+=1.5){let y=c.y;for(const q of b){const dx=x-(x0+q[0]*s),rr=q[2]*s;if(Math.abs(dx)<rr)y=Math.min(y,c.y+q[1]*s-Math.sqrt(rr*rr-dx*dx));}cx.lineTo(x,y);}
-  cx.lineTo(xb,c.y);cx.closePath();}
+function cloudPath(c,ox){const b=c.b,s=c.s,x0=c.x+ox,l=b[0],r=b[b.length-1],xa=x0+(l[0]-l[2])*s,xb=x0+(r[0]+r[2])*s;cx.beginPath();let st=false;   // 丸の重なりの上の輪郭だけをなぞる（底の線は引かない）
+  for(let x=xa;x<=xb;x+=1.5){let y=c.y;for(const q of b){const dx=x-(x0+q[0]*s),rr=q[2]*s;if(Math.abs(dx)<rr)y=Math.min(y,c.y+q[1]*s-Math.sqrt(rr*rr-dx*dx));}if(st)cx.lineTo(x,y);else{cx.moveTo(x,y);st=true;}}}
 function skyScene(e){const t=e.t,inn=e.m==='in',k=inn?ramp(t,0,40,150,210):ramp(t,0,6,150,175);e.g=0;if(k<=0){if(t>20)e.done=true;return;}
-  const u=inn?0:ei(cl((t-10)/90)),blue=mix([70,130,235],G,u),pale=mix([150,195,255],G,u),cw=mix([242,246,255],G,u*0.8),L=LANDED?0.45:1;
-  const g=cx.createLinearGradient(0,120,0,HY);g.addColorStop(0,rgb(blue,0.42*k*L));g.addColorStop(0.6,rgb(pale,0.2*k*L));g.addColorStop(1,rgb(pale,0));cx.fillStyle=g;cx.fillStyle=rgb(blue,0.42*k*L);cx.fillRect(-400,-1200,PW+800,1320);cx.fillStyle=g;cx.fillRect(-400,120,PW+800,HY-120);
+  const u=inn?0:ei(cl((t-10)/90)),blue=mix([80,150,250],G,u),pale=mix([165,208,255],G,u),cw=mix([242,246,255],G,u*0.8),L=LANDED?0.45:1;
+  SKYV=Math.max(SKYV,k*(1-u));const g=cx.createLinearGradient(0,120,0,HY);g.addColorStop(0,rgb(blue,0.6*k*L));g.addColorStop(0.6,rgb(pale,0.34*k*L));g.addColorStop(1,rgb(pale,0));cx.fillStyle=g;cx.fillStyle=rgb(blue,0.6*k*L);cx.fillRect(-400,-1200,PW+800,1320);cx.fillStyle=g;cx.fillRect(-400,120,PW+800,HY-120);
   // 高いところの細い筋雲
   for(let j=0;j<2;j++){const y=196+j*14,ox=((T*0.05+j*90)%(PW+120))-60,len=110-j*30,a=0.22*k*L*(inn?cl((t-20-j*15)/40):1-u);if(a<=0.01)continue;
     glp(()=>{cx.beginPath();cx.moveTo(ox-len/2,y+2);cx.quadraticCurveTo(ox,y-4,ox+len/2,y+1);},cw,a,0.6);}
   CLOUDS.forEach((c,ci)=>{const ox=((T*0.03*(1+ci*0.3))%40)-20+Math.sin(T*0.002+ci)*6;let a=k*L;
     if(inn)a*=cl((t-25-ci*18)/45);else{const d=cl((t-20-(PW-c.x)*0.25)/50);a*=1-d;if(d>0&&d<1&&Math.random()<0.25){const q=c.b[Math.floor(Math.random()*c.b.length)],an=Math.PI+Math.random()*Math.PI;SP.push({x:c.x+ox+q[0]*c.s+Math.cos(an)*q[2]*c.s,y:c.y+q[1]*c.s+Math.sin(an)*q[2]*c.s,vx:R(0.1,0.35),vy:-R(0.1,0.4),l:0.8,c:cw,r:0.7,dr:0.015});}}
     if(a<=0.01)return;
-    for(const q of c.b)blob(c.x+ox+q[0]*c.s,c.y+q[1]*c.s-2,q[2]*c.s*1.8,cw,0.07*a);
-    glp(()=>cloudPath(c,ox),cw,0.5*a,0.8);
+    for(const q of c.b)blob(c.x+ox+q[0]*c.s,c.y+q[1]*c.s-2,q[2]*c.s*1.8,cw,0.11*a);
+    cx.setLineDash([16,3,7,4,22,3]);cx.lineDashOffset=ci*9;glp(()=>cloudPath(c,ox),cw,0.38*a,0.5);cx.setLineDash([]);   // 細く淡い線で、ところどころ途切れさせる
     for(const q of c.b)gdot(c.x+ox+q[0]*c.s,c.y+(q[1]-q[2])*c.s,0.6,cw,0.6*a*(0.6+0.4*Math.sin(T*0.03+q[0])));});
   if(t>(inn?400:200))e.done=true;}
 function sunScene(e){const t=e.t;let k,sy,ph,glow;if(e.m==='out'){k=ramp(t,0,18,170,200);sy=HY-62+100*ei((t-20)/110);ph=cl((t-30)/120);glow=1-cl((t-120)/55);}else{k=ramp(t,0,15,260,320);sy=HY+38-210*ei((t-25)/150);ph=1-cl((t-15)/120);glow=cl(t/40);}

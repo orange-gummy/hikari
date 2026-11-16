@@ -19,7 +19,7 @@ function aurBand(i,o,a,rv){if(a<=0.01||rv<=0.01)return;const t=T*0.003+i*1.7,edg
     const g=cx.createLinearGradient(0,y+14*sy,0,y-h);g.addColorStop(0,rgb(o.rgb,0));g.addColorStop(0.1,rgb(o.rgb,al*0.25));g.addColorStop(0.15,rgb(edgeC,al*1.6));g.addColorStop(0.22,rgb(o.rgb,al*0.9));g.addColorStop(0.5,rgb(o.rgb,al*0.32));g.addColorStop(1,rgb(topC,0));
     cx.fillStyle=g;cx.fillRect(x,y-h,3,h+14*sy);}
   cx.restore();}
-let devGlow=0;
+let devGlow=0,SKYV=0;   // SKYV：晴れた昼の空の濃さ（前のコマの値で、オーロラを弱める）
 /* ③の航海：窓を横切る地平線の光の帯（自分たちの銀河を外から見る）。光の点を一度だけ描いておき、毎フレーム重ねる */
 let BAND=null;
 function bandCanvas(w,h){if(BAND&&BAND.w===w&&BAND.h===h)return BAND.c;const c=document.createElement('canvas');c.width=Math.ceil(w*DPR);c.height=Math.ceil(h*DPR);const x=c.getContext('2d');x.scale(DPR,DPR);
@@ -55,7 +55,7 @@ function frameInner(){
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
   cx.clearRect(0,0,CW,CH);drawTint();drawBand();
   // 四隅の記憶の色のもやは、宇宙らしく見えなくなるのでやめた（2026-11-16）
-  for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null)aurBand(i,o,A[i],RV[i]);}
+  {const dim=1-0.8*SKYV;SKYV=0;for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null)aurBand(i,o,A[i]*dim,RV[i]);}}   // 晴れた昼の空が出ている間は、オーロラを弱める
   // stars
   const tw=0.25*aw,CXs=RC.x||CW/2,CYs=RC.y||CH/2,rs=420*sc*(1-CONV*0.92)*ZOOM;
   if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const s of STARS){s.t+=s.v*0.75*SPDF*(1+CONV*4);if(s.t>3.1){s.t=0.02+Math.random()*0.2;s.p=Math.random()*6.283;}else if(s.t<0.02&&SPDF<0){s.t=2.95+Math.random()*0.14;s.p=Math.random()*6.283;}
