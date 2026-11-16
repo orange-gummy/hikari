@@ -18,8 +18,10 @@ function milMult(n){let m=1;const b=has('eA')?3:2;for(const x of MILESTONES)if(n
 function synK(){return has('e5')?1.5:1;}
 const TIER_NEED=[0,0,10,25,50,100,200],TIER_COST=[0,0,300,1e5,3e7,1e10,3e12],ROMAN=['','I','II','III','IV','V','VI'];
 function upgA(i){return Math.pow(has('e5')?2.5:2,(S.tier[i]||1)-1);}
-function tierNext(i){const t=(S.tier[i]||1)+1;if(t>6)return null;return{t,need:TIER_NEED[t],cost:DEVICES[i].cost*TIER_COST[t]};}
-function tierUp(i){const n=tierNext(i);if(!n||S.dev[i]<n.need||S.E<n.cost)return;S.E-=n.cost;S.tier[i]=n.t;FXQ.tier=i;}
+// TIER は、装置が出てきた段階で II、そこから加速1回ごとに1つ上まで上げられる（2026-11-16。出てきた瞬間に V まで上がらないように）
+function tierStage(i,t){return (DEVICES[i].unlock||0)+(t-2);}
+function tierNext(i){const t=(S.tier[i]||1)+1;if(t>6)return null;const st=tierStage(i,t);return{t,need:TIER_NEED[t],cost:DEVICES[i].cost*TIER_COST[t],st,lock:S.stage<st};}
+function tierUp(i){const n=tierNext(i);if(!n||n.lock||S.dev[i]<n.need||S.E<n.cost)return;S.E-=n.cost;S.tier[i]=n.t;FXQ.tier=i;}
 function kinds(){let k=0;for(const i of PRODI)if(S.dev[i]>0)k++;return k;}
 function synMult(i){if((S.tier[i]||1)<3)return 1;const n=S.dev,k=synK();
   switch(i){case 0:return 1+0.02*n[1]*k;case 1:return 1+0.02*n[2]*k;case 2:return 1+0.03*n[5]*k;case 3:return 1+0.01*n[0]*k;case 4:return 1+0.03*n[6]*k;case 6:return 1+0.05*n[ANCHOR]*k;case 7:return 1+0.10*kinds()*k;default:return 1;}}
@@ -85,7 +87,7 @@ function tick(dt,offMul){
   else{gain=P*dt;if(S.wind>0){const x=Math.min(S.wind,P*dt*(WIND_X-1));gain+=x;S.wind-=x;}forkTick(dt);}
   if(S.nebT>0)S.nebT=Math.max(0,S.nebT-dt);   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
   S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;
-  autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
+  autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&!n.lock&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
   for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
   const dy=yearsPerSec()*dt;S.years+=dy;
   if(S.voy)S.uTime+=dt*(offMul||1);
