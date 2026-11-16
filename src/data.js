@@ -73,6 +73,7 @@ const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.5),WIND_X
 const FORK_INT=+((typeof process!=='undefined'&&process.env.FORK_INT)||600),FORK_LIFE=180,NEB_T=600;
 const FORKS=[{id:'neb',name:'星雲を抜ける',col:[150,170,255]},{id:'wreck',name:'古い星の残骸に寄る',col:[220,200,170]},{id:'calm',name:'静かな空域へ',col:[255,214,170]},{id:'wind',name:'追い風の流れに乗る',col:[200,235,255]}];
 // 引き直しをすすめる目安：得られる航跡が「今までの合計 × REDRAW_R」以上（以前は合計以上＝1）
+const FORK_LINES={neb:'星雲の中を、光が速く流れていく。',wreck:'古い星の残骸に、誰かの航跡が残っていた。',calm:'静かな空域。故郷の光が、少しだけ近い。',wind:'見えない流れが、帆を押した。'};
 const REDRAW_R=+((typeof process!=='undefined'&&process.env.REDRAW_R)||0.3);
 const TIME_K=0.3;   // 故郷への周回で9が12個より先は、故郷の時間と生産の速まりを γ のこの乗にとどめる（周回が数分に縮まないように）
 const FINAL_N=2;   // 9が12個から数えて、この数の段階は FINAL_MULT 倍で上がる
