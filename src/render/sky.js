@@ -5,16 +5,16 @@
 /* 7色の記憶のオーロラ（2026-11-16 描き直し）：下の縁がくっきり明るく、上へ細い光の筋がのびて消えていく幕。
    筋の明るさは横へゆっくり流れ、幕が折れて横から見えるところほど明るい。色はその記憶の色のまま、縁は白っぽく、上はわずかに紫へ */
 const AUR_TOP=[175,140,255];
-function aurBand(i,o,a,rv){if(a<=0.01||rv<=0.01)return;const t=T*0.012+i*1.7,edge=-30+rv*(CW+90),sy=CH/610,base=o.ay*CH,tt=T*0.004;
-  const yAt=x=>base+(Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*30+Math.sin(x*0.043-t*1.7+i)*7)*sy;
+function aurBand(i,o,a,rv){if(a<=0.01||rv<=0.01)return;const t=T*0.006+i*1.7,edge=-30+rv*(CW+90),sy=CH/610,base=o.ay*CH,tt=T*0.0012;
+  const yAt=x=>base+(Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*30+Math.sin(x*0.043-t*0.6+i)*7)*sy;
   const edgeC=mix(o.rgb,[255,255,255],0.35),topC=mix(o.rgb,AUR_TOP,0.3);
   cx.save();cx.globalCompositeOperation='lighter';
   // 幕のうしろのぼんやりした光
   for(let x=0;x<=CW;x+=36){const fade=cl((edge-x)/50);if(fade<=0)break;const y=yAt(x),al=0.05*a*fade;blob(x,y-26*sy,70*sy,o.rgb,al);}
   for(let x=0;x<=CW;x+=3){const fade=cl((edge-x)/50);if(fade<=0)break;const y=yAt(x),sl=Math.min(1,Math.abs(yAt(x+3)-y)/3*1.6);
-    const cur=0.5+0.5*Math.sin(x*0.09+T*0.02+i)*Math.sin(x*0.031-T*0.013);
+    const cur=0.5+0.5*Math.sin(x*0.09+T*0.007+i)*Math.sin(x*0.031-T*0.005);
     let ray=0.5+0.5*Math.sin(x*0.37+tt*9+i*3)*Math.sin(x*0.113-tt*5);ray=0.35+0.65*ray*ray;
-    const fl=0.85+0.15*Math.sin(x*0.9+T*0.11+i);
+    const fl=0.9+0.1*Math.sin(x*0.9+T*0.02+i);
     const h=(46+30*ray+18*Math.sin(x*0.02+t*1.3))*sy,al=0.17*a*fade*cur*ray*fl*(1+0.9*sl);if(al<0.004)continue;
     const g=cx.createLinearGradient(0,y+14*sy,0,y-h);g.addColorStop(0,rgb(o.rgb,0));g.addColorStop(0.1,rgb(o.rgb,al*0.25));g.addColorStop(0.15,rgb(edgeC,al*1.6));g.addColorStop(0.22,rgb(o.rgb,al*0.9));g.addColorStop(0.5,rgb(o.rgb,al*0.32));g.addColorStop(1,rgb(topC,0));
     cx.fillStyle=g;cx.fillRect(x,y-h,3,h+14*sy);}

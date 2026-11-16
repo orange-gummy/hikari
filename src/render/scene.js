@@ -52,10 +52,10 @@ function runVQ(){if(vqTimer||!VQ.length)return;if(!climax&&(ACC||Date.now()-accE
 function ay(o,x,t){return o.ayp+Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*30;}
 /* 窓の中の青いオーロラ（2026-11-16、背景の記憶のオーロラと同じ描き方に）：くっきり明るい下の縁、上へのびて消える光の筋、流れる明るさ、折れ目ほど明るい。
    in：左から幕が灯っていく／out：右へ順に、幕が灰色になりながら縮んで消え、粒がこぼれる */
-function curtain(k,mode,t){const c=[120,170,255],tp=[175,150,255],ec=mix(c,[255,255,255],0.35),tt=T*0.004;
-  const byAt=x=>150+Math.sin(x*0.02+T*0.01)*18+Math.sin(x*0.009-T*0.006)*22+Math.sin(x*0.05-T*0.017)*5;
+function curtain(k,mode,t){const c=[120,170,255],tp=[175,150,255],ec=mix(c,[255,255,255],0.35),tt=T*0.0012;
+  const byAt=x=>150+Math.sin(x*0.02+T*0.005)*18+Math.sin(x*0.009-T*0.003)*22+Math.sin(x*0.05-T*0.006)*5;
   cx.save();cx.globalCompositeOperation='lighter';
-  for(let x=2;x<PW;x+=2){const by=byAt(x),sl=Math.min(1,Math.abs(byAt(x+2)-by)/2*1.6),L=72+38*Math.sin(x*0.05+T*0.02),I=0.55+0.45*Math.sin(x*0.13+T*0.04)*Math.sin(x*0.03-T*0.02);
+  for(let x=2;x<PW;x+=2){const by=byAt(x),sl=Math.min(1,Math.abs(byAt(x+2)-by)/2*1.6),L=72+38*Math.sin(x*0.05+T*0.007),I=0.55+0.45*Math.sin(x*0.13+T*0.012)*Math.sin(x*0.03-T*0.007);
     let ray=0.5+0.5*Math.sin(x*0.61+tt*9)*Math.sin(x*0.19-tt*5);ray=0.35+0.65*ray*ray;let u=0,rev=1;
     if(mode==='in')rev=cl((t*5-x)/40);else u=ei((t-12-x*0.18)/60);if(rev<=0)continue;const bot=by-u*L,len=L*(1-u)*(0.75+0.45*ray);if(len<2)continue;
     const cc=mix(c,G,u),e2=mix(ec,G,u),a=k*I*ray*rev*(1-u*0.6)*(1+0.8*sl)*0.75;if(a<0.004)continue;
