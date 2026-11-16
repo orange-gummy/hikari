@@ -71,6 +71,7 @@ function devCost(i,k){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);r
 function devMax(i){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);return Math.max(0,Math.floor(Math.log(S.E*(g-1)/c+1)/Math.log(g)));}
 function batteryCap(){return batteryCapRaw(prodRate());}
 function batteryRate(){return 0.03+(has('e2')?0.02:0);}
+function windMigrate(){if(!(S.wind>0))return;const P=prodRate();S.windT=(S.windT||0)+Math.min(P>0?S.wind/(P*(WIND_X-1)):0,offlineCap()*(1-OFF_NOW)/(WIND_X-1));delete S.wind;}   // 版6の途中まで追い風はエネルギーで貯めていた。留守の上限に見合う時間までに切り詰めて移す
 function offlineCap(){return (has('c7')?sp('c7'):has('c3')?24:has('c1')?8:2)*3600;}
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
@@ -84,8 +85,8 @@ function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 
 function tick(dt,offMul){
   const P=prodRate();let gain;
-  if(offMul){const g=P*offMul*dt,now=S.chal?1:OFF_NOW;gain=g*now;S.wind=(S.wind||0)+g*(1-now);}   // 留守の間：一部だけすぐ入り、残りは追い風に（チャレンジ中は全部すぐ入る）
-  else{gain=P*dt;if(S.wind>0){const x=Math.min(S.wind,P*dt*(WIND_X-1));gain+=x;S.wind-=x;}forkTick(dt);}
+  if(offMul){const g=P*offMul*dt,now=S.chal?1:OFF_NOW;gain=g*now;S.windT=(S.windT||0)+dt*offMul*(1-now)/(WIND_X-1);}   // 留守の間：一部だけすぐ入り、残りは追い風に（チャレンジ中は全部すぐ入る）
+  else{gain=P*dt;if(S.windT>0){const w=Math.min(S.windT,dt);gain+=P*w*(WIND_X-1);S.windT-=w;}forkTick(dt);}
   if(S.nebT>0)S.nebT=Math.max(0,S.nebT-dt);   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
   S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;
   autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&!n.lock&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
@@ -168,12 +169,12 @@ function voyAdvance(d){if(S.nebT>0)d*=3;S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function redrawReady(){return S.voy&&tGain()>=Math.max(3,Math.ceil(S.tTotal*REDRAW_R));}
 // 分かれ道：得られるもの（そのときの強さに合わせる）
-function forkGain(id){if(id==='wreck')return Math.max(2,Math.ceil(Math.max(tGain(),Math.sqrt(S.tTotal))*0.3));if(id==='calm')return Math.ceil(lPer()*0.5);if(id==='wind')return prodRate()*NEB_T*(WIND_X-1);return 3;}
+function forkGain(id){if(id==='wreck')return Math.max(2,Math.ceil(Math.max(tGain(),Math.sqrt(S.tTotal))*0.3));if(id==='calm')return Math.ceil(lPer()*0.5);if(id==='wind')return NEB_T;return 3;}
 function forkText(id){const g=forkGain(id);return id==='neb'?'10分間、航海の距離 ×3':id==='wreck'?'航跡 +'+g:id==='calm'?'残光 +'+g:'追い風 10分ぶん';}
 function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0){S.fork=null;S.forkT=0;}return;}
   S.forkT=(S.forkT||0)+dt;if(S.forkT>=FORK_INT){const ids=FORKS.map(f=>f.id).sort(()=>Math.random()-0.5).slice(0,2+(Math.random()<0.5?1:0));S.fork={opts:ids,life:FORK_LIFE};FXQ.fork=true;}}
 function chooseFork(id){if(!S.fork||!S.fork.opts.includes(id))return false;const g=forkGain(id);
-  if(id==='neb')S.nebT=NEB_T;else if(id==='wreck'){S.T+=g;S.tTotal+=g;}else if(id==='calm'){S.L+=g;S.lTotal+=g;}else if(id==='wind')S.wind=(S.wind||0)+g;
+  if(id==='neb')S.nebT=NEB_T;else if(id==='wreck'){S.T+=g;S.tTotal+=g;}else if(id==='calm'){S.L+=g;S.lTotal+=g;}else if(id==='wind')S.windT=(S.windT||0)+g;
   S.fork=null;S.forkT=0;S.st.forks=(S.st.forks||0)+1;return true;}
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)):0;}
 function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}

@@ -2,7 +2,7 @@
 /* =====================================================================
    STATE ― ゲームの状態とセーブ
    ===================================================================== */
-function freshState(){return{v:SAVE_VERSION,voyStash:null,wind:0,fork:null,forkT:0,nebT:0,E:0,Erun:0,maxE:0,dev:DEVICES.map(()=>0),frac:DEVICES.map(()=>0),upg:[],stage:0,maxStage:0,W:0,wTotal:0,skills:[],prestiges:0,peakP:0,
+function freshState(){return{v:SAVE_VERSION,voyStash:null,windT:0,fork:null,forkT:0,nebT:0,E:0,Erun:0,maxE:0,dev:DEVICES.map(()=>0),frac:DEVICES.map(()=>0),upg:[],stage:0,maxStage:0,W:0,wTotal:0,skills:[],prestiges:0,peakP:0,
   battery:0,years:0,dist:0,lost:0,greyLost:false,flags:{},ach:[],log:[],taps:0,deposited:false,idleBack:false,cleared:false,
   runTime:0,pulse:0,burst:0,over:0,overMul:1,batDep:0,released:false,auto:DEVICES.map(()=>1),autoT:[0,0,0,0,0,0,0,0],autoBud:0.5,autoBought:0,autoAcc:true,autoTier:true,autoRel:true,sling:0,coast:0,crit:0,tier:[1,1,1,1,1,1,1,1],region:0,
   L:0,lTotal:0,restarts:0,ag:{},lit:[],prevSkills:[],sig:0,loopTime:0,
