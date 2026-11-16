@@ -19,13 +19,6 @@ function aurBand(X,i,o,a,rv){if(a<=0.01||rv<=0.01)return;const t=T*0.003+i*1.7,e
     const g=X.createLinearGradient(0,y+14*sy,0,y-h);g.addColorStop(0,rgb(o.rgb,0));g.addColorStop(0.1,rgb(o.rgb,al*0.25));g.addColorStop(0.15,rgb(edgeC,al*1.6));g.addColorStop(0.22,rgb(o.rgb,al*0.9));g.addColorStop(0.5,rgb(o.rgb,al*0.32));g.addColorStop(1,rgb(topC,0));
     X.fillStyle=g;X.fillRect(x,y-h,3,h+14*sy);}
   X.restore();}
-/* オーロラは横1/3・縦1/2の小さな画面に描いてから、なめらかに引き伸ばして重ねる（2026-11-16）。
-   3px の縦の帯をそのまま描くと、PC の細かい画面で帯の境目が線に見えていた */
-let AURC=null;
-function drawAurora(dim){const w=Math.ceil(CW/3),h=Math.ceil(CH/2);if(!AURC||AURC.width!==w||AURC.height!==h){AURC=document.createElement('canvas');AURC.width=w;AURC.height=h;}
-  const X=AURC.getContext('2d');X.setTransform(1,0,0,1,0,0);X.clearRect(0,0,w,h);X.setTransform(1/3,0,0,1/2,0,0);let any=false;
-  for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null&&A[i]*dim>0.01&&RV[i]>0.01){aurBand(X,i,o,A[i]*dim,RV[i]);any=true;}}
-  if(!any)return;cx.save();cx.globalCompositeOperation='lighter';cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(AURC,0,0,w*3,h*2);cx.restore();}
 let devGlow=0,SKYV=0;   // SKYV：晴れた昼の空の濃さ（前のコマの値で、オーロラを弱める）
 /* ③の航海：窓を横切る地平線の光の帯（自分たちの銀河を外から見る）。光の点を一度だけ描いておき、毎フレーム重ねる */
 let BAND=null;
@@ -62,7 +55,7 @@ function frameInner(){
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
   cx.clearRect(0,0,CW,CH);drawTint();drawBand();
   // 四隅の記憶の色のもやは、宇宙らしく見えなくなるのでやめた（2026-11-16）
-  {const dim=1-0.8*SKYV;SKYV=0;drawAurora(dim);}   // 晴れた昼の空が出ている間は、オーロラを弱める
+  {const dim=1-0.8*SKYV;SKYV=0;for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null)aurBand(cx,i,o,A[i]*dim,RV[i]);}}   // 晴れた昼の空が出ている間は、オーロラを弱める
   // stars
   const tw=0.25*aw,CXs=RC.x||CW/2,CYs=RC.y||CH/2,rs=420*sc*(1-CONV*0.92)*ZOOM;
   if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const s of STARS){s.t+=s.v*0.75*SPDF*(1+CONV*4);if(s.t>3.1){s.t=0.02+Math.random()*0.2;s.p=Math.random()*6.283;}else if(s.t<0.02&&SPDF<0){s.t=2.95+Math.random()*0.14;s.p=Math.random()*6.283;}
