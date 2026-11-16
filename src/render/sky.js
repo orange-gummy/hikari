@@ -152,13 +152,19 @@ function drawAcc(){const a=ACC;a.t++;const low=fxLow,lv=a.lvl,n=nines(lv),t=a.t,
   if(t>CH_T+dur+6){ZOOM=1;SPDF=1;ROTV=0;stk=0;ROT=Math.round(ROT/5)*5;TKG.setAttribute('transform','rotate('+ROT+' 88 88)');if(n>0)SEG[(n-1)%12].setAttribute('stroke-width','2.2');ACC=null;accEndAt=Date.now();}}
 function mkCrack(){const br=[];for(let j=0;j<9;j++){let a=j/9*6.283+R(-0.2,0.2),x=RC.x,y=RC.y;const pts=[[x,y]];for(let k=0;k<26;k++){a+=R(-0.35,0.35);x+=Math.cos(a)*R(8,16);y+=Math.sin(a)*R(8,16);pts.push([x,y]);}br.push(pts);}CRACK={t:0,br};}
 
+let HOMEC=null;
 function drawHome(){const h=HOMEA;h.t++;const D=380;   // 雲を抜けるまで（約6秒）
   if(!h.L){h.L=[];for(let i=0;i<18;i++){const pf=[];for(let k=0;k<14;k++){const a=R(0,6.283),d=Math.sqrt(Math.random())*1.6;pf.push({x:Math.cos(a)*d,y:Math.sin(a)*d*0.7,r:R(0.35,0.9)});}h.L.push({s:i*17+R(-5,5),pf});}}
   const cxp=CW/2,cyp=CH*0.45,base=Math.max(CW,CH)*0.5,gp=cl(h.t/D),col=mix([182,187,198],G,0.3);
   cx.fillStyle='rgba(19,21,30,'+ei(cl(h.t/45)).toFixed(3)+')';cx.fillRect(0,0,CW,CH);
   let fog=0;const vis=h.L.map(L=>{const age=h.t-L.s,dur=140-75*gp;return{L,p:age/dur};}).filter(o=>o.p>0&&o.p<1).sort((a,b)=>a.p-b.p);
-  for(const o of vis){const z=1-o.p,sc=0.2/(z+0.04),al=(o.p<0.6?o.p/0.6:1)*(0.6-0.2*gp);if(o.p>0.78)fog=Math.max(fog,Math.sin((o.p-0.78)/0.22*Math.PI)*0.42);
-    for(const f of o.L.pf){const x=cxp+f.x*base*sc,y=cyp+f.y*base*sc,r=f.r*base*sc*0.9;if(x+r<0||x-r>CW||y+r<0||y-r>CH)continue;const fa=al*(o.p>0.85?(1-o.p)/0.15:1);blob(x,y,r,col,fa*0.38);blob(x+r*0.35,y-r*0.15,r*0.55,[220,224,232],fa*0.22);}
+  // 雲は1/4の大きさの画面（上下左右に6ずつ余白。ぼかしで画面の縁が薄くならないよう）に描いてから、なめらかに引き伸ばす（2026-11-16）。薄い丸いぼかしを何十枚も重ねると、PC の細かい画面で細かな網目の線が見えていた
+  const hw=Math.ceil(CW/4)+12,hh=Math.ceil(CH/4)+12;if(!HOMEC||HOMEC.width!==hw||HOMEC.height!==hh){HOMEC=document.createElement('canvas');HOMEC.width=hw;HOMEC.height=hh;}
+  const HX=HOMEC.getContext('2d');HX.setTransform(1,0,0,1,0,0);HX.clearRect(0,0,hw,hh);HX.setTransform(0.25,0,0,0.25,6,6);
+  const hb=(x,y,rr,c,a)=>{if(a<=0.002||rr<=0)return;const g=HX.createRadialGradient(x,y,0,x,y,rr);g.addColorStop(0,rgb(c,a));g.addColorStop(0.45,rgb(c,a*0.45));g.addColorStop(1,rgb(c,0));HX.fillStyle=g;HX.fillRect(x-rr,y-rr,rr*2,rr*2);};
+  for(const o of vis){const al=(o.p<0.6?o.p/0.6:1)*(0.6-0.2*gp),sc=0.2/(1-o.p+0.04);for(const f of o.L.pf){const x=cxp+f.x*base*sc,y=cyp+f.y*base*sc,r=f.r*base*sc*0.9;if(x+r<0||x-r>CW||y+r<0||y-r>CH)continue;const fa=al*(o.p>0.85?(1-o.p)/0.15:1);hb(x,y,r,col,fa*0.38);hb(x+r*0.35,y-r*0.15,r*0.55,[220,224,232],fa*0.22);}}
+  cx.save();cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';if('filter' in cx)cx.filter='blur(6px)';cx.drawImage(HOMEC,-24,-24,hw*4,hh*4);cx.restore();   // 引き伸ばしたときの粗さもぼかして消す
+  for(const o of vis){const z=1-o.p,sc=0.2/(z+0.04);if(o.p>0.78)fog=Math.max(fog,Math.sin((o.p-0.78)/0.22*Math.PI)*0.42);
     if(o.p>0.55){const k=(o.p-0.55)/0.45;for(const f of o.L.pf.slice(0,6)){const dx=f.x,dy=f.y,dl=Math.hypot(dx,dy)||1,r1=base*sc*dl*0.9,r2=r1*1.25;cx.beginPath();cx.moveTo(cxp+dx/dl*r1,cyp+dy/dl*r1);cx.lineTo(cxp+dx/dl*r2,cyp+dy/dl*r2);cx.strokeStyle=rgb([220,224,232],0.12*k*(1-gp*0.5));cx.lineWidth=2;cx.stroke();}}}
   if(fog>0){cx.fillStyle=rgb(mix([150,155,168],[60,64,74],gp),fog);cx.fillRect(0,0,CW,CH);}
   if(h.t>D&&!h.done){h.done=true;homeColors();}}
