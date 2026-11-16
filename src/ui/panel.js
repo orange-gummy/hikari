@@ -209,12 +209,13 @@ function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';
     else h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる残光</span><span class="big">'+fmt(lg)+'</span></div>'+
     '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、残光は残る。</div>'+
-    '<button class="act" id="rsGo"'+(lg<1?' disabled':'')+'>再出発する</button>'+(!S.cleared?'<div class="note">故郷に着くと使える。</div>':'')+
+    (canVoyage()?'<button class="act" id="rsDoor" style="border-color:rgba(210,200,255,.6);color:#e6e2ff">さらに遠くへ</button><div class="note">上位の星8つが灯った。ここから先は航海になる。</div>':'<button class="act" id="rsGo"'+(lg<1?' disabled':'')+'>再出発する</button>'+(!S.cleared?'<div class="note">故郷に着くと使える。</div>':''))+
     '<div class="row" style="margin-top:10px"><span class="note" style="margin:0">これまでの再出発</span><span class="num">'+S.restarts+' 回</span></div>';}
   else h+='<div class="phead"><span class="lab">AFTERGLOW</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div>'+glowScene(360,210,150)+glowDetail();
   pbody.dataset.k=key;pbody.innerHTML=h;
   pbody.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;pbody.dataset.k='';renderGlow();});
   const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){fla=Math.max(fla,0.1);GLOWFX={id:glowSel,t:Date.now()};pbody.dataset.k='';renderGlow();}};
+  const rd=document.getElementById('rsDoor');if(rd)rd.onclick=()=>showDoor();
   const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','残光を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、残光は残る。',()=>{startBrake(0);BRK.rs=true;});}
 /* ② チャレンジ（CHALLENGE タブ）：上位の星8つの「残光の星座」。星1つごとにチャレンジが1つ。越えるとその星が灯り、周回の最初から効いて消えない */
 let litSel=null;
@@ -258,7 +259,7 @@ function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
   pbody.dataset.k='';pbody.innerHTML=h;
   pbody.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(buyTrail(b.dataset.t)){fla=Math.max(fla,0.1);renderPanel(true);}});
   const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、残光は残る。',()=>{startBrake(0);BRK.vr=true;});
-  const fg=document.getElementById('farGo');if(fg)fg.onclick=()=>confirmBox('さらに遠くへ','故郷を出発点に、隣の銀河へ航海に出る。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星は残る。',()=>{goFarther();});}
+  const fg=document.getElementById('farGo');if(fg)fg.onclick=()=>showDoor();}   // どこから押しても、章の扉を通って航海へ
 function renderLog(){pbody.dataset.k='';const logMode=curTab==='ach'?'ach':'log';let h='<div class="phead"><span class="lab">'+(logMode==='log'?'LOG':'RECORD')+'</span>'+(logMode==='ach'?'<span class="num" style="font-size:12px;color:var(--ink-dim)">実績 '+S.ach.length+' / '+ACHIEVEMENTS.length+'</span>':'')+'</div>';
   if(logMode==='log'){S.log.slice().reverse().forEach((e,j)=>{const col=e.c>=0?rgb(COLORS[e.c].rgb,1):'var(--ink-dim)';h+='<div class="le"><span class="y" style="color:'+col+'">故郷 '+e.y.toLocaleString('ja-JP')+'年</span><span class="t" style="opacity:'+(j===0?1:0.75)+'">'+e.t+'</span></div>';});}
   else{h+='<div class="row" style="padding:2px 0 8px"><span class="note" style="margin:0">実績1つにつき、すべての生産 +'+Math.round(ACH_BONUS*100)+'%。リセットしても消えない</span><span class="num">×'+achMult().toFixed(2)+'</span></div>';ACHIEVEMENTS.forEach(a=>{const on=S.ach.includes(a[0]);h+='<div class="ach'+(on?'':' off')+'"><span style="width:12px">'+(on?'✦':'·')+'</span><span style="flex:1">'+a[1]+'</span><span style="color:var(--ink-dim)">'+a[2]+'</span></div>';});}

@@ -32,12 +32,19 @@ function doorScene(){const W=innerWidth,H=innerHeight,hz=Math.round(H*0.88),gx=W
   for(let k=1;k<10;k++){const t=k/10,bx=(1-t)*(1-t)*x0+2*(1-t)*t*cx1+t*t*gx,by=(1-t)*(1-t)*y0+2*(1-t)*t*cy1+t*t*(gy+gr*0.8);v+='<circle cx="'+f(bx)+'" cy="'+f(by)+'" r="1" fill="rgba(236,238,242,'+(0.5-t*0.3).toFixed(2)+')"/>';}
   v+='<circle r="2.4" fill="#fff"><animateMotion dur="9s" repeatCount="indefinite" path="'+d+'" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".5 0 .5 1"/></circle><circle r="9" fill="rgba(255,236,210,.25)"><animateMotion dur="9s" repeatCount="indefinite" path="'+d+'" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".5 0 .5 1"/></circle>';
   document.getElementById('dFar').innerHTML=v+'</svg>';}
-function showDoor(){S.flags.door=true;save();doorScene();document.getElementById('door').classList.add('on');}
+// 成し遂げたこと：灯した上位の星8つを小さな星座で、故郷に着いた回数。次に開くもの
+function paintDoorText(){const ks=SKILLS.filter(k=>k.glow),W=230,H=70,P=ks.map((_,i)=>{const a=-Math.PI/2+i*Math.PI*2/ks.length;return [W/2+Math.cos(a)*92,H/2+Math.sin(a)*26];});
+  let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-label="灯した上位の星">';
+  ks.forEach((k,i)=>{const a=P[i],b=P[(i+1)%ks.length];v+='<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+b[0].toFixed(1)+'" y2="'+b[1].toFixed(1)+'" stroke="rgba(255,236,200,.35)" stroke-width=".7"/>';});
+  ks.forEach((k,i)=>{const [x,y]=P[i],c=BR_COL[k.br];v+='<circle class="bStar" style="animation-delay:-'+(i*0.6)+'s" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="7" fill="rgba('+c.join(',')+',.25)"/><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.2" fill="rgb('+c.join(',')+')"/>';});
+  document.getElementById('dStars').innerHTML=v+'</svg>';
+  const n=S.restarts+(S.cleared?1:0);document.getElementById('dSum').innerHTML='上位の星 <b>'+S.lit.length+' / '+ks.length+'</b> が灯った<i>·</i>故郷に着いた <b>'+n+'</b> 回';
+  document.getElementById('dOpen').innerHTML='<span class="dOL">ひらくもの</span>隣の銀河への航海<i>·</i>新しい色と装置<i>·</i>航路の分かれ道';}
+function showDoor(){S.flags.door=true;save();doorScene();paintDoorText();document.getElementById('door').classList.add('on');}
 function closeDoor(){document.getElementById('door').classList.remove('on');}
-document.getElementById('dGo').onclick=()=>confirmBox('さらに遠くへ','故郷を出て、隣の銀河へ向かう。ここから先は航海になり、故郷への周回には戻らない（チャレンジの段2・3は航海の途中で挑める）。',()=>{closeDoor();goFarther();});
-document.getElementById('dStay').onclick=()=>{closeDoor();paintTitle();titleScene();document.getElementById('title').classList.add('on');};
+document.getElementById('dGo').onclick=()=>{closeDoor();goFarther();};
 addEventListener('resize',()=>{if(document.getElementById('door').classList.contains('on'))doorScene();});
-function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';if(!PREVIEW&&canVoyage()&&!S.flags.door){showDoor();return;}paintTitle();titleScene();document.getElementById('title').classList.add('on');}
+function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';if(!PREVIEW&&canVoyage()){showDoor();return;}paintTitle();titleScene();document.getElementById('title').classList.add('on');}
 // 「空は、こんな色だった。」はタップで飛ばせる（文字が出てから）
 // iPhone では div の click が届かないことがあるので pointerup で受ける。文字が見えてから（出始めて1.5秒後から）飛ばせる
 document.getElementById('ending').addEventListener('pointerup',()=>{if(!END.length||document.getElementById('title').classList.contains('on'))return;if(!endShown||performance.now()-endShown<1500)return;showTitle();});

@@ -149,7 +149,7 @@ function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math
 function showBoot(){bootOn=true;paintBoot();document.getElementById('boot').classList.add('on');}
 // 入る：留守の分を受け取る（はじめてなら最初の3行）。quiet＝設定から確認用の場面に移るとき
 function bootGo(quiet){if(!bootOn)return;bootOn=false;const b=document.getElementById('boot');b.classList.add('out');setTimeout(()=>{b.classList.remove('on','out');document.getElementById('bSky').innerHTML='';},900);
-  lastT=performance.now();if(quiet)return;SND.play('resail');if(!S.flags.start)setTimeout(prologue,900);else offline();}
+  lastT=performance.now();if(quiet)return;SND.play('resail');if(!S.flags.start)setTimeout(prologue,900);else offline();if(!S.voy&&canVoyage())setTimeout(showDoor,900);}   // 星8つで着いたままなら、章の扉へ
 document.getElementById('bGo').onclick=()=>bootGo();document.getElementById('bGear').onclick=()=>openSettings();
 addEventListener('resize',()=>{if(bootOn)paintBoot();});
 function boot(){const had=load();initScene();resize();applyLoadedVisuals();S.region=regionIndex(S.dist);renderPanel(true);paintGoal();

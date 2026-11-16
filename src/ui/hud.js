@@ -66,7 +66,7 @@ function emblem(svg,kind){const parts=[];const add=(t,a)=>parts.push(el(t,Object
   const core=el('circle',{cx:13,cy:13,r:2.4},svg);return{parts,core};}
 /* 目標 */
 function goal(){const s=S.stage,nx=s+1;
-  if(S.cleared)return[canVoyage()?'GALAXYで、さらに遠くへ':'STARで、もう一度船を出す',canVoyage()?'voy':'restart',false];
+  if(S.cleared)return[canVoyage()?'STARで、さらに遠くへ':'STARで、もう一度船を出す',canVoyage()?'restart':'restart',false];
   if(S.chal&&CHAL[S.chal])return['挑戦中「'+CHAL[S.chal].name+'」段'+(S.chalLv||1)+'　'+CHAL[S.chal].gtext[(S.chalLv||1)-1],null,false];
   if(!S.lightDone&&canLight())return['LIGHTで、光になる','light',false];
   if(S.flags.bat&&!S.deposited&&S.chal!=='c7')return['窓を横切る流れ星をタップで捕まえる',null,false];

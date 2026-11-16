@@ -213,13 +213,17 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #door.on{display:block;animation:bSkyIn 2.4s ease both}
 #dSky,#dFar{position:absolute;inset:0;pointer-events:none}
 #dSky .gTw,#dFar .gTw{animation:gTw 4.5s ease-in-out infinite}#dSky .tBand{animation:tBand 9s ease-in-out infinite}
-#dBody{position:absolute;left:0;right:0;top:34%;display:flex;flex-direction:column;align-items:center;gap:12px;z-index:1}
-#dBody>*{animation:bIn 1.6s ease both}#dBody>*:nth-child(2){animation-delay:.6s}#dBody>*:nth-child(3){animation-delay:1.4s}#dBody>*:nth-child(4){animation-delay:2.2s}#dBody>*:nth-child(5){animation-delay:2.6s}
+#dBody{position:absolute;left:0;right:0;top:27%;display:flex;flex-direction:column;align-items:center;gap:12px;z-index:1}
+#dBody>*{animation:bIn 1.6s ease both}#dBody>*:nth-child(2){animation-delay:.9s}#dBody>*:nth-child(3){animation-delay:1.4s}#dBody>*:nth-child(4){animation-delay:1.8s}#dBody>*:nth-child(5){animation-delay:2.4s}#dBody>*:nth-child(6){animation-delay:3s}#dBody>*:nth-child(7){animation-delay:3.6s}
 #dBody .dCh{font-family:var(--label);font-size:11px;letter-spacing:.42em;padding-left:.42em;color:var(--ink-dim)}
 #dBody h1{font-family:var(--log);font-weight:500;font-size:30px;letter-spacing:.34em;padding-left:.34em;margin:0;color:#fff;text-shadow:0 0 22px rgba(200,190,255,.45)}
 #dBody .dLine{font-family:var(--log);font-size:14px;letter-spacing:.12em;color:var(--ink);margin:4px 0 14px}
 #dBody #dGo{width:240px;border-color:rgba(210,200,255,.6);color:#e6e2ff;letter-spacing:.3em;box-shadow:0 0 22px rgba(190,180,255,.16)}
-#dBody #dStay{background:none;border:0;color:var(--ink-dim);font-size:12px;letter-spacing:.12em;padding:8px}
+#dBody .dDone{display:flex;flex-direction:column;align-items:center;gap:4px}
+#dBody .dSum,#dBody .dOpen{font-size:12px;color:var(--ink-dim);letter-spacing:.04em;text-align:center;padding:0 16px}
+#dBody .dSum b{font-family:var(--num);font-weight:400;color:#ffe2be}#dBody .dSum i,#dBody .dOpen i{font-style:normal;margin:0 .6em;opacity:.5}
+#dBody .dOpen{color:#d6d0ff;margin:-6px 0 8px;line-height:1.7}#dBody .dOpen .dOL{display:block;font-family:var(--label);font-size:9.5px;letter-spacing:.3em;color:var(--ink-dim)}
+#dBody .dRule{width:150px;height:1px;background:linear-gradient(90deg,transparent,rgba(236,238,242,.45),transparent);margin:10px 0 6px}
 #chap{position:relative;z-index:1;flex:none;display:flex;align-items:center;gap:10px;padding:8px 20px 0;font-size:11px;color:var(--ink-dim);letter-spacing:.04em}
 #chap .cL{color:#ffd6aa;white-space:nowrap}#chap .cR{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #chap .cB{flex:1;min-width:40px;height:1px;background:rgba(236,238,242,.14);position:relative}
