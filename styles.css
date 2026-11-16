@@ -245,8 +245,12 @@ body.forkOn #sub{opacity:0!important;transition:opacity .4s}
 #bSky .bRotA{animation:bRot 140s linear infinite}#bSky .bRotB{animation:bRot 70s linear infinite reverse}@keyframes bRot{to{transform:rotate(360deg)}}
 #bSky .bBreath{animation:bBreath 5s ease-in-out infinite}@keyframes bBreath{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.18);opacity:1}}
 #bSky .bScan{animation:bRot 9s linear infinite}
-#bSky .bNeedle{animation:bNeedle 3.2s ease-in-out infinite}@keyframes bNeedle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg)}}
+#bSky .bNeedle{animation:bNeedle 3.2s ease-in-out infinite}@keyframes bNeedle{0%,100%{transform:rotate(-7deg)}35%{transform:rotate(5deg)}60%{transform:rotate(-2deg)}80%{transform:rotate(8deg)}}
 #bSky .bBar{animation:bBar 2.2s ease-in-out infinite}@keyframes bBar{0%,100%{opacity:.55}50%{opacity:1}}
+#bSky .bTicks{animation:bTicks 6s linear infinite}@keyframes bTicks{from{transform:translateY(0)}to{transform:translateY(var(--tk))}}
+#bSky .bGearA{animation:bRot 14s linear infinite}#bSky .bGearB{animation:bRot 9.6s linear infinite reverse}
+#bSky .bDial{animation:bRot 5s linear infinite}
+#bGear svg{animation:bRot 24s linear infinite}#bGear:hover svg{animation-duration:4s}
 #bSky .bShoot{opacity:0;animation:gShoot 13s linear 4s infinite}
 #bGear{position:absolute;z-index:2;right:max(16px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));width:32px;height:32px;display:flex;align-items:center;justify-content:center;opacity:.55;background:none;border:0;color:var(--ink)}
 #bBody{position:absolute;z-index:1;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:12px}
