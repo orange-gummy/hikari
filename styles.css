@@ -375,3 +375,7 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscro
 .gTop,.gBot{position:absolute;left:0;right:0;z-index:1;margin:0 auto;width:min(560px,calc(100% - 32px))}
 .gTop{top:calc(env(safe-area-inset-top,0px) + 14px);pointer-events:none}
 .gBot{bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:min(460px,calc(100% - 32px))}
+
+/* 版の表記（2026-11-16） */
+#bVer{position:absolute;z-index:2;right:max(16px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));font-family:var(--ui);font-size:10px;letter-spacing:.08em;color:rgba(200,205,225,.32);pointer-events:none}
+#sVer{margin-top:16px;font-family:var(--ui);font-size:10px;letter-spacing:.08em;color:rgba(200,205,225,.38);text-align:center}

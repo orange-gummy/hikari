@@ -161,7 +161,7 @@ function bootGo(quiet){if(!bootOn)return;bootOn=false;const b=document.getElemen
   lastT=performance.now();if(quiet)return;SND.play('resail');if(!S.flags.start)setTimeout(prologue,900);else offline();if(!S.voy&&canVoyage())setTimeout(showDoor,900);}   // 星8つで着いたままなら、章の扉へ
 document.getElementById('bGo').onclick=()=>bootGo();document.getElementById('bGear').onclick=()=>openSettings();
 addEventListener('resize',()=>{if(bootOn)paintBoot();});
-function boot(){const had=load();initScene();resize();applyLoadedVisuals();S.region=regionIndex(S.dist);renderPanel(true);paintGoal();
+function boot(){for(const id of ['bVer','sVer']){const e=document.getElementById(id);if(e)e.textContent='ver '+VERSION;}const had=load();initScene();resize();applyLoadedVisuals();S.region=regionIndex(S.dist);renderPanel(true);paintGoal();
   showBoot();
   addEventListener('resize',resize);new ResizeObserver(measure).observe(frameEl);
   // タイトルが出ている間は保存しない（保存すると「最後に遊んだ時刻」が進み、留守の分を受け取れなくなる）
