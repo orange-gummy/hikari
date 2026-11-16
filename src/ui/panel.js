@@ -35,10 +35,10 @@ let devUI=[],TIERFX=null;
 /* 次の章までの道しるべ（2026-11-16）：STAR・GALAXY・UNIVERSE・LIGHT の層の上に一行。いまの章と、次の扉までの進み具合 */
 function chapterHint(){const ks=SKILLS.filter(k=>k.glow).length,n=S.lit.length;
   if(S.lightDone)return ['終章','光になった。旅は、まだ続けられる。',1];
-  if(S.voy||S.voyStash||S.uni>0){if(law('lc')>=LAWS.find(L=>L.id==='lc').max)return ['次の扉　光になる','9を22個並べる　いま9が'+nines(Math.max(S.stage,S.maxStage))+'個',Math.min(1,nines(S.maxStage)/22)];
-    if(S.uni>0||canFold())return ['次の扉　光になる','光の上限 '+law('lc')+' / 10',law('lc')/10];
-    const e=DEST[DEST.length-1].ly;return ['次の扉　新しい宇宙','宇宙の果てまで あと '+lyText(Math.max(0,e-S.vdist))+' 光年',Math.min(1,Math.log10(1+S.vdist)/Math.log10(e))];}
-  return ['次の扉　さらに遠くへ','上位の星 '+n+' / '+ks+(n>=ks?'　故郷に着くと開く':''),n/ks];}
+  if(S.voy||S.voyStash||S.uni>0){if(law('lc')>=LAWS.find(L=>L.id==='lc').max)return ['次の章　光になる','9を22個並べる　いま9が'+nines(Math.max(S.stage,S.maxStage))+'個',Math.min(1,nines(S.maxStage)/22)];
+    if(S.uni>0||canFold())return ['次の章　光になる','光の上限 '+law('lc')+' / 10',law('lc')/10];
+    const e=DEST[DEST.length-1].ly;return ['次の章　新しい宇宙','宇宙の果てまで あと '+lyText(Math.max(0,e-S.vdist))+' 光年',Math.min(1,Math.log10(1+S.vdist)/Math.log10(e))];}
+  return ['次の章　さらに遠くへ','上位の星 '+n+' / '+ks+(n>=ks?'　故郷に着くと開く':''),n/ks];}
 function paintChap(){const el=document.getElementById('chap'),L=curLayer;if(!(L==='star'||L==='galaxy'||L==='universe'||L==='light')){el.innerHTML='';el.style.display='none';return;}
   const [a,b,p]=chapterHint();el.style.display='';el.innerHTML='<span class="cL">'+a+'</span><span class="cB"><i style="width:'+Math.round(Math.max(0,Math.min(1,p))*100)+'%"></i></span><span class="cR">'+b+'</span>';}
 function renderPanel(force){
