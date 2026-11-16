@@ -16,8 +16,9 @@ function bandCanvas(w,h){if(BAND&&BAND.w===w&&BAND.h===h)return BAND.c;const c=d
   const g=x.createRadialGradient(w*0.62,y0-3,0,w*0.62,y0-3,60);g.addColorStop(0,'rgba(255,236,220,.22)');g.addColorStop(1,'rgba(255,236,220,0)');x.fillStyle=g;x.fillRect(0,0,w,h);
   BAND={c,w,h};return c;}
 function drawBand(){if(!S.voy||LANDED||HOMEA||FR.w<=0)return;const c=bandCanvas(FR.w,FR.h);cx.save();cx.globalAlpha=0.85;cx.drawImage(c,FR.x,FR.y+Math.sin(T*0.002)*2,FR.w,FR.h);cx.restore();}
-let FRK=1,FRT=0;   // 1フレーム（60fps）を1とした経過時間。流れ星は画面の書き換えの速さによらず、実際の時間で動かす
-function frame(){requestAnimationFrame(frame);if(FREEZE)return;{const n=performance.now();FRK=FRT?Math.max(0.2,Math.min(3,(n-FRT)/16.667)):1;FRT=n;}const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
+let FRK=1,FRT=0,FRA=0,FRP=0;   // FRK：1フレーム（60fps）を1とした経過時間。流れ星は画面の書き換えの速さによらず、実際の時間で動かす
+// 演出の多くは1コマずつ進むので、120Hz・144Hz・240Hz の画面では速くなっていた。書き換えが60回/秒より多いときはコマを間引き、平均で60回/秒に保つ（2026-11-16）
+function frame(){requestAnimationFrame(frame);{const n=performance.now();FRA=Math.min(50,FRA+(FRP?n-FRP:16.667));FRP=n;if(FRA<14.667)return;FRA-=16.667;}if(FREEZE)return;{const n=performance.now();FRK=FRT?Math.max(0.2,Math.min(3,(n-FRT)/16.667)):1;FRT=n;}const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
 /* ④ 宇宙を畳む：星がすべて中心へ流れ込み（4秒）→ 光の点ひとつ（2秒）→ 点がほどけて新しい色合いの空が広がる */
 let FOLD=null;
 function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
