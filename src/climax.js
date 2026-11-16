@@ -16,7 +16,28 @@ function landing(){SND.play('land');logLine(LINES.land,-1);if(!PREVIEW){if(!S.cl
   END.push(setTimeout(()=>{e.classList.add('on');requestAnimationFrame(()=>{e.style.opacity='1';});},3500));
   END.push(setTimeout(()=>{document.getElementById('endLine').style.opacity='1';endShown=performance.now();},3500+5000));END.push(setTimeout(showTitle,3500+14500));}
 let END=[],endShown=0;
-function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';paintTitle();titleScene();document.getElementById('title').classList.add('on');}
+/* 章の扉（2026-11-16）：上位の星8つを灯して故郷に着いたとき、いつものタイトルの前に一度だけ出る。
+   故郷の家並みの上、空の高いところに隣の銀河が浮かび、地平線からそこへ細い航路がのびて、船の光が上っていく */
+function doorScene(){const W=innerWidth,H=innerHeight,hz=Math.round(H*0.88),gx=W*0.5,gy=H*0.17,gr=Math.max(26,Math.min(W,H)*0.07);titleScene('dSky',0.88);
+  let sd=5;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},f=n=>n.toFixed(1);
+  let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs><radialGradient id="dCore"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".25" stop-color="rgb(210,200,255)" stop-opacity=".35"/><stop offset="1" stop-color="rgb(180,170,255)" stop-opacity="0"/></radialGradient>'+
+    '<linearGradient id="dRoute" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="rgb(255,226,190)" stop-opacity=".7"/><stop offset="1" stop-color="rgb(200,190,255)" stop-opacity=".15"/></linearGradient></defs>';
+  // 隣の銀河：2本の腕に光の点
+  v+='<circle cx="'+f(gx)+'" cy="'+f(gy)+'" r="'+f(gr*2.4)+'" fill="url(#dCore)" opacity=".35"/>';
+  for(let k=0;k<160;k++){const arm=k%2,t=rnd(),a=arm*Math.PI+t*4.6+0.4,rr=t*gr*1.6;v+='<circle cx="'+f(gx+Math.cos(a)*rr+(rnd()-0.5)*gr*0.2)+'" cy="'+f(gy+Math.sin(a)*rr*0.42+(rnd()-0.5)*gr*0.14)+'" r="'+(0.4+rnd()*0.7).toFixed(2)+'" fill="'+(rnd()<0.25?'#cfc6ff':'#eceef2')+'" opacity="'+((0.25+rnd()*0.6)*(1-t*0.55)).toFixed(2)+'"/>';}
+  v+='<circle cx="'+f(gx)+'" cy="'+f(gy)+'" r="'+f(gr*0.45)+'" fill="url(#dCore)"/>';
+  // 地平線から銀河へ、細い航路と目盛り。船の光が上っていく
+  const x0=W*0.5,y0=hz-4,cx1=W*1.02,cy1=(hz+gy)*0.52,d='M'+f(x0)+' '+f(y0)+'Q'+f(cx1)+' '+f(cy1)+' '+f(gx)+' '+f(gy+gr*0.8);
+  v+='<path d="'+d+'" fill="none" stroke="url(#dRoute)" stroke-width="1" stroke-dasharray="2 5"/>';
+  for(let k=1;k<10;k++){const t=k/10,bx=(1-t)*(1-t)*x0+2*(1-t)*t*cx1+t*t*gx,by=(1-t)*(1-t)*y0+2*(1-t)*t*cy1+t*t*(gy+gr*0.8);v+='<circle cx="'+f(bx)+'" cy="'+f(by)+'" r="1" fill="rgba(236,238,242,'+(0.5-t*0.3).toFixed(2)+')"/>';}
+  v+='<circle r="2.4" fill="#fff"><animateMotion dur="9s" repeatCount="indefinite" path="'+d+'" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".5 0 .5 1"/></circle><circle r="9" fill="rgba(255,236,210,.25)"><animateMotion dur="9s" repeatCount="indefinite" path="'+d+'" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".5 0 .5 1"/></circle>';
+  document.getElementById('dFar').innerHTML=v+'</svg>';}
+function showDoor(){S.flags.door=true;save();doorScene();document.getElementById('door').classList.add('on');}
+function closeDoor(){document.getElementById('door').classList.remove('on');}
+document.getElementById('dGo').onclick=()=>confirmBox('さらに遠くへ','故郷を出て、隣の銀河へ向かう。ここから先は航海になり、故郷への周回には戻らない（チャレンジの段2・3は航海の途中で挑める）。',()=>{closeDoor();goFarther();});
+document.getElementById('dStay').onclick=()=>{closeDoor();paintTitle();titleScene();document.getElementById('title').classList.add('on');};
+addEventListener('resize',()=>{if(document.getElementById('door').classList.contains('on'))doorScene();});
+function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';if(!PREVIEW&&canVoyage()&&!S.flags.door){showDoor();return;}paintTitle();titleScene();document.getElementById('title').classList.add('on');}
 // 「空は、こんな色だった。」はタップで飛ばせる（文字が出てから）
 // iPhone では div の click が届かないことがあるので pointerup で受ける。文字が見えてから（出始めて1.5秒後から）飛ばせる
 document.getElementById('ending').addEventListener('pointerup',()=>{if(!END.length||document.getElementById('title').classList.contains('on'))return;if(!endShown||performance.now()-endShown<1500)return;showTitle();});
@@ -37,7 +58,7 @@ function skipClimax(){if(!climax)return;CLT.forEach(id=>{clearTimeout(id);clearI
 document.getElementById('skipC').onclick=skipClimax;
 /* タイトルの景色（2026-11-15）：着いたばかりの故郷の空。地平線ぞいに家並みと窓の明かり、木々、電線を光の点と線で描き、
    空には戻ってきた7色が淡い帯になって残る。題名はその空に浮かぶ */
-function titleScene(){const el=document.getElementById('tSky');if(!el)return;const W=innerWidth,H=innerHeight,hz=Math.round(H*0.8);
+function titleScene(id,hzR){const el=document.getElementById(id||'tSky');if(!el)return;const W=innerWidth,H=innerHeight,hz=Math.round(H*(hzR||0.8));
   let sd=11;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},C=COLORS.map(c=>c.rgb),rg=(c,a)=>'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')';
   let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs>'+
     '<linearGradient id="tBand" x1="0" y1="0" x2="0" y2="1">'+C.map((c,i)=>'<stop offset="'+(i/6).toFixed(3)+'" stop-color="'+rg(c,1)+'"/>').join('')+'</linearGradient>'+
