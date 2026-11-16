@@ -9,6 +9,8 @@ function aurBand(i,o,a,rv){if(a<=0.01||rv<=0.01)return;const t=T*0.003+i*1.7,edg
   const yAt=x=>base+(Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*30+Math.sin(x*0.043-t*0.6+i)*7)*sy;
   const edgeC=mix(o.rgb,[255,255,255],0.35),topC=mix(o.rgb,AUR_TOP,0.3);
   cx.save();cx.globalCompositeOperation='lighter';
+  // 幕のうしろのぼんやりした光（弱く）
+  for(let x=0;x<=CW;x+=36){const fade=cl((edge-x)/50);if(fade<=0)break;const y=yAt(x),al=0.015*a*fade;blob(x,y-26*sy,70*sy,o.rgb,al);}
   for(let x=0;x<=CW;x+=3){const fade=cl((edge-x)/50);if(fade<=0)break;const y=yAt(x),sl=Math.min(1,Math.abs(yAt(x+3)-y)/3*1.6);
     const cur=0.5+0.5*Math.sin(x*0.09+T*0.0035+i)*Math.sin(x*0.031-T*0.0025);
     let ray=0.5+0.5*Math.sin(x*0.37+tt*9+i*3)*Math.sin(x*0.113-tt*5);ray=0.35+0.65*ray*ray;
@@ -52,7 +54,7 @@ function frameInner(){
   if(!STILL)T++;for(let i=0;i<7;i++){A[i]+=(TG[i]-A[i])*(TG[i]?0.03:0.022);if(TG[i])RV[i]=Math.min(1,RV[i]+0.012);POP[i]*=0.93;}BB*=0.993;
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
   cx.clearRect(0,0,CW,CH);drawTint();drawBand();
-  if(!LANDED)for(let i=0;i<5;i++){const o=COLORS[i];if(o.nx==null)continue;const a=A[i],c=mix(o.rgb,G,1-a);for(let j=0;j<3;j++){const bx=o.nx*CW+Math.sin(T*0.004+j*2.1+i)*40,by=o.ny*CH+Math.cos(T*0.0033+j*1.7+i)*34;blob(bx,by,o.nr*sc*(0.45+0.15*j),c,0.045*(0.08+0.92*a));}}
+  // 四隅の記憶の色のもやは、宇宙らしく見えなくなるのでやめた（2026-11-16）
   for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null)aurBand(i,o,A[i],RV[i]);}
   // stars
   const tw=0.25*aw,CXs=RC.x||CW/2,CYs=RC.y||CH/2,rs=420*sc*(1-CONV*0.92)*ZOOM;
