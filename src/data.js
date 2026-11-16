@@ -68,7 +68,6 @@ const STAGE_MULT=500;   // 光速の99%より先は、段階ごとに加速コ�
 const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階12（光速の99%）まで。その先は STAGE_MULT 倍ずつ（stageCost）
 const MAX_STAGE=22;
 const TOP_STAGE=MAX_STAGE+10;   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
-const VOY_MULT=+((typeof process!=='undefined'&&process.env.VOY_MULT)||8),VOY_TOP=MAX_STAGE+88,LIGHT_STAGE=MAX_STAGE+10,VOY_K=0.15;   // 航海は9が100個まで加速できる（2026-11-16）。光の上限（9が12＋段 個）より先は生産だけが γ の VOY_K 乗で少し伸び、距離は伸びない。光になるのは9が22個
 const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.5),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||5);   // 追い風（2026-11-16）：留守の間のエネルギーは OFF_NOW（5割）だけすぐ入り、残りは追い風になって、遊んでいる間に生産 ×WIND_X で吹き出す
 const TIME_K=0.3;   // 故郷への周回で9が12個より先は、故郷の時間と生産の速まりを γ のこの乗にとどめる（周回が数分に縮まないように）
 const FINAL_N=2;   // 9が12個から数えて、この数の段階は FINAL_MULT 倍で上がる
@@ -160,7 +159,7 @@ const CHAL={
 };
 /* ④ 新しい宇宙（法則）。宇宙の果てに着くと、宇宙を畳んで作り直せる */
 const LAWS=[
-  {id:'lc',name:'光の上限',max:10,col:[235,238,250],cost:l=>1+Math.floor(l/3),text:l=>'航海で、加速すると故郷の時間と距離も速まる段階が1つ上がる（9が'+(11+l)+'個 → '+(12+l)+'個）'},
+  {id:'lc',name:'光の上限',max:10,col:[235,238,250],cost:l=>1+Math.floor(l/3),text:l=>'航海での速度の段階の上限が1つ上がる（9が'+(11+l)+'個 → '+(12+l)+'個）'},
   {id:'td',name:'時の遅れ',max:8,col:[170,200,255],cost:l=>1+Math.floor(l/2),text:l=>'生産の倍率 γ が強くなる（γ<sup>'+(1+0.1*(l-1)).toFixed(1)+'</sup> → γ<sup>'+(1+0.1*l).toFixed(1)+'</sup>）'},
   {id:'ar',name:'引き直しの記憶',max:1,col:[255,214,170],cost:()=>2,text:()=>'航路の引き直しが自動になる（航跡が今までの合計以上たまったとき）'},
   {id:'ut',name:'宇宙の色合い',max:4,col:[150,230,210],cost:()=>1,text:l=>'宇宙の色合いを選べる（'+(l+1)+'種類）。見た目だけ'}

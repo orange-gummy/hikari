@@ -82,7 +82,7 @@ function uniManage(){if(!canFold()){endAt=null;return;}if(endAt==null)endAt=t;
     let b=true;while(b){b=false;const c=LAWS.map(a=>[a.id,lawNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.U).sort((x,y)=>x[1].cost*(x[0]==='ut'?3:x[0]==='ar'?0.6:1)-y[1].cost*(y[0]==='ut'?3:y[0]==='ar'?0.6:1));if(c.length){buyLaw(c[0][0]);b=true;}}
     if(law('lc')>=10&&!lcDay)lcDay=(t/86400).toFixed(2)+'日目';}
   }
-let lightDay=null;function lightWatch(){if(!lightDay&&law('lc')>=10&&S.stage>=LIGHT_STAGE&&S.E>=accelCost(LIGHT_STAGE+1))lightDay=(t/86400).toFixed(2)+'日目';}
+let lightDay=null;function lightWatch(){if(!lightDay&&law('lc')>=10&&S.stage>=maxStage()&&S.E>=accelCost(maxStage()+1))lightDay=(t/86400).toFixed(2)+'日目';}
 function voyManage(){if(!S.voy)return;spendL();uniManage();lightWatch();
   while(FOUND.length<S.found)FOUND.push(DEST[FOUND.length].name+' '+(t/86400).toFixed(2)+'日目');
   const g=tGain();if(g>=Math.max(3,S.tTotal)){redraw();REDRAW.push((t/86400).toFixed(2)+'日目 +'+g);lastP=t;}

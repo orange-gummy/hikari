@@ -5,12 +5,12 @@
    星が止まり、数字・タブ・リング・窓の枠が光の粒になって一つずつほどけ、暗闇に白い点ひとつと一文。
    タップで画面が戻り、④の続きを遊べる。窓の中心には小さな白い光がずっと残る。
    ===================================================================== */
-function canLight(){return S.voy&&law('lc')>=LAWS.find(L=>L.id==='lc').max&&S.stage>=LIGHT_STAGE;}
-function lightCost(){return accelCost(LIGHT_STAGE+1);}
+function canLight(){return S.voy&&law('lc')>=LAWS.find(L=>L.id==='lc').max&&S.stage>=maxStage();}
+function lightCost(){return accelCost(maxStage()+1);}
 function becomeLight(){if(!canLight()||S.E<lightCost())return false;S.E-=lightCost();S.lightDone=true;S.lightAt=Date.now();S.lightUni=S.uni+1;save();return true;}
 /* LIGHT タブ：光速を示す縦の線へ、光の線が伸びる。その手前に、いまの船 */
 function renderLight(){const done=S.lightDone,ready=canLight(),c=lightCost(),key='l|'+[done,ready,S.E>=c,S.stage,law('lc')].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
-  const W=360,H=170,y=82,xc=300,n=Math.min(S.uni+1,14),prog=done?1:Math.min(1,S.stage/LIGHT_STAGE);
+  const W=360,H=170,y=82,xc=300,n=Math.min(S.uni+1,14),prog=done?1:Math.min(1,S.stage/maxStage());
   let v='<svg class="uniSky" viewBox="0 0 '+W+' '+H+'" aria-label="光速への線"><defs><linearGradient id="lgl" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".85" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient><radialGradient id="lgg"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>'+
     '<line x1="20" y1="'+y+'" x2="'+xc+'" y2="'+y+'" stroke="url(#lgl)" stroke-width=".8"/>'+
     '<circle cx="'+xc+'" cy="'+y+'" r="38" fill="url(#lgg)"/><line x1="'+xc+'" y1="'+(y-36)+'" x2="'+xc+'" y2="'+(y+36)+'" stroke="#fff" stroke-opacity=".9" stroke-width="1"/>'+
