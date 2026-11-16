@@ -224,10 +224,10 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #dBody .dSum b{font-family:var(--num);font-weight:400;color:#ffe2be}#dBody .dSum i,#dBody .dOpen i{font-style:normal;margin:0 .6em;opacity:.5}
 #dBody .dOpen{color:#d6d0ff;margin:-6px 0 8px;line-height:1.7}#dBody .dOpen .dOL{display:block;font-family:var(--label);font-size:9.5px;letter-spacing:.3em;color:var(--ink-dim)}
 #dBody .dRule{width:150px;height:1px;background:linear-gradient(90deg,transparent,rgba(236,238,242,.45),transparent);margin:10px 0 6px}
-#chap{position:relative;z-index:1;flex:none;display:flex;align-items:center;gap:10px;padding:8px 20px 0;font-size:11px;color:var(--ink-dim);letter-spacing:.04em}
+#chap{position:relative;z-index:1;flex:none;display:flex;align-items:center;gap:12px;padding:10px 20px 2px;font-size:12px;color:var(--ink-dim);letter-spacing:.04em}
 #chap .cL{color:#ffd6aa;white-space:nowrap}#chap .cR{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#chap .cB{flex:1;min-width:40px;height:1px;background:rgba(236,238,242,.14);position:relative}
-#chap .cB i{position:absolute;left:0;top:-.5px;height:2px;background:linear-gradient(90deg,rgba(255,214,170,.3),#ffd6aa);box-shadow:0 0 6px rgba(255,214,170,.6)}
+#chap .cB{flex:1;min-width:40px;height:2px;border-radius:1px;background:rgba(236,238,242,.14);position:relative}
+#chap .cB i{position:absolute;left:0;top:-.5px;height:3px;border-radius:2px;background:linear-gradient(90deg,rgba(255,214,170,.3),#ffd6aa);box-shadow:0 0 6px rgba(255,214,170,.6)}
 body.forkOn #sub{opacity:0!important;transition:opacity .4s}
 #forkOv{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .8s}
 #forkOv.on{opacity:1}
@@ -284,6 +284,7 @@ body.forkOn #sub{opacity:0!important;transition:opacity .4s}
   #tabs{border-top:0;border-bottom:0.5px solid var(--line-soft);padding:16px 16px 10px}
   #tabs .tr,#tr2{justify-content:flex-start!important;gap:6px}
   #pbody,#pset{padding:14px 24px}
+  #tabs{order:2}#chap{order:1;padding:14px 24px 4px;font-size:14px}#chap .cR{color:var(--ink)}   /* PC は column-reverse：タブの下、パネルの上に置く */
   #ringWrap{transform:translate(-50%,-52%) scale(1.25)}
 }
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}
