@@ -50,22 +50,26 @@ let accEndAt=0;
 function runVQ(){if(vqTimer||!VQ.length)return;if(!climax&&(ACC||Date.now()-accEndAt<2000)){vqTimer=setTimeout(()=>{vqTimer=null;runVQ();},400);return;}const f=VQ.shift();f();vqTimer=setTimeout(()=>{vqTimer=null;runVQ();},GAP);}
 /* ---- 情景の描画（PW座標系）---- */
 function ay(o,x,t){return o.ayp+Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*30;}
-/* 窓の中の青いオーロラ（2026-11-16、背景の記憶のオーロラと同じ描き方に）：くっきり明るい下の縁、上へのびて消える光の筋、流れる明るさ、折れ目ほど明るい。
-   in：左から幕が灯っていく／out：右へ順に、幕が灰色になりながら縮んで消え、粒がこぼれる */
-function curtain(k,mode,t){const c=[120,170,255],tp=[175,150,255],ec=mix(c,[255,255,255],0.35),tt=T*0.0012;
-  const byAt=x=>150+Math.sin(x*0.02+T*0.005)*18+Math.sin(x*0.009-T*0.003)*22+Math.sin(x*0.05-T*0.006)*5;
-  cx.save();cx.globalCompositeOperation='lighter';
-  for(let x=2;x<PW;x+=2){const by=byAt(x),sl=Math.min(1,Math.abs(byAt(x+2)-by)/2*1.6),L=72+38*Math.sin(x*0.05+T*0.007),I=0.55+0.45*Math.sin(x*0.13+T*0.012)*Math.sin(x*0.03-T*0.007);
-    let ray=0.5+0.5*Math.sin(x*0.61+tt*9)*Math.sin(x*0.19-tt*5);ray=0.35+0.65*ray*ray;let u=0,rev=1;
-    if(mode==='in')rev=cl((t*5-x)/40);else u=ei((t-12-x*0.18)/60);if(rev<=0)continue;const bot=by-u*L,len=L*(1-u)*(0.75+0.45*ray);if(len<2)continue;
-    const cc=mix(c,G,u),e2=mix(ec,G,u),a=k*I*ray*rev*(1-u*0.6)*(1+0.8*sl)*0.55;if(a<0.004)continue;
-    const g=cx.createLinearGradient(0,bot+10,0,bot-len);g.addColorStop(0,rgb(cc,0));g.addColorStop(0.08,rgb(cc,0.25*a));g.addColorStop(0.13,rgb(e2,1.0*a));g.addColorStop(0.22,rgb(cc,0.75*a));g.addColorStop(0.55,rgb(cc,0.3*a));g.addColorStop(1,rgb(mix(tp,G,u),0));
-    cx.fillStyle=g;cx.fillRect(x-1.1,bot-len,2.2,len+10);
-    if(mode==='out'&&u>0.05&&u<0.95&&Math.random()<0.02)SP.push({x,y:bot,vx:R(-0.1,0.1),vy:-R(0.4,1),l:0.8,c:cc,r:0.8,dr:0.02});}
-  cx.restore();}
-function clearSky(k,t){const c=[100,155,255],w=[235,242,255];const g=cx.createLinearGradient(0,-40,0,HY-60);g.addColorStop(0,rgb(c,0.38*k));g.addColorStop(1,rgb(c,0));cx.fillStyle=g;cx.fillRect(-400,-1200,PW+800,HY-60+1200);
-  for(let j=0;j<5;j++){const y=30+j*34+Math.sin(j*1.9)*8,off=((t*(0.25+j*0.05)+j*70)%(PW+160))-80,len=90+j*18,a=0.32*k*(1-j*0.12);cx.beginPath();cx.moveTo(off-len/2,y+4);cx.quadraticCurveTo(off,y-6,off+len/2,y+2);cx.strokeStyle=rgb(w,a);cx.lineWidth=1.4;cx.lineCap='round';cx.stroke();blob(off,y,len*0.35,w,a*0.25);}}
-function skyBack(e){const k=ramp(e.t,0,30,130,210)*(LANDED?0.35:1);if(k<=0)return;const g=cx.createLinearGradient(0,-60,0,280);g.addColorStop(0,'rgba(36,66,170,'+(0.5*k)+')');g.addColorStop(0.6,'rgba(36,66,170,'+(0.16*k)+')');g.addColorStop(1,'rgba(36,66,170,0)');cx.fillStyle=g;cx.fillRect(-400,-1200,PW+800,1480);}
+/* 青の情景「晴れた昼の空」（2026-11-16、オーロラから変えた）：窓の上に澄んだ青が広がり、光の線で描いた雲がゆっくり流れる。
+   in：上から青が満ち、雲が順に灯る／out：青が抜けて灰色になり、雲の線が右から粒になってほどける。
+   PC の横長の窓では情景の上のほう（y<170 前後）が切れるので、雲は y 200〜260 に置く */
+const CLOUDS=[{x:62,y:240,s:1.0,b:[[-22,0,9],[-9,-7,13],[8,-5,11],[21,0,8]]},{x:178,y:226,s:1.25,b:[[-26,0,8],[-12,-8,13],[5,-10,15],[21,-3,10],[33,1,7]]},{x:262,y:256,s:0.8,b:[[-16,0,8],[-3,-6,11],[12,-2,9]]}];
+function cloudPath(c,ox){const b=c.b,s=c.s,x0=c.x+ox,l=b[0],r=b[b.length-1],xa=x0+(l[0]-l[2])*s,xb=x0+(r[0]+r[2])*s;cx.beginPath();cx.moveTo(xa,c.y);   // 丸の重なりの外側だけをなぞる
+  for(let x=xa;x<=xb;x+=1.5){let y=c.y;for(const q of b){const dx=x-(x0+q[0]*s),rr=q[2]*s;if(Math.abs(dx)<rr)y=Math.min(y,c.y+q[1]*s-Math.sqrt(rr*rr-dx*dx));}cx.lineTo(x,y);}
+  cx.lineTo(xb,c.y);cx.closePath();}
+function skyScene(e){const t=e.t,inn=e.m==='in',k=inn?ramp(t,0,40,150,210):ramp(t,0,6,150,175);e.g=0;if(k<=0){if(t>20)e.done=true;return;}
+  const u=inn?0:ei(cl((t-10)/90)),blue=mix([70,130,235],G,u),pale=mix([150,195,255],G,u),cw=mix([242,246,255],G,u*0.8),L=LANDED?0.45:1;
+  const g=cx.createLinearGradient(0,120,0,HY);g.addColorStop(0,rgb(blue,0.42*k*L));g.addColorStop(0.6,rgb(pale,0.2*k*L));g.addColorStop(1,rgb(pale,0));cx.fillStyle=g;cx.fillStyle=rgb(blue,0.42*k*L);cx.fillRect(-400,-1200,PW+800,1320);cx.fillStyle=g;cx.fillRect(-400,120,PW+800,HY-120);
+  // 高いところの細い筋雲
+  for(let j=0;j<2;j++){const y=196+j*14,ox=((T*0.05+j*90)%(PW+120))-60,len=110-j*30,a=0.22*k*L*(inn?cl((t-20-j*15)/40):1-u);if(a<=0.01)continue;
+    glp(()=>{cx.beginPath();cx.moveTo(ox-len/2,y+2);cx.quadraticCurveTo(ox,y-4,ox+len/2,y+1);},cw,a,0.6);}
+  CLOUDS.forEach((c,ci)=>{const ox=((T*0.03*(1+ci*0.3))%40)-20+Math.sin(T*0.002+ci)*6;let a=k*L;
+    if(inn)a*=cl((t-25-ci*18)/45);else{const d=cl((t-20-(PW-c.x)*0.25)/50);a*=1-d;if(d>0&&d<1&&Math.random()<0.25){const q=c.b[Math.floor(Math.random()*c.b.length)],an=Math.PI+Math.random()*Math.PI;SP.push({x:c.x+ox+q[0]*c.s+Math.cos(an)*q[2]*c.s,y:c.y+q[1]*c.s+Math.sin(an)*q[2]*c.s,vx:R(0.1,0.35),vy:-R(0.1,0.4),l:0.8,c:cw,r:0.7,dr:0.015});}}
+    if(a<=0.01)return;
+    for(const q of c.b)blob(c.x+ox+q[0]*c.s,c.y+q[1]*c.s-2,q[2]*c.s*1.8,cw,0.07*a);
+    glp(()=>cloudPath(c,ox),cw,0.5*a,0.8);
+    for(const q of c.b)gdot(c.x+ox+q[0]*c.s,c.y+(q[1]-q[2])*c.s,0.6,cw,0.6*a*(0.6+0.4*Math.sin(T*0.03+q[0])));});
+  if(t>(inn?400:200))e.done=true;}
 function sunScene(e){const t=e.t;let k,sy,ph,glow;if(e.m==='out'){k=ramp(t,0,18,170,200);sy=HY-62+100*ei((t-20)/110);ph=cl((t-30)/120);glow=1-cl((t-120)/55);}else{k=ramp(t,0,15,260,320);sy=HY+38-210*ei((t-25)/150);ph=1-cl((t-15)/120);glow=cl(t/40);}
   e.g=k;if(k<=0)return;const pal=[[255,150,72],[230,90,110],[150,80,175],[45,55,120]],pi=ph*3,i0=Math.min(2,Math.floor(pi)),sk=mix(pal[i0],pal[i0+1],pi-i0),sun=mix([255,215,150],[255,120,80],ph);
   const g=cx.createLinearGradient(0,HY-240,0,HY);g.addColorStop(0,rgb(sk,0));g.addColorStop(0.6,rgb(sk,0.16*k));g.addColorStop(1,rgb(sk,0.4*k*(0.5+0.5*glow)));
