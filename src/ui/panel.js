@@ -76,7 +76,7 @@ function renderDrive(force){
   }
   updateDrive();paintDeviceColors();
 }
-function tierHintHTML(i,tn){return '<span class="nw swp">右へスワイプ<span class="arr">››</span></span> <span class="nw">TIER '+ROMAN[tn.t]+'（'+(tn.t===3&&SYN[i]?'相乗：'+SYN[i]:'生産×'+(has('e5')?2.5:2))+'）</span> '+(tn.lock?'<span class="nw">あと加速 '+(tn.st-S.stage)+' 回で開く</span>':'<span class="nw num">必要 '+fmt(tn.cost)+'</span>')+'';}
+function tierHintHTML(i,tn){return '<span class="nw swp">右へスワイプ<span class="arr">››</span></span> <span class="nw">TIER '+ROMAN[tn.t]+'（'+(tn.t===3&&SYN[i]?'相乗：'+SYN[i]:'生産×'+fmtG(TIER_X*(has('e5')?1.25:1)))+'）</span> '+(tn.lock?'<span class="nw">あと加速 '+(tn.st-S.stage)+' 回で開く</span>':'<span class="nw num">必要 '+fmt(tn.cost)+'</span>')+'';}
 // TIER が上がったら、その行の表示だけ書き換える（一覧ごと作り直すと、自動で上がるたびにちらつく）
 function refreshTier(i){const u=devUI.find(x=>x.i===i);if(!u)return;const r=u.el.querySelector('.tierR');if(r){r.textContent='TIER '+ROMAN[S.tier[i]];r.classList.remove('tierNew');void r.offsetWidth;r.classList.add('tierNew');}
   if(u.hint){const tn=tierNext(i);if(tn)u.hint.innerHTML=tierHintHTML(i,tn);else{u.hint.remove();u.hint=null;}}}
