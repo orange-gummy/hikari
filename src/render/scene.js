@@ -50,10 +50,19 @@ let accEndAt=0;
 function runVQ(){if(vqTimer||!VQ.length)return;if(!climax&&(ACC||Date.now()-accEndAt<2000)){vqTimer=setTimeout(()=>{vqTimer=null;runVQ();},400);return;}const f=VQ.shift();f();vqTimer=setTimeout(()=>{vqTimer=null;runVQ();},GAP);}
 /* ---- 情景の描画（PW座標系）---- */
 function ay(o,x,t){return o.ayp+Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*30;}
-function curtain(k,mode,t){const c=[120,170,255],tp=[175,150,255];for(let x=2;x<PW;x+=3){const by=150+Math.sin(x*0.02+T*0.01)*18+Math.sin(x*0.009-T*0.006)*22,L=72+38*Math.sin(x*0.05+T*0.02),I=0.55+0.45*Math.sin(x*0.13+T*0.04)*Math.sin(x*0.03-T*0.02);let u=0,rev=1;
-  if(mode==='in')rev=cl((t*5-x)/40);else u=ei((t-12-x*0.18)/60);if(rev<=0)continue;const bot=by-u*L,len=L*(1-u);if(len<2)continue;const cc=mix(c,G,u),a=k*I*rev*(1-u*0.6);
-  const g=cx.createLinearGradient(0,bot,0,bot-len);g.addColorStop(0,rgb(cc,0.85*a));g.addColorStop(0.25,rgb(cc,0.5*a));g.addColorStop(1,rgb(mix(tp,G,u),0));cx.fillStyle=g;cx.globalAlpha=0.55;cx.fillRect(x-1.6,bot-len,3.2,len);cx.globalAlpha=1;
-  if(mode==='out'&&u>0.05&&u<0.95&&Math.random()<0.03)SP.push({x,y:bot,vx:R(-0.1,0.1),vy:-R(0.4,1),l:0.8,c:cc,r:0.8,dr:0.02});}}
+/* 窓の中の青いオーロラ（2026-11-16、背景の記憶のオーロラと同じ描き方に）：くっきり明るい下の縁、上へのびて消える光の筋、流れる明るさ、折れ目ほど明るい。
+   in：左から幕が灯っていく／out：右へ順に、幕が灰色になりながら縮んで消え、粒がこぼれる */
+function curtain(k,mode,t){const c=[120,170,255],tp=[175,150,255],ec=mix(c,[255,255,255],0.35),tt=T*0.004;
+  const byAt=x=>150+Math.sin(x*0.02+T*0.01)*18+Math.sin(x*0.009-T*0.006)*22+Math.sin(x*0.05-T*0.017)*5;
+  cx.save();cx.globalCompositeOperation='lighter';
+  for(let x=2;x<PW;x+=2){const by=byAt(x),sl=Math.min(1,Math.abs(byAt(x+2)-by)/2*1.6),L=72+38*Math.sin(x*0.05+T*0.02),I=0.55+0.45*Math.sin(x*0.13+T*0.04)*Math.sin(x*0.03-T*0.02);
+    let ray=0.5+0.5*Math.sin(x*0.61+tt*9)*Math.sin(x*0.19-tt*5);ray=0.35+0.65*ray*ray;let u=0,rev=1;
+    if(mode==='in')rev=cl((t*5-x)/40);else u=ei((t-12-x*0.18)/60);if(rev<=0)continue;const bot=by-u*L,len=L*(1-u)*(0.75+0.45*ray);if(len<2)continue;
+    const cc=mix(c,G,u),e2=mix(ec,G,u),a=k*I*ray*rev*(1-u*0.6)*(1+0.8*sl)*0.75;if(a<0.004)continue;
+    const g=cx.createLinearGradient(0,bot+10,0,bot-len);g.addColorStop(0,rgb(cc,0));g.addColorStop(0.08,rgb(cc,0.25*a));g.addColorStop(0.13,rgb(e2,1.3*a));g.addColorStop(0.22,rgb(cc,0.75*a));g.addColorStop(0.55,rgb(cc,0.3*a));g.addColorStop(1,rgb(mix(tp,G,u),0));
+    cx.fillStyle=g;cx.fillRect(x-1.1,bot-len,2.2,len+10);
+    if(mode==='out'&&u>0.05&&u<0.95&&Math.random()<0.02)SP.push({x,y:bot,vx:R(-0.1,0.1),vy:-R(0.4,1),l:0.8,c:cc,r:0.8,dr:0.02});}
+  cx.restore();}
 function clearSky(k,t){const c=[100,155,255],w=[235,242,255];const g=cx.createLinearGradient(0,-40,0,HY-60);g.addColorStop(0,rgb(c,0.38*k));g.addColorStop(1,rgb(c,0));cx.fillStyle=g;cx.fillRect(-400,-1200,PW+800,HY-60+1200);
   for(let j=0;j<5;j++){const y=30+j*34+Math.sin(j*1.9)*8,off=((t*(0.25+j*0.05)+j*70)%(PW+160))-80,len=90+j*18,a=0.32*k*(1-j*0.12);cx.beginPath();cx.moveTo(off-len/2,y+4);cx.quadraticCurveTo(off,y-6,off+len/2,y+2);cx.strokeStyle=rgb(w,a);cx.lineWidth=1.4;cx.lineCap='round';cx.stroke();blob(off,y,len*0.35,w,a*0.25);}}
 function skyBack(e){const k=ramp(e.t,0,30,130,210)*(LANDED?0.35:1);if(k<=0)return;const g=cx.createLinearGradient(0,-60,0,280);g.addColorStop(0,'rgba(36,66,170,'+(0.5*k)+')');g.addColorStop(0.6,'rgba(36,66,170,'+(0.16*k)+')');g.addColorStop(1,'rgba(36,66,170,0)');cx.fillStyle=g;cx.fillRect(-400,-1200,PW+800,1480);}
