@@ -29,8 +29,8 @@ let lastP=0;
 // 暇な時間を測る（--gaps）：触っている間の秒だけを数え、手応えのある出来事（加速・TIER・新しい装置・緊急停止とスキル・色を失う・
 // 再出発・チャレンジ・目的地・引き直し・宇宙を畳む）の間隔を記録する。装置を買い足すだけの時間は「暇」に数える
 let aT=0,lastEv=0,evPrev=null,evWhat='';const GAPS=[];
-function evSnap(){return {stage:S.stage,tier:S.tier.reduce((a,b)=>a+b,0),dev:PRODI.filter(i=>devOpen(i)&&!chalBlocksDevice(i)).length,stop:S.prestiges,lost:S.lost+(S.greyLost?1:0),loop:S.restarts,chal:(S.chal||'')+(S.chalLv||0),found:S.found,redraw:S.st.redraws,uni:S.uni};}
-const EV_NAME={stage:'加速',tier:'TIER',dev:'新しい装置',stop:'緊急停止',lost:'色を失う',loop:'再出発',chal:'チャレンジ',found:'目的地',redraw:'引き直し',uni:'宇宙を畳む'};
+function evSnap(){return {stage:S.stage,tier:S.tier.reduce((a,b)=>a+b,0),dev:PRODI.filter(i=>devOpen(i)&&!chalBlocksDevice(i)).length,stop:S.prestiges,lost:S.lost+(S.greyLost?1:0),loop:S.restarts,chal:(S.chal||'')+(S.chalLv||0),found:S.found,redraw:S.st.redraws,uni:S.uni,fork:S.st.forks||0};}
+const EV_NAME={stage:'加速',tier:'TIER',dev:'新しい装置',stop:'緊急停止',lost:'色を失う',loop:'再出発',chal:'チャレンジ',found:'目的地',redraw:'引き直し',uni:'宇宙を畳む',fork:'分かれ道'};
 function gapTick(){aT++;const s=evSnap();if(evPrev){const ch=Object.keys(s).filter(k=>s[k]!==evPrev[k]&&!(k==='stage'&&s.stop!==evPrev.stop)&&!(k==='tier'&&s.stop!==evPrev.stop));
     if(ch.length){GAPS.push({g:aT-lastEv,at:stamp(),loop:S.restarts+1,stage:evPrev.stage,voy:!!S.voy,dist:Math.round(S.voy?S.vdist:S.dist),before:evWhat,after:ch.map(k=>EV_NAME[k]).join('・')});lastEv=aT;evWhat=ch.map(k=>EV_NAME[k]).join('・');}}
   evPrev=s;}
@@ -51,6 +51,8 @@ function act(){
     const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;
     for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
     const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;onBought(b.i);if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
+  if(S.fork){const o=S.fork.opts;chooseFork(['neb','wreck','wind','calm'].find(x=>o.includes(x)));}
+  if(S.voy&&t%60===0)voyManage();   // 航海では遊んでいる間も、引き直しと航跡・残光の強化を判断する
   if(S.voy){if(voyStopReady()&&t-lastP>20){LOG.push([stamp(),'prest',wGain()]);prestige(false);lastP=t;}return;}   // ③では自動の停止とスキル選び
   const w=wGain();if(S.stage>=BRAKE_STAGE&&w>=Math.max(5,1.6*(S.W+skillSpent()))&&t-lastP>90){prestige(false);lastP=t;LOG.push([stamp(),'prest',w]);for(const id of PATH){const k=SKILLS.find(z=>z.id===id);if(k.cost<=100||k.cost<=0.25*S.W)buySkill(id);}}
 }
@@ -85,7 +87,7 @@ function uniManage(){if(!canFold()){endAt=null;return;}if(endAt==null)endAt=t;
 let lightDay=null;function lightWatch(){if(!lightDay&&law('lc')>=10&&S.stage>=maxStage()&&S.E>=accelCost(maxStage()+1))lightDay=(t/86400).toFixed(2)+'日目';}
 function voyManage(){if(!S.voy)return;spendL();uniManage();lightWatch();
   while(FOUND.length<S.found)FOUND.push(DEST[FOUND.length].name+' '+(t/86400).toFixed(2)+'日目');
-  const g=tGain();if(g>=Math.max(3,S.tTotal)){redraw();REDRAW.push((t/86400).toFixed(2)+'日目 +'+g);lastP=t;}
+  const g=tGain();if(redrawReady()){redraw();REDRAW.push((t/86400).toFixed(2)+'日目 +'+g);lastP=t;}
   let b=true;while(b){b=false;const c=TRAIL.map(a=>[a.id,trailNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.T).sort((x,y)=>x[1].cost*(x[0]==='vs'?0.5:1)-y[1].cost*(y[0]==='vs'?0.5:1));if(c.length){buyTrail(c[0][0]);b=true;}}}
 function summary(){if(process.env.DBG)console.log('DBG maxE',S.maxE.toExponential(2),'E',S.E.toExponential(2),'stage',S.stage,'vbest',S.vbest.toExponential(2),'years',S.years.toExponential(2));if(ULOG.length||S.uni)console.log('宇宙',ULOG.join('、')||'-','／法則',JSON.stringify(S.law),'残り',S.U,'／光の上限10段',lcDay||'まだ','／光になれる日',lightDay||'まだ');if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('チャレンジ',CLOG.join(' / ')||'-');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
 

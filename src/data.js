@@ -69,6 +69,11 @@ const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階1
 const MAX_STAGE=22;
 const TOP_STAGE=MAX_STAGE+10;   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
 const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.5),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||5);   // 追い風（2026-11-16）：留守の間のエネルギーは OFF_NOW（5割）だけすぐ入り、残りは追い風になって、遊んでいる間に生産 ×WIND_X で吹き出す
+// 航路の分かれ道（2026-11-16）：航海で遊んでいる間、FORK_INT 秒ごとに分かれ道が出る。選ばなければ FORK_LIFE 秒でまっすぐ進む
+const FORK_INT=+((typeof process!=='undefined'&&process.env.FORK_INT)||600),FORK_LIFE=180,NEB_T=600;
+const FORKS=[{id:'neb',name:'星雲を抜ける',col:[150,170,255]},{id:'wreck',name:'古い星の残骸に寄る',col:[220,200,170]},{id:'calm',name:'静かな空域へ',col:[255,214,170]},{id:'wind',name:'追い風の流れに乗る',col:[200,235,255]}];
+// 引き直しをすすめる目安：得られる航跡が「今までの合計 × REDRAW_R」以上（以前は合計以上＝1）
+const REDRAW_R=+((typeof process!=='undefined'&&process.env.REDRAW_R)||0.3);
 const TIME_K=0.3;   // 故郷への周回で9が12個より先は、故郷の時間と生産の速まりを γ のこの乗にとどめる（周回が数分に縮まないように）
 const FINAL_N=2;   // 9が12個から数えて、この数の段階は FINAL_MULT 倍で上がる
 const FINAL_MULT=25;   // 9が11個 → 12個の加速は、ひとつ前の段階の値段のこの倍（ほかは STAGE_MULT 倍）。1周目の後半に届く目標にするため

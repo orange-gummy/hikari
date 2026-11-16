@@ -82,7 +82,8 @@ function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 function tick(dt,offMul){
   const P=prodRate();let gain;
   if(offMul){const g=P*offMul*dt,now=S.chal?1:OFF_NOW;gain=g*now;S.wind=(S.wind||0)+g*(1-now);}   // 留守の間：一部だけすぐ入り、残りは追い風に（チャレンジ中は全部すぐ入る）
-  else{gain=P*dt;if(S.wind>0){const x=Math.min(S.wind,P*dt*(WIND_X-1));gain+=x;S.wind-=x;}}   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
+  else{gain=P*dt;if(S.wind>0){const x=Math.min(S.wind,P*dt*(WIND_X-1));gain+=x;S.wind-=x;}forkTick(dt);}
+  if(S.nebT>0)S.nebT=Math.max(0,S.nebT-dt);   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
   S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;
   autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
   for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
@@ -153,9 +154,18 @@ function canVoyage(){return !S.voy&&S.cleared&&S.lit.length>=SKILLS.filter(k=>k.
 function voyDoublings(d){return d>=1e4?Math.floor(Math.log2(d/1e4))+1:0;}   // 1万光年、2万、4万…と、距離が2倍になるたびに1回
 function lPer(){return Math.floor(RESTART_BASE*(1+0.1*S.restarts))*Math.pow(2,tg('ls'));}   // 距離が2倍になるたびに入る残光
 function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdist=0;S.vL=0;story('voy',VOY_LINES.start);FXQ.voyage=true;return true;}
-function voyAdvance(d){S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
+function voyAdvance(d){if(S.nebT>0)d*=3;S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
   const n=voyDoublings(S.vdist);if(n>S.vL){const g=(n-S.vL)*lPer();S.L+=g;S.lTotal+=g;S.vL=n;}
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
+function redrawReady(){return S.voy&&tGain()>=Math.max(3,Math.ceil(S.tTotal*REDRAW_R));}
+// 分かれ道：得られるもの（そのときの強さに合わせる）
+function forkGain(id){if(id==='wreck')return Math.max(2,Math.ceil(Math.max(tGain(),Math.sqrt(S.tTotal))*0.3));if(id==='calm')return Math.ceil(lPer()*0.5);if(id==='wind')return prodRate()*NEB_T*(WIND_X-1);return 3;}
+function forkText(id){const g=forkGain(id);return id==='neb'?'10分間、航海の距離 ×3':id==='wreck'?'航跡 +'+g:id==='calm'?'残光 +'+g:'追い風 10分ぶん';}
+function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0){S.fork=null;S.forkT=0;}return;}
+  S.forkT=(S.forkT||0)+dt;if(S.forkT>=FORK_INT){const ids=FORKS.map(f=>f.id).sort(()=>Math.random()-0.5).slice(0,2+(Math.random()<0.5?1:0));S.fork={opts:ids,life:FORK_LIFE};FXQ.fork=true;}}
+function chooseFork(id){if(!S.fork||!S.fork.opts.includes(id))return false;const g=forkGain(id);
+  if(id==='neb')S.nebT=NEB_T;else if(id==='wreck'){S.T+=g;S.tTotal+=g;}else if(id==='calm'){S.L+=g;S.lTotal+=g;}else if(id==='wind')S.wind=(S.wind||0)+g;
+  S.fork=null;S.forkT=0;S.st.forks=(S.st.forks||0)+1;return true;}
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)):0;}
 function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
@@ -167,7 +177,7 @@ function fold(){const g=uGain();if(g<1)return 0;
   S.uTint=S.uni%UNI_TINT.length;FXQ.fold=g;return g;}
 function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}
-function autoRedrawReady(){return law('ar')>0&&S.voy&&S.stage>=maxStage()-1&&tGain()>=Math.max(3,S.tTotal);}
+function autoRedrawReady(){return law('ar')>0&&S.voy&&S.stage>=maxStage()-1&&redrawReady();}
 function trailNext(id){const a=TRAIL.find(x=>x.id===id),l=tg(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyTrail(id){const n=trailNext(id);if(!n||S.T<n.cost)return false;S.T-=n.cost;S.tg[id]=n.l+1;return true;}
 // ③では緊急停止とスキル選びが自動になる
