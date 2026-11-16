@@ -8,7 +8,7 @@ let curTab='drive',buyMode='1';
 const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
 const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
 const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
-function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(law('lc')>=10||S.lightDone));}
+function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||S.voyStash||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(law('lc')>=10||S.lightDone));}
 function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}
 function tabClick(t){if(t==='skill'){openSkill(false);return;}curTab=t;renderPanel(true);}
 function buildTabs(){const open=LAYERS.filter(L=>layerOpen(L.id));   // 上の段に層（HOME〜LIGHT と ETC）、下の段にその層の中のタブ
@@ -32,11 +32,20 @@ function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){setSel(b,b.dat
 function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;return (t==='battery'&&((S.chal==='c7'&&S.chalLv>=2)||!S.flags.bat))||(t==='reset'&&S.maxStage<BRAKE_STAGE&&S.restarts===0)||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&!S.flags.bat);}
 let devUI=[],TIERFX=null;
+/* 次の章までの道しるべ（2026-11-16）：STAR・GALAXY・UNIVERSE・LIGHT の層の上に一行。いまの章と、次の扉までの進み具合 */
+function chapterHint(){const ks=SKILLS.filter(k=>k.glow).length,n=S.lit.length;
+  if(S.lightDone)return ['終章','光になった。旅は、まだ続けられる。',1];
+  if(S.voy||S.voyStash||S.uni>0){if(law('lc')>=LAWS.find(L=>L.id==='lc').max)return ['次の扉　光になる','9を22個並べる　いま9が'+nines(Math.max(S.stage,S.maxStage))+'個',Math.min(1,nines(S.maxStage)/22)];
+    if(S.uni>0||canFold())return ['次の扉　光になる','光の上限 '+law('lc')+' / 10',law('lc')/10];
+    const e=DEST[DEST.length-1].ly;return ['次の扉　新しい宇宙','宇宙の果てまで あと '+lyText(Math.max(0,e-S.vdist))+' 光年',Math.min(1,Math.log10(1+S.vdist)/Math.log10(e))];}
+  return ['次の扉　さらに遠くへ','上位の星 '+n+' / '+ks+(n>=ks?'　故郷に着くと開く':''),n/ks];}
+function paintChap(){const el=document.getElementById('chap'),L=curLayer;if(!(L==='star'||L==='galaxy'||L==='universe'||L==='light')){el.innerHTML='';el.style.display='none';return;}
+  const [a,b,p]=chapterHint();el.style.display='';el.innerHTML='<span class="cL">'+a+'</span><span class="cB"><i style="width:'+Math.round(Math.max(0,Math.min(1,p))*100)+'%"></i></span><span class="cR">'+b+'</span>';}
 function renderPanel(force){
   if(tabHidden(curTab))curTab='drive';
   curLayer=layerOf(curTab)||'home';lastTab[curLayer]=curTab;
   const isSet=curTab==='set',ps=document.getElementById('pset');pbody.style.display=isSet?'none':'';ps.style.display=isSet?'':'none';
-  paintTabs();
+  paintTabs();paintChap();
   if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='uni')renderUniverse();else if(curTab==='light')renderLight();else if(curTab==='set')renderSet();else if(curTab==='stats')renderStats();else renderLog();
 }
 function devVisible(i){return devOpen(i);}
@@ -211,7 +220,7 @@ function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';
 let litSel=null;
 let unlockChal=null;
 function renderUnlock(){const ks=SKILLS.filter(k=>k.glow);if(S.chal!==unlockChal){unlockChal=S.chal;if(S.chal)litSel=S.chal;}if(!litSel)litSel=(S.chal||(ks.find(k=>!S.lit.includes(k.id))||ks[0]).id);
-  const key='u|'+[S.lit.join(),JSON.stringify(S.chalTier),litSel,S.chal,canChallenge()].join('|');if(pbody.dataset.k===key)return;
+  const key='u|'+[S.lit.join(),JSON.stringify(S.chalTier),litSel,S.chal,canChallenge(litSel),S.voy].join('|');if(pbody.dataset.k===key)return;
   const W=360,H=250,cx=180,cy=120,P=ks.map((_,i)=>{const a=-Math.PI*0.62+i*Math.PI*2/ks.length;return[cx+Math.cos(a)*120,cy+Math.sin(a)*92];});
   const tsum=ks.reduce((a,k)=>a+(S.chalTier[k.id]||0),0);let v='<div class="phead"><span class="lab">CHALLENGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">段 '+tsum+' / '+(ks.length*3)+'</span></div><svg class="gHz" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="残光の星座">';
   ks.forEach((k,i)=>{const a=P[i],b=P[(i+1)%ks.length],both=S.lit.includes(k.id)&&S.lit.includes(ks[(i+1)%ks.length].id);v+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="rgb(255,236,200)" stroke-opacity="'+(both?0.4:0.1)+'" stroke-width=".8"'+(both?'':' stroke-dasharray="2 4"')+'/>';});
@@ -225,11 +234,11 @@ function renderUnlock(){const ks=SKILLS.filter(k=>k.glow);if(S.chal!==unlockChal
   const k=ks.find(z=>z.id===litSel),ch=CHAL[k.id],lit=S.lit.includes(k.id),act=S.chal===k.id,tier=S.chalTier[k.id]||0,nx=act?(S.chalLv||1):chalNext(k.id),ri=Math.max(1,nx||3)-1;
   v+='<div class="gDet"><div class="row" style="padding:0"><span style="font-size:14px">「'+ch.name+'」'+(nx?'　段'+nx:'')+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">'+(act?'挑戦中':tier>=3?'3段すべて越えた':tier?'段'+tier+'まで越えた':'')+'</span></div>'+
     '<div class="note" style="margin:4px 0 2px">縛り：'+ch.rule[ri]+'<br>目標：'+ch.gtext[ri]+'<br>'+(nx===1?'灯る星：'+k.name+'（'+STAR_P[k.id].t(STAR_P[k.id].p[0])+'）':nx?'越えると星「'+k.name+'」が強くなる：'+STAR_P[k.id].t(STAR_P[k.id].p[nx-2])+' → '+STAR_P[k.id].t(STAR_P[k.id].p[nx-1]):'灯った星：'+k.name+'（'+starText(k.id)+'）')+'</div>'+
-    (act?'<button class="act" id="chQuit">やめる</button>':nx?'<button class="act" id="chGo"'+(canChallenge()?'':' disabled')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">段'+nx+'に挑む</button>'+(canChallenge()?'':'<div class="note">'+(S.voy?'航海に出ている間は挑めない。':'故郷に一度着くと挑める。')+'</div>'):'<div class="note">この星は灯っている。周回の最初から効き、消えない。</div>')+'</div>';
+    (act?'<button class="act" id="chQuit">やめる</button>':nx?'<button class="act" id="chGo"'+(canChallenge(k.id)?'':' disabled')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">段'+nx+'に挑む</button>'+(canChallenge(k.id)?(S.voy?'<div class="note">挑む間、航海は預けておく。越えるか、やめると航海に戻る。</div>':''):'<div class="note">'+(nx>=2&&!voyaged()?'段2と段3は、航海に出てから挑める。':S.voy&&nx===1?'段1は、航海に出る前に挑む。':'故郷に一度着くと挑める。')+'</div>'):'<div class="note">この星は灯っている。周回の最初から効き、消えない。</div>')+'</div>';
   pbody.dataset.k=key;pbody.innerHTML=v;
   pbody.querySelectorAll('[data-us]').forEach(g=>g.onclick=()=>{litSel=g.dataset.us;pbody.dataset.k='';renderUnlock();});
-  const go=document.getElementById('chGo');if(go)go.onclick=()=>confirmBox('チャレンジ「'+ch.name+'」段'+nx,'今の周回をやめて、遠い宙域から出直す。縛りは「'+ch.rule[ri]+'」。'+ch.gtext[ri]+'と、'+(nx===1?k.name+'が灯る。':'星「'+k.name+'」が強くなる。')+'距離・年月・歪み・スキルはなくなり、残光は得られない。',()=>{if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();if(startChallenge(k.id)){applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}});
-  const q=document.getElementById('chQuit');if(q)q.onclick=()=>confirmBox('チャレンジをやめる','縛りがなくなり、今の周回をそのまま続ける。この段は越えたことにならない。',()=>{quitChallenge();pbody.dataset.k='';renderPanel(true);});}
+  const go=document.getElementById('chGo');if(go)go.onclick=()=>confirmBox('チャレンジ「'+ch.name+'」段'+nx,'今の周回をやめて、遠い宙域から出直す。縛りは「'+ch.rule[ri]+'」。'+ch.gtext[ri]+'と、'+(nx===1?k.name+'が灯る。':'星「'+k.name+'」が強くなる。')+(S.voy?'航海は預けておき、越えるかやめると戻る。':'距離・年月・歪み・スキルはなくなり、残光は得られない。'),()=>{if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();if(startChallenge(k.id)){applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}});
+  const q=document.getElementById('chQuit');if(q)q.onclick=()=>confirmBox('チャレンジをやめる',S.voyStash?'縛りがなくなり、預けていた航海に戻る。この段は越えたことにならない。':'縛りがなくなり、今の周回をそのまま続ける。この段は越えたことにならない。',()=>{quitChallenge();pbody.dataset.k='';renderPanel(true);});}
 /* ③ さらに遠くへ（GALAXY タブ） */
 function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
   if(part==='voy'&&!S.voy&&canVoyage())h+='<div class="phead"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。②の周回は終わり、緊急停止とスキル選びは自動になる。残光とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';
