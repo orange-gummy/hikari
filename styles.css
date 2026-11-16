@@ -248,7 +248,7 @@ body.forkOn #sub{opacity:0!important;transition:opacity .4s}
 #bSky .bNeedle{animation:bNeedle 3.2s ease-in-out infinite}@keyframes bNeedle{0%,100%{transform:rotate(-7deg)}35%{transform:rotate(5deg)}60%{transform:rotate(-2deg)}80%{transform:rotate(8deg)}}
 #bSky .bBar{animation:bBar 2.2s ease-in-out infinite}@keyframes bBar{0%,100%{opacity:.55}50%{opacity:1}}
 #bSky .bTicks{animation:bTicks 6s linear infinite}@keyframes bTicks{from{transform:translateY(0)}to{transform:translateY(var(--tk))}}
-#bSky .bGearA{animation:bRot 14s linear infinite}#bSky .bGearB{animation:bRot 9.6s linear infinite reverse}
+#bSky .bTickRing{animation:bRot 40s linear infinite reverse}
 #bSky .bDial{animation:bRot 5s linear infinite}
 #bGear svg{animation:bRot 24s linear infinite}#bGear:hover svg{animation-duration:4s}
 #bSky .bShoot{opacity:0;animation:gShoot 13s linear 4s infinite}

@@ -106,7 +106,9 @@ function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math
     v+=on[i]?'<path d="'+arc(i,r)+'" fill="none" stroke="'+col+'" stroke-width="'+f(Math.max(10,r*0.11))+'" stroke-linecap="round" opacity=".28" filter="url(#bBlur)"/><path class="bStar" style="animation-delay:-'+(i*0.7)+'s" d="'+arc(i,r)+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linecap="round"/>'
       :'<path d="'+arc(i,r)+'" fill="none" stroke="'+ink(0.22)+'" stroke-width=".8" stroke-dasharray="1.5 5"/>';}
   v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+f(r*0.86)+'" fill="none" stroke="'+ink(0.12)+'" stroke-width=".6"/>';
+  v+='<g class="bTickRing" style="transform-origin:'+cxp+'px '+cyp+'px">';   // 色の輪の外の目盛りは、ゆっくり回る
   for(let k=0;k<72;k++){const a=k*Math.PI/36,l=k%6?4:9;v+='<line x1="'+f(cxp+Math.cos(a)*(r+12))+'" y1="'+f(cyp+Math.sin(a)*(r+12))+'" x2="'+f(cxp+Math.cos(a)*(r+12+l))+'" y2="'+f(cyp+Math.sin(a)*(r+12+l))+'" stroke="'+ink(k%6?0.16:0.34)+'" stroke-width=".6"/>';}
+  v+='</g>';
   {const rp=r,cp='M'+f(cxp)+' '+f(cyp-rp)+'A'+rp+' '+rp+' 0 1 1 '+f(cxp-0.01)+' '+f(cyp-rp)+'Z';   // 7色の輪を、光がひとつ回る
     for(let k=0;k<5;k++)v+='<circle r="'+(2.6-k*0.45).toFixed(2)+'" fill="#fff" opacity="'+(0.95-k*0.18).toFixed(2)+'"><animateMotion dur="7s" begin="-'+(k*0.06).toFixed(2)+'s" repeatCount="indefinite" path="'+cp+'"/></circle>';
     v+='<g class="bScan" style="transform-origin:'+cxp+'px '+cyp+'px"><line x1="'+cxp+'" y1="'+cyp+'" x2="'+f(cxp+r*1.55)+'" y2="'+cyp+'" stroke="url(#bScanG)" stroke-width="1"/></g>';}
@@ -147,11 +149,6 @@ function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math
         for(let j=-4;j<=n;j++){const y=t0+sp*j,l=((j%4)+4)%4?3:7;v+='<line x1="'+f(tx-(k?l:0))+'" y1="'+f(y)+'" x2="'+f(tx+(k?0:l))+'" y2="'+f(y)+'" stroke="'+ink(((j%4)+4)%4?0.18:0.36)+'" stroke-width=".6"/>';}
         v+='</g></g>';
         const py=t1-(t1-t0)*val,d=k?-1:1;v+='<path d="M'+f(tx+d*10)+' '+f(py)+'l'+(d*7)+' -4v8z" fill="'+ink(0.85)+'"/>';});}
-    // 歯車：光の線で描いた小さな歯車が、かみ合って回る
-    {const gear=(x,y,R,nT,cls)=>{let d='';for(let i=0;i<nT*2;i++){const a0=i*Math.PI/nT,a1=(i+1)*Math.PI/nT,rr=i%2?R:R*1.22;d+=(i?'L':'M')+f(x+Math.cos(a0)*rr)+' '+f(y+Math.sin(a0)*rr)+'L'+f(x+Math.cos(a1)*rr)+' '+f(y+Math.sin(a1)*rr);}
-        return '<g class="'+cls+'" style="transform-origin:'+f(x)+'px '+f(y)+'px"><path d="'+d+'Z" fill="none" stroke="'+ink(0.32)+'" stroke-width=".7"/><circle cx="'+f(x)+'" cy="'+f(y)+'" r="'+f(R*0.35)+'" fill="none" stroke="'+ink(0.3)+'" stroke-width=".6"/><line x1="'+f(x-R*0.8)+'" y1="'+f(y)+'" x2="'+f(x+R*0.8)+'" y2="'+f(y)+'" stroke="'+ink(0.22)+'" stroke-width=".6"/></g>';};
-      const gyy=Math.min(H-16,ry+42),R1=Math.min(11,W*0.025),R2=R1*0.68;
-      [[cxp-80-R1,1],[cxp+80+R1,-1]].forEach(([gx0,d])=>{if(Math.abs(gx0-cxp)<W*0.42){v+=gear(gx0,gyy,R1,10,'bGearA')+gear(gx0+d*(R1+R2)*1.08,gyy-2,R2,7,'bGearB');}});}
     // 小さな計器：速度の段階の針
     const gx=Math.max(20,x0*0.45),gy=cy0+ch*0.52,gr=Math.min(13,x0*0.3),ga=Math.PI*(1-Math.min(1,S.stage/22));
     [gx,W-gx].forEach((g,k)=>{const an=k?Math.PI*(1-Math.min(1,p)):ga;v+='<g class="bDial" style="transform-origin:'+f(g)+'px '+f(gy)+'px"><circle cx="'+f(g)+'" cy="'+f(gy)+'" r="'+f(gr*0.55)+'" fill="none" stroke="'+ink(0.25)+'" stroke-width=".6" stroke-dasharray="1 2.2"/></g><path d="M'+f(g-gr)+' '+f(gy)+'A'+gr+' '+gr+' 0 0 1 '+f(g+gr)+' '+f(gy)+'" fill="none" stroke="'+ink(0.3)+'" stroke-width=".7"/><line class="bNeedle" style="transform-origin:'+f(g)+'px '+f(gy)+'px;animation-delay:-'+k*1.3+'s" x1="'+f(g)+'" y1="'+f(gy)+'" x2="'+f(g+Math.cos(an)*gr*0.8)+'" y2="'+f(gy-Math.sin(an)*gr*0.8)+'" stroke="'+ink(0.75)+'" stroke-width=".8"/><circle cx="'+f(g)+'" cy="'+f(gy)+'" r="1" fill="'+ink(0.7)+'"/>';});}
