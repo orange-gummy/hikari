@@ -5,20 +5,27 @@
 /* 7色の記憶のオーロラ（2026-11-16 描き直し）：下の縁がくっきり明るく、上へ細い光の筋がのびて消えていく幕。
    筋の明るさは横へゆっくり流れ、幕が折れて横から見えるところほど明るい。色はその記憶の色のまま、縁は白っぽく、上はわずかに紫へ */
 const AUR_TOP=[175,140,255];
-function aurBand(i,o,a,rv){if(a<=0.01||rv<=0.01)return;const t=T*0.003+i*1.7,edge=-30+rv*(CW+90),sy=CH/610,base=o.ay*CH,tt=T*0.0006;
+function aurBand(X,i,o,a,rv){if(a<=0.01||rv<=0.01)return;const t=T*0.003+i*1.7,edge=-30+rv*(CW+90),sy=CH/610,base=o.ay*CH,tt=T*0.0006;
   const yAt=x=>base+(Math.sin(x*0.018+t)*22+Math.sin(x*0.007-t*0.6)*30+Math.sin(x*0.043-t*0.6+i)*7)*sy;
   const edgeC=mix(o.rgb,[255,255,255],0.35),topC=mix(o.rgb,AUR_TOP,0.3);
-  cx.save();cx.globalCompositeOperation='lighter';
+  X.save();X.globalCompositeOperation='lighter';
   // 幕のうしろのぼんやりした光（弱く）
-  for(let x=0;x<=CW;x+=36){const fade=cl((edge-x)/50);if(fade<=0)break;const y=yAt(x),al=0.015*a*fade;blob(x,y-26*sy,70*sy,o.rgb,al);}
+  for(let x=0;x<=CW;x+=36){const fade=cl((edge-x)/50);if(fade<=0)break;const y=yAt(x),al=0.015*a*fade;{const rr=70*sy,gg=X.createRadialGradient(x,y-26*sy,0,x,y-26*sy,rr);gg.addColorStop(0,rgb(o.rgb,al));gg.addColorStop(1,rgb(o.rgb,0));X.fillStyle=gg;X.fillRect(x-rr,y-26*sy-rr,rr*2,rr*2);}}
   for(let x=0;x<=CW;x+=3){const fade=cl((edge-x)/50);if(fade<=0)break;const y=yAt(x),sl=Math.min(1,Math.abs(yAt(x+3)-y)/3*1.6);
     const cur=0.5+0.5*Math.sin(x*0.09+T*0.0035+i)*Math.sin(x*0.031-T*0.0025);
     let ray=0.5+0.5*Math.sin(x*0.37+tt*9+i*3)*Math.sin(x*0.113-tt*5);ray=0.35+0.65*ray*ray;
     const fl=0.9+0.1*Math.sin(x*0.9+T*0.008+i);
     const h=(46+30*ray+18*Math.sin(x*0.02+t*1.3))*sy,al=0.12*a*fade*cur*ray*fl*(1+0.9*sl);if(al<0.004)continue;
-    const g=cx.createLinearGradient(0,y+14*sy,0,y-h);g.addColorStop(0,rgb(o.rgb,0));g.addColorStop(0.1,rgb(o.rgb,al*0.25));g.addColorStop(0.15,rgb(edgeC,al*1.6));g.addColorStop(0.22,rgb(o.rgb,al*0.9));g.addColorStop(0.5,rgb(o.rgb,al*0.32));g.addColorStop(1,rgb(topC,0));
-    cx.fillStyle=g;cx.fillRect(x,y-h,3,h+14*sy);}
-  cx.restore();}
+    const g=X.createLinearGradient(0,y+14*sy,0,y-h);g.addColorStop(0,rgb(o.rgb,0));g.addColorStop(0.1,rgb(o.rgb,al*0.25));g.addColorStop(0.15,rgb(edgeC,al*1.6));g.addColorStop(0.22,rgb(o.rgb,al*0.9));g.addColorStop(0.5,rgb(o.rgb,al*0.32));g.addColorStop(1,rgb(topC,0));
+    X.fillStyle=g;X.fillRect(x,y-h,3,h+14*sy);}
+  X.restore();}
+/* オーロラは横1/3・縦1/2の小さな画面に描いてから、なめらかに引き伸ばして重ねる（2026-11-16）。
+   3px の縦の帯をそのまま描くと、PC の細かい画面で帯の境目が線に見えていた */
+let AURC=null;
+function drawAurora(dim){const w=Math.ceil(CW/3),h=Math.ceil(CH/2);if(!AURC||AURC.width!==w||AURC.height!==h){AURC=document.createElement('canvas');AURC.width=w;AURC.height=h;}
+  const X=AURC.getContext('2d');X.setTransform(1,0,0,1,0,0);X.clearRect(0,0,w,h);X.setTransform(1/3,0,0,1/2,0,0);let any=false;
+  for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null&&A[i]*dim>0.01&&RV[i]>0.01){aurBand(X,i,o,A[i]*dim,RV[i]);any=true;}}
+  if(!any)return;cx.save();cx.globalCompositeOperation='lighter';cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(AURC,0,0,w*3,h*2);cx.restore();}
 let devGlow=0,SKYV=0;   // SKYV：晴れた昼の空の濃さ（前のコマの値で、オーロラを弱める）
 /* ③の航海：窓を横切る地平線の光の帯（自分たちの銀河を外から見る）。光の点を一度だけ描いておき、毎フレーム重ねる */
 let BAND=null;
@@ -55,7 +62,7 @@ function frameInner(){
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
   cx.clearRect(0,0,CW,CH);drawTint();drawBand();
   // 四隅の記憶の色のもやは、宇宙らしく見えなくなるのでやめた（2026-11-16）
-  {const dim=1-0.8*SKYV;SKYV=0;for(let i=0;i<5;i++){const o=COLORS[i];if(o.ay!=null)aurBand(i,o,A[i]*dim,RV[i]);}}   // 晴れた昼の空が出ている間は、オーロラを弱める
+  {const dim=1-0.8*SKYV;SKYV=0;drawAurora(dim);}   // 晴れた昼の空が出ている間は、オーロラを弱める
   // stars
   const tw=0.25*aw,CXs=RC.x||CW/2,CYs=RC.y||CH/2,rs=420*sc*(1-CONV*0.92)*ZOOM;
   if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const s of STARS){s.t+=s.v*0.75*SPDF*(1+CONV*4);if(s.t>3.1){s.t=0.02+Math.random()*0.2;s.p=Math.random()*6.283;}else if(s.t<0.02&&SPDF<0){s.t=2.95+Math.random()*0.14;s.p=Math.random()*6.283;}
@@ -70,12 +77,12 @@ function frameInner(){
   // scenes inside the window
   if(HEARD&&!LANDED){HEARD.t++;cx.fillStyle='rgba(19,21,30,'+ei(cl(HEARD.t/100)).toFixed(3)+')';cx.fillRect(0,0,CW,CH);}
   if(LANDED){cx.save();cx.beginPath();if(cx.roundRect)cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);else cx.rect(FR.x,FR.y,FR.w,FR.h);cx.clip();cx.fillStyle='rgb(19,21,30)';cx.fillRect(FR.x,FR.y,FR.w,FR.h);const mn=Math.min(A[0],A[1],A[2],A[3],A[4],A[5],A[6]),sa=0.45*ei(cl((mn-0.5)/0.5)),sk=cx.createLinearGradient(0,FR.y,0,FR.y+FR.h);sk.addColorStop(0,rgb(mix([127,177,234],[60,64,74],1-A[4]),sa));sk.addColorStop(0.6,rgb(mix([184,212,241],[60,64,74],1-A[5]),sa*0.8));sk.addColorStop(1,rgb(mix([242,170,120],[60,64,74],1-A[0]),sa));cx.fillStyle=sk;cx.fillRect(FR.x,FR.y,FR.w,FR.h);cx.restore();}
-  if(FX.length||SP.length||GLOWB.length){const s=LANDED?Math.max(FR.w/276,FR.h/380):Math.min(FR.w/276,FR.h/200);cx.save();cx.beginPath();if(cx.roundRect)cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);else cx.rect(FR.x,FR.y,FR.w,FR.h);cx.clip();
-    cx.translate(FR.x+(FR.w-276*s)/2-12*s,FR.y+FR.h-378*s);cx.scale(s,s);
+  if(FX.length||SP.length||GLOWB.length){const s=Math.min(SC_MAX,LANDED?Math.max(FR.w/276,FR.h/380):Math.min(FR.w/276,FR.h/200));cx.save();cx.beginPath();if(cx.roundRect)cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);else cx.rect(FR.x,FR.y,FR.w,FR.h);cx.clip();
+    const ox=FR.x+(FR.w-276*s)/2-12*s;cx.translate(ox,FR.y+FR.h-378*s);cx.scale(s,s);SXL=Math.min(-5,(FR.x-ox)/s-5);SXR=Math.max(PW+5,(FR.x+FR.w-ox)/s+5);   // 倍率は SC_MAX まで（PC の広い窓で情景が大きくなりすぎないよう）。SXL・SXR：窓の左右の端（情景の座標）
     let gA=0;FX.forEach(e=>{e.t++;});
     FX.forEach(e=>{if(e.i===4)skyScene(e);});
     FX.forEach(e=>{if(e.i===0)sunScene(e);if(e.i===3)townScene(e);if(e.g!=null)gA=Math.max(gA,e.g);});
-    GA+=(gA-GA)*0.15;if(GA>0.01){glp(ridgePath,[200,210,235],0.5*GA,0.9);for(let x=3;x<PW;x+=9)gdot(x,ry(x),0.6,[200,210,235],0.5*GA*(0.5+0.5*Math.sin(T*0.07+x*0.7)));}
+    GA+=(gA-GA)*0.15;if(GA>0.01){glp(ridgePath,[200,210,235],0.5*GA,0.9);for(let x=SXL+3;x<SXR;x+=9)gdot(x,ry(x),0.6,[200,210,235],0.5*GA*(0.5+0.5*Math.sin(T*0.07+x*0.7)));}
     FX.forEach(e=>{if(e.i===1)(e.m==='in'?vineScene:treeScene)(e);if(e.i===2)flowerScene(e);if(e.i===5)snowScene(e);if(e.i===6)rainScene(e);});
     for(let i=SP.length-1;i>=0;i--){const p=SP[i];p.x+=p.vx;p.y+=p.vy;p.l-=p.dr;if(p.l<=0){SP.splice(i,1);continue;}gdot(p.x,p.y,p.r,p.c,p.l*0.9);}
     for(let i=GLOWB.length-1;i>=0;i--){const g=GLOWB[i];g.t++;const p=g.t/110;if(p>=1){GLOWB.splice(i,1);continue;}const c=COLORS[g.i].rgb,a=Math.sin(Math.PI*Math.min(1,p*1.4))*(1-p*0.4);blob(g.x,g.y,14+eo(p)*210,c,0.32*a);blob(g.x,g.y,8+eo(p)*70,mix(c,[255,255,255],0.4),0.45*a);}
@@ -139,8 +146,8 @@ const CH_T=65;
 function drawAcc(){const a=ACC;a.t++;const low=fxLow,lv=a.lvl,n=nines(lv),t=a.t,dur=162,amp=low?0.45:1;
   if(n>0){const i=(n-1)%12,an=-1.5708+(i+0.5)/12*6.283,ax=RC.x+Math.cos(an)*74*RCS,ay=RC.y+Math.sin(an)*74*RCS,c=mix(COLORS[i%6].rgb,G,1-A[i%6]),g=t<CH_T?t/CH_T:Math.max(0,1-(t-CH_T)/70);blob(ax,ay,(16+lv)*(0.5+g),c,0.8*g);SEG[i].setAttribute('stroke-width',(2.2+3*g).toFixed(2));}
   let e=0;
-  if(t<CH_T){const c=t/CH_T,f=0.35+0.65*Math.sin(Math.PI*Math.min(1,c*1.1));if(!a.inS)a.inS=[];for(let k=0;k<(low?3:8);k++){const an=Math.random()*6.283,d=Math.hypot(CW,CH)*R(0.5,0.6),ci=(k+t)%6;a.inS.push({x:RC.x+Math.cos(an)*d,y:RC.y+Math.sin(an)*d,an,sp:R(5,11),l:0,s:R(0.7,1.5),c:mix(COLORS[ci].rgb,G,1-A[ci])});}
-    for(let k=a.inS.length-1;k>=0;k--){const q=a.inS[k];q.x-=Math.cos(q.an)*q.sp*f;q.y-=Math.sin(q.an)*q.sp*f;q.l=Math.min(1,q.l+0.08);const dd=Math.hypot(q.x-RC.x,q.y-RC.y);if(dd<50){a.inS.splice(k,1);continue;}const al=q.l*Math.min(1,dd/160),tl=q.sp*f*2.2;cx.beginPath();cx.moveTo(q.x,q.y);cx.lineTo(q.x+Math.cos(q.an)*tl,q.y+Math.sin(q.an)*tl);cx.strokeStyle=rgb(q.c,al*0.7);cx.lineWidth=q.s*0.7;cx.stroke();cx.beginPath();cx.arc(q.x,q.y,q.s,0,6.283);cx.fillStyle=rgb(q.c,al);cx.fill();}}
+  if(t<CH_T){const c=t/CH_T,f=0.35+0.65*Math.sin(Math.PI*Math.min(1,c*1.1));if(!a.inS)a.inS=[];const DR=Math.min(Math.hypot(CW,CH),Math.hypot(FR.w,FR.h)*1.1),SK=Math.max(1,DR/930);for(let k=0;k<Math.round((low?3:8)*Math.max(1,DR/500));k++){const an=Math.random()*6.283,d=DR*R(0.5,0.6),ci=(k+t)%6;a.inS.push({x:RC.x+Math.cos(an)*d,y:RC.y+Math.sin(an)*d,an,sp:d*R(0.016,0.028),l:0,s:R(0.7,1.5)*Math.sqrt(SK),c:mix(COLORS[ci].rgb,G,1-A[ci])});}
+    for(let k=a.inS.length-1;k>=0;k--){const q=a.inS[k];q.x-=Math.cos(q.an)*q.sp*f;q.y-=Math.sin(q.an)*q.sp*f;q.l=Math.min(1,q.l+0.08);const dd=Math.hypot(q.x-RC.x,q.y-RC.y);if(dd<50*SK){a.inS.splice(k,1);continue;}const al=q.l*Math.min(1,dd/(160*SK)),tl=q.sp*f*2.2;cx.beginPath();cx.moveTo(q.x,q.y);cx.lineTo(q.x+Math.cos(q.an)*tl,q.y+Math.sin(q.an)*tl);cx.strokeStyle=rgb(q.c,al*0.7);cx.lineWidth=q.s*0.7;cx.stroke();cx.beginPath();cx.arc(q.x,q.y,q.s,0,6.283);cx.fillStyle=rgb(q.c,al);cx.fill();}}
   if(t===CH_T&&a.inS){for(const q of a.inS){const v=R(7,13);P.push({x:q.x,y:q.y,vx:Math.cos(q.an)*v,vy:Math.sin(q.an)*v,l:0.9,c:q.c,r:q.s,dr:0.03});}a.inS=null;}
   if(t<CH_T){const c=ei(t/CH_T);ZOOM=1-0.05*c*amp;SPDF=1-c-0.9*Math.sin(Math.PI*c)*amp;ROTV=-0.5*c*amp;stk=0;}
   else{e=Math.pow(1-cl((t-CH_T)/dur),2);ZOOM=1+(0.22+0.01*lv)*e*amp;SPDF=1+(13+lv*0.7)*e*amp;ROTV=(9+lv*0.8)*e*amp;stk=Math.round(46*e);}
