@@ -59,10 +59,10 @@ function offline(){const el2=(Date.now()-(S.last||Date.now()))/1000;if(el2<30||S
 /* 起動時のタイトル（2026-11-15）：開くたびに出る。暗い宇宙に船の丸い窓が浮かび、中を星が流れる。
    窓の中の7色の星座は、まだ持っている色だけが灯る。出ている間はゲームの時間を進めず、入ったときに留守の分を受け取る */
 let bootOn=false;
-function bootStatus(){if(S.voy){const d=nextDest();return d?d.name+'まで あと '+lyText(Math.max(0,d.ly-S.vdist))+' 光年':'宇宙の果ての先へ '+lyText(S.vdist)+' 光年';}
-  if(S.cleared)return '故郷に着いている。';let lost=0;for(let i=0;i<7;i++)if(!memHas(i))lost++;
-  return '故郷まで '+Math.max(0,Math.ceil(GOAL_LY-S.dist)).toLocaleString('ja-JP')+' 光年'+(lost?'<i>·</i>失った色 '+lost:'');}
-function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math.max(120,H*0.19)),cy0=H-ch,cxp=W/2,cyp=Math.round(H*(ch?0.30:0.36)),r=Math.round(Math.min(W*0.3,H*0.17,170));
+function bootStatus(){const loop='<i>·</i>'+(S.restarts+1)+' 周目';if(S.voy){const d=nextDest();return (d?d.name+'まで あと '+lyText(Math.max(0,d.ly-S.vdist))+' 光年':'宇宙の果ての先へ '+lyText(S.vdist)+' 光年')+'<i>·</i>宇宙 '+roman(S.uni+1);}
+  if(S.cleared)return '故郷に着いている。'+loop;let lost=0;for(let i=0;i<7;i++)if(!memHas(i))lost++;
+  return REGIONS[regionIndex(S.dist)].name+'<i>·</i>故郷まで '+Math.max(0,Math.ceil(GOAL_LY-S.dist)).toLocaleString('ja-JP')+' 光年'+(lost?'<i>·</i>失った色 '+lost:'')+loop;}
+function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math.max(120,H*0.19)),cy0=H-ch,cxp=W/2,BODY=230,TOP=60,r=Math.round(Math.max(60,Math.min(W*0.3,H*0.17,170,((cy0||H)-24-BODY-TOP-50)/2))),cyp=Math.round(Math.max(TOP+r+20,Math.min(H*(ch?0.30:0.36),(cy0||H)-24-BODY-r-30)));   // 題名とボタンが計器盤にかからないよう、輪の大きさと位置を決める
   let sd=23;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},f=n=>n.toFixed(1),on=COLORS.map((_,i)=>memHas(i)),ink=a=>'rgba(236,238,242,'+a+')';
   let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs>'+
     '<linearGradient id="bTail" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient>'+
@@ -71,6 +71,7 @@ function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math
     '<radialGradient id="bCore"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".18" stop-color="rgb(225,232,255)" stop-opacity=".35"/><stop offset="1" stop-color="rgb(200,215,255)" stop-opacity="0"/></radialGradient>'+
     '<linearGradient id="bFlare" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'+
     '<linearGradient id="bFlareV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'+
+    '<linearGradient id="bScanG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dfe6ff" stop-opacity="0"/><stop offset=".7" stop-color="#dfe6ff" stop-opacity=".35"/><stop offset="1" stop-color="#dfe6ff" stop-opacity="0"/></linearGradient>'+
     '<radialGradient id="bHome"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".7"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></radialGradient>'+
     '<radialGradient id="bGrey"><stop offset="0" stop-color="rgb(130,134,146)" stop-opacity=".5"/><stop offset="1" stop-color="rgb(130,134,146)" stop-opacity="0"/></radialGradient>'+
     COLORS.map((c,i)=>'<radialGradient id="bC'+i+'"><stop offset="0" stop-color="rgb('+c.rgb.join(',')+')" stop-opacity=".55"/><stop offset="1" stop-color="rgb('+c.rgb.join(',')+')" stop-opacity="0"/></radialGradient>').join('')+'</defs>';
@@ -106,7 +107,10 @@ function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math
       :'<path d="'+arc(i,r)+'" fill="none" stroke="'+ink(0.22)+'" stroke-width=".8" stroke-dasharray="1.5 5"/>';}
   v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+f(r*0.86)+'" fill="none" stroke="'+ink(0.12)+'" stroke-width=".6"/>';
   for(let k=0;k<72;k++){const a=k*Math.PI/36,l=k%6?4:9;v+='<line x1="'+f(cxp+Math.cos(a)*(r+12))+'" y1="'+f(cyp+Math.sin(a)*(r+12))+'" x2="'+f(cxp+Math.cos(a)*(r+12+l))+'" y2="'+f(cyp+Math.sin(a)*(r+12+l))+'" stroke="'+ink(k%6?0.16:0.34)+'" stroke-width=".6"/>';}
-  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+f(r*0.5)+'" fill="url(#bCore)" class="bStar"/>'+
+  {const rp=r,cp='M'+f(cxp)+' '+f(cyp-rp)+'A'+rp+' '+rp+' 0 1 1 '+f(cxp-0.01)+' '+f(cyp-rp)+'Z';   // 7色の輪を、光がひとつ回る
+    for(let k=0;k<5;k++)v+='<circle r="'+(2.6-k*0.45).toFixed(2)+'" fill="#fff" opacity="'+(0.95-k*0.18).toFixed(2)+'"><animateMotion dur="7s" begin="-'+(k*0.06).toFixed(2)+'s" repeatCount="indefinite" path="'+cp+'"/></circle>';
+    v+='<g class="bScan" style="transform-origin:'+cxp+'px '+cyp+'px"><line x1="'+cxp+'" y1="'+cyp+'" x2="'+f(cxp+r*1.55)+'" y2="'+cyp+'" stroke="url(#bScanG)" stroke-width="1"/></g>';}
+  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+f(r*0.5)+'" fill="url(#bCore)" class="bBreath" style="transform-origin:'+cxp+'px '+cyp+'px"/>'+
     '<rect x="'+f(cxp-r*1.7)+'" y="'+f(cyp-0.6)+'" width="'+f(r*3.4)+'" height="1.2" fill="url(#bFlare)"/><rect x="'+f(cxp-0.5)+'" y="'+f(cyp-r*0.55)+'" width="1" height="'+f(r*1.1)+'" fill="url(#bFlareV)"/>'+
     '<circle cx="'+cxp+'" cy="'+cyp+'" r="2.6" fill="#fff"/>';
   // 輪の細部：ゆっくり回る外の輪と逆に回る内の弧、9の数の点、四方の印
@@ -130,19 +134,19 @@ function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math
     v+='<circle cx="'+f(x0)+'" cy="'+f(ry)+'" r="1.6" fill="'+ink(0.6)+'"/><circle cx="'+f(x1)+'" cy="'+f(ry)+'" r="13" fill="url(#bHome)" class="bStar"/><circle cx="'+f(x1)+'" cy="'+f(ry)+'" r="2.2" fill="rgb(255,226,190)"/>'+
       '<path d="M'+f(px(p)-5)+' '+f(ry-4.5)+'L'+f(px(p)+5)+' '+f(ry)+'L'+f(px(p)-5)+' '+f(ry+4.5)+'Z" fill="#04050C" stroke="#f6f7fb" stroke-width=".9"/>'+
       '<text x="'+f(x0)+'" y="'+f(ry+22)+'" text-anchor="middle" font-size="10" fill="'+ink(0.4)+'">'+(S.voy?'故郷':'遠い宙域')+'</text><text x="'+f(x1)+'" y="'+f(ry+22)+'" text-anchor="middle" font-size="10" fill="rgba(255,226,190,.7)">'+(S.voy?'宇宙の果て':'故郷')+'</text>';
-    v+='<text x="'+f(x0)+'" y="'+f(ry-22)+'" font-size="9" letter-spacing="1.5" fill="'+ink(0.38)+'" font-family="Michroma,Jura,sans-serif">VELOCITY</text><text x="'+f(x0)+'" y="'+f(ry-36)+'" font-size="13" fill="'+ink(0.85)+'" font-family="Jura,sans-serif">'+speedText(S.stage)+'</text>'+
-      '<text x="'+f(x1)+'" y="'+f(ry-22)+'" text-anchor="end" font-size="9" letter-spacing="1.5" fill="'+ink(0.38)+'" font-family="Michroma,Jura,sans-serif">HOME</text><text x="'+f(x1)+'" y="'+f(ry-36)+'" text-anchor="end" font-size="13" fill="'+ink(0.85)+'" font-family="Jura,sans-serif">'+Math.floor(S.years).toLocaleString('ja-JP')+' 年</text>';
+    v+='<text x="'+f(x0)+'" y="'+f(ry-16)+'" font-size="9" letter-spacing="1.5" fill="'+ink(0.38)+'" font-family="Michroma,Jura,sans-serif">VELOCITY</text><text x="'+f(x0)+'" y="'+f(ry-29)+'" font-size="13" fill="'+ink(0.85)+'" font-family="Jura,sans-serif">'+speedText(S.stage)+'</text>'+
+      '<text x="'+f(x1)+'" y="'+f(ry-16)+'" text-anchor="end" font-size="9" letter-spacing="1.5" fill="'+ink(0.38)+'" font-family="Michroma,Jura,sans-serif">HOME</text><text x="'+f(x1)+'" y="'+f(ry-29)+'" text-anchor="end" font-size="13" fill="'+ink(0.85)+'" font-family="Jura,sans-serif">'+Math.floor(S.years).toLocaleString('ja-JP')+' 年</text>';
     // 計器盤の細部：7色の表示灯、装置の台数の棒、区域と周回の読み取り、左右の柱の目盛り
-    {const ly=cy0+22,sp2=Math.min(22,(x1-x0)*0.06),lx=cxp-sp2*3;v+='<line x1="'+f(lx-10)+'" y1="'+ly+'" x2="'+f(lx+sp2*6+10)+'" y2="'+ly+'" stroke="'+ink(0.12)+'" stroke-width=".6"/>';
+    {const ly=cy0+13,sp2=Math.min(22,(x1-x0)*0.06),lx=cxp-sp2*3;v+='<line x1="'+f(lx-10)+'" y1="'+ly+'" x2="'+f(lx+sp2*6+10)+'" y2="'+ly+'" stroke="'+ink(0.12)+'" stroke-width=".6"/>';
       for(let i=0;i<7;i++)v+=on[i]?'<circle cx="'+f(lx+i*sp2)+'" cy="'+ly+'" r="6" fill="url(#bC'+i+')"/><circle cx="'+f(lx+i*sp2)+'" cy="'+ly+'" r="2" fill="rgb('+COLORS[i].rgb.join(',')+')"/>':'<circle cx="'+f(lx+i*sp2)+'" cy="'+ly+'" r="2" fill="#05060e" stroke="'+ink(0.3)+'" stroke-width=".6"/>';
-      const by=Math.min(H-10,ry+44),bx=cxp-8*4.5+2;for(let i=0;i<8;i++){const hh=Math.min(20,Math.log10(1+(S.dev[i]||0))*7);v+='<line x1="'+f(bx+i*9)+'" y1="'+f(by)+'" x2="'+f(bx+i*9)+'" y2="'+f(by-20)+'" stroke="'+ink(0.1)+'" stroke-width="3"/>'+(hh>0.5?'<line x1="'+f(bx+i*9)+'" y1="'+f(by)+'" x2="'+f(bx+i*9)+'" y2="'+f(by-hh)+'" stroke="'+ink(0.7)+'" stroke-width="3"/>':'');}
+      const by=Math.min(H-10,ry+44),bx=cxp-8*4.5+2;for(let i=0;i<8;i++){const hh=Math.min(20,Math.log10(1+(S.dev[i]||0))*7);v+='<line x1="'+f(bx+i*9)+'" y1="'+f(by)+'" x2="'+f(bx+i*9)+'" y2="'+f(by-20)+'" stroke="'+ink(0.1)+'" stroke-width="3"/>'+(hh>0.5?'<line class="bBar" style="animation-delay:-'+(i*0.4)+'s" x1="'+f(bx+i*9)+'" y1="'+f(by)+'" x2="'+f(bx+i*9)+'" y2="'+f(by-hh)+'" stroke="'+ink(0.7)+'" stroke-width="3"/>':'');}
       const lab=(x,anc,a,b)=>'<text x="'+f(x)+'" y="'+f(cy0-24)+'" text-anchor="'+anc+'" font-size="8.5" letter-spacing="1.5" fill="'+ink(0.34)+'" font-family="Michroma,Jura,sans-serif">'+a+'</text><text x="'+f(x)+'" y="'+f(cy0-10)+'" text-anchor="'+anc+'" font-size="11" fill="'+ink(0.7)+'">'+b+'</text>';
-      v+=lab(W*0.1,'start','REGION',S.voy?(nextDest()?nextDest().name+'へ':'宇宙の果ての先'):REGIONS[regionIndex(S.dist)].name)+lab(W*0.9,'end','LOOP',(S.restarts+1)+' 周目');
+      // REGION と LOOP は題名の下の一行に移した（2026-11-16、文字が重なるため）
       [[W*0.045,Math.min(1,S.stage/22)],[W*0.955,Math.min(1,p)]].forEach(([tx,val],k)=>{const t0=cy0*0.42,t1=cy0-44,n=16;for(let j=0;j<=n;j++){const y=t0+(t1-t0)*j/n,l=j%4?3:7;v+='<line x1="'+f(tx-(k?l:0))+'" y1="'+f(y)+'" x2="'+f(tx+(k?0:l))+'" y2="'+f(y)+'" stroke="'+ink(j%4?0.18:0.36)+'" stroke-width=".6"/>';}
         const py=t1-(t1-t0)*val,d=k?-1:1;v+='<path d="M'+f(tx+d*10)+' '+f(py)+'l'+(d*7)+' -4v8z" fill="'+ink(0.85)+'"/>';});}
     // 小さな計器：速度の段階の針
     const gx=Math.max(20,x0*0.45),gy=cy0+ch*0.52,gr=Math.min(13,x0*0.3),ga=Math.PI*(1-Math.min(1,S.stage/22));
-    [gx,W-gx].forEach((g,k)=>{const an=k?Math.PI*(1-Math.min(1,p)):ga;v+='<path d="M'+f(g-gr)+' '+f(gy)+'A'+gr+' '+gr+' 0 0 1 '+f(g+gr)+' '+f(gy)+'" fill="none" stroke="'+ink(0.3)+'" stroke-width=".7"/><line x1="'+f(g)+'" y1="'+f(gy)+'" x2="'+f(g+Math.cos(an)*gr*0.8)+'" y2="'+f(gy-Math.sin(an)*gr*0.8)+'" stroke="'+ink(0.75)+'" stroke-width=".8"/><circle cx="'+f(g)+'" cy="'+f(gy)+'" r="1" fill="'+ink(0.7)+'"/>';});}
+    [gx,W-gx].forEach((g,k)=>{const an=k?Math.PI*(1-Math.min(1,p)):ga;v+='<path d="M'+f(g-gr)+' '+f(gy)+'A'+gr+' '+gr+' 0 0 1 '+f(g+gr)+' '+f(gy)+'" fill="none" stroke="'+ink(0.3)+'" stroke-width=".7"/><line class="bNeedle" style="transform-origin:'+f(g)+'px '+f(gy)+'px;animation-delay:-'+k*1.3+'s" x1="'+f(g)+'" y1="'+f(gy)+'" x2="'+f(g+Math.cos(an)*gr*0.8)+'" y2="'+f(gy-Math.sin(an)*gr*0.8)+'" stroke="'+ink(0.75)+'" stroke-width=".8"/><circle cx="'+f(g)+'" cy="'+f(gy)+'" r="1" fill="'+ink(0.7)+'"/>';});}
   v+='</svg>';
   document.getElementById('bSky').innerHTML=v;document.getElementById('bBody').style.top=(cyp+r+30)+'px';
   document.getElementById('bStat').innerHTML=bootStatus();document.getElementById('bGo').textContent=S.flags.start?'船に戻る':'船を出す';}
