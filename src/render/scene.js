@@ -58,8 +58,8 @@ function curtain(k,mode,t){const c=[120,170,255],tp=[175,150,255],ec=mix(c,[255,
   for(let x=2;x<PW;x+=2){const by=byAt(x),sl=Math.min(1,Math.abs(byAt(x+2)-by)/2*1.6),L=72+38*Math.sin(x*0.05+T*0.007),I=0.55+0.45*Math.sin(x*0.13+T*0.012)*Math.sin(x*0.03-T*0.007);
     let ray=0.5+0.5*Math.sin(x*0.61+tt*9)*Math.sin(x*0.19-tt*5);ray=0.35+0.65*ray*ray;let u=0,rev=1;
     if(mode==='in')rev=cl((t*5-x)/40);else u=ei((t-12-x*0.18)/60);if(rev<=0)continue;const bot=by-u*L,len=L*(1-u)*(0.75+0.45*ray);if(len<2)continue;
-    const cc=mix(c,G,u),e2=mix(ec,G,u),a=k*I*ray*rev*(1-u*0.6)*(1+0.8*sl)*0.75;if(a<0.004)continue;
-    const g=cx.createLinearGradient(0,bot+10,0,bot-len);g.addColorStop(0,rgb(cc,0));g.addColorStop(0.08,rgb(cc,0.25*a));g.addColorStop(0.13,rgb(e2,1.3*a));g.addColorStop(0.22,rgb(cc,0.75*a));g.addColorStop(0.55,rgb(cc,0.3*a));g.addColorStop(1,rgb(mix(tp,G,u),0));
+    const cc=mix(c,G,u),e2=mix(ec,G,u),a=k*I*ray*rev*(1-u*0.6)*(1+0.8*sl)*0.55;if(a<0.004)continue;
+    const g=cx.createLinearGradient(0,bot+10,0,bot-len);g.addColorStop(0,rgb(cc,0));g.addColorStop(0.08,rgb(cc,0.25*a));g.addColorStop(0.13,rgb(e2,1.0*a));g.addColorStop(0.22,rgb(cc,0.75*a));g.addColorStop(0.55,rgb(cc,0.3*a));g.addColorStop(1,rgb(mix(tp,G,u),0));
     cx.fillStyle=g;cx.fillRect(x-1.1,bot-len,2.2,len+10);
     if(mode==='out'&&u>0.05&&u<0.95&&Math.random()<0.02)SP.push({x,y:bot,vx:R(-0.1,0.1),vy:-R(0.4,1),l:0.8,c:cc,r:0.8,dr:0.02});}
   cx.restore();}
