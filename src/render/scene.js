@@ -11,7 +11,9 @@ const A=COLORS.map(()=>1).concat(NEW_COLORS.map(()=>1)),TG=COLORS.map(()=>1),RV=
 let T=0,fla=0,stk=0,BB=0,CONV=0,FREEZE=false,CRACK=null,HOMEA=null,ACC=null,RCS=1,ZOOM=1,SPDF=1,ROT=0,ROTV=0,BVC=-1,BRK=null,RST=null,NEWSK=[],STILL=false,TRIP=[],MET=null,BLOOM=null,LANDED=false,HEARD=null;
 const P=[],SP=[],STARS=[],FLY=[],FX=[],RIP=[],POPS=[],GLOWB=[];
 function resize(){DPR=Math.min(2,window.devicePixelRatio||1);CW=innerWidth;CH=innerHeight;cv.width=CW*DPR;cv.height=CH*DPR;cx.setTransform(DPR,0,0,DPR,0,0);measure();}
-function measure(){const r=frameEl.getBoundingClientRect();FR={x:r.left,y:r.top,w:r.width,h:r.height};const q=ringEl.getBoundingClientRect();RC={x:q.left+q.width/2,y:q.top+q.height/2};RCS=q.width/176||1;}
+let MEAS_N=0;
+// リングが隠れている間に測ると中心が画面の左上（0,0）になり、加速の光が左上の端に4分の1の円で見えていた（2026-11-16）。大きさが0のときは前の値を残す
+function measure(){const r=frameEl.getBoundingClientRect();if(r.width>0)FR={x:r.left,y:r.top,w:r.width,h:r.height};const q=ringEl.getBoundingClientRect();if(q.width>0){RC={x:q.left+q.width/2,y:q.top+q.height/2};RCS=q.width/176||1;}}
 const cl=x=>Math.max(0,Math.min(1,x)),eo=x=>{x=cl(x);return 1-Math.pow(1-x,3);},ei=x=>{x=cl(x);return x*x*(3-2*x);};
 const mix=(c,g,k)=>[c[0]+(g[0]-c[0])*k,c[1]+(g[1]-c[1])*k,c[2]+(g[2]-c[2])*k];
 const rgb=(c,a)=>'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+Math.max(0,a)+')';

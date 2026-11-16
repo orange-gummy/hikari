@@ -36,7 +36,8 @@ let FRK=1,FRA=0,FRP=0;   // FRK：1コマ（60分の1秒）を1とした経過�
 function frame(){requestAnimationFrame(frame);const n=performance.now();FRA=Math.min(50,FRA+(FRP?n-FRP:16.667));FRP=n;
   let k=0;while(FRA>=14.667&&k<2){FRA-=16.667;k++;if(!FREEZE)frameStep();if(performance.now()-n>8)break;}
   if(FRA>16.667)FRA=16.667;}
-function frameStep(){FRK=1;const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
+function frameStep(){FRK=1;if(++MEAS_N>=20){MEAS_N=0;measure();}   // リングと窓の位置を、ときどき測り直す
+const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
 /* ④ 宇宙を畳む：星がすべて中心へ流れ込み（4秒）→ 光の点ひとつ（2秒）→ 点がほどけて新しい色合いの空が広がる */
 let FOLD=null;
 function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
@@ -117,6 +118,8 @@ function drawRst(){const r=RST;r.t++;const t=r.t;
   if(t>=80){const p=cl((t-80)/70);SPDF=ei(p);ROTV=2*(1-p);}
   ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');
   if(t>=150){SPDF=1;ROTV=0;ROT=Math.round(ROT/5)*5;TKG.setAttribute('transform','rotate('+ROT+' 88 88)');NEWSK=[];document.getElementById('block').style.display='none';RST=null;}}
+/* 航海の自動の緊急停止（2026-11-16 に軽くした）：大きな演出・画面の覆い・時間の停止をやめ、鈴の音と小さな光、上の短い知らせだけ */
+function autoBrake(){const g=wGain();SND.play('milestone');prestige(false);FXQ.prestige=false;fla=Math.max(fla,0.03);TRIP.push({x:RC.x,y:RC.y,t:0,c:[200,210,235]});paintSpeed();renderPanel(true);toast('自動で止まった　歪み +'+fmt(g));}
 function startBrake(g,auto){NEWSK=[];BRK={t:0,g,lit:nines(S.stage),auto:!!auto};SND.play(auto?'milestone':'brake');document.getElementById('block').style.display='block';}
 function drawBrk(){const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B1=180,S1=215,S2=335;
   if(b.t===1){b.st=S.stage;b.bv0=BVC;b.sp0=3+b.lit*0.25;}
