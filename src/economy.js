@@ -169,7 +169,7 @@ function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdis
 /* ③ 光子（2026-11-17 試作） */
 function phOpen(k){return S.voy&&!S.chal&&(S.found||0)>=(PH_DEV[k].find||0);}
 function sailMult(){return S.voy&&!S.chal?Math.pow(SAIL_X,S.sail||0):1;}
-function phRate(){return S.voy&&!S.chal?(S.phDev[0]||0)*PH_DEV[0].rate*sailMult():0;}
+function phRate(){return S.voy&&!S.chal?(S.phDev[0]||0)*PH_DEV[0].rate*(SAIL_PH?sailMult():1):0;}
 function phCost(k){return PH_DEV[k].cost*Math.pow(PH_DEV[k].g,S.phBuy[k]||0);}
 function phBuyDev(k){if(!phOpen(k)||S.ph<phCost(k))return false;S.ph-=phCost(k);S.phBuy[k]=(S.phBuy[k]||0)+1;S.phDev[k]=(S.phDev[k]||0)+1;return true;}
 function phGain(sec,min){if(!S.voy||S.chal)return 0;const g=Math.max(min,phRate()*sec);S.ph+=g;return g;}   // タップと流れ星で入る光子
@@ -178,7 +178,7 @@ function sailCost(){return SAIL_COST*Math.pow(SAIL_G,S.sail||0);}
 function raiseSail(){if((S.phPend||0)<sailCost())return false;S.phPend-=sailCost();S.sail=(S.sail||0)+1;FXQ.sail=S.sail;return true;}
 function sailAutoSpend(){while((S.phPend||0)>=sailCost())raiseSail();S.phPend=0;}
 function phReset(keepSail){S.ph=0;S.phDev=[1,0,0,0];S.phBuy=[0,0,0,0];if(!keepSail)S.sail=0;}
-function phTick(dt){if(!S.voy||S.chal)return;const m=sailMult();for(let k=PH_DEV.length-1;k>=1;k--)if(S.phDev[k]>0)S.phDev[k-1]+=S.phDev[k]*PH_DEV[k].rate*m*dt;S.ph+=phRate()*dt;}
+function phTick(dt){if(!S.voy||S.chal)return;const m=SAIL_PH?sailMult():1;for(let k=PH_DEV.length-1;k>=1;k--)if(S.phDev[k]>0)S.phDev[k-1]+=S.phDev[k]*PH_DEV[k].rate*m*dt;S.ph+=phRate()*dt;}
 function routeOpts(){const ids=ROUTE_TYPES.slice().sort(()=>Math.random()-0.5).slice(0,2+(Math.random()<0.5?1:0));if(Math.random()<ROUTE_UNKNOWN)ids[ids.length-1]='unknown';return ids;}
 function routeInit(){S.route={n:voyDoublings(S.vdist||0),cur:null,opts:routeOpts(),pick:null,path:[],wreck:0};}
 function routeCur(){return S.voy&&S.route?S.route.cur:null;}

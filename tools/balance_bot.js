@@ -6,6 +6,7 @@
 //         --gaps で、触っている間の「暇な時間」（手応えのある出来事の間隔）を出す
 //         --week 10 で日数を変えられる（既定は7日）。上位の星が8つ灯ったあと着くと、③の航海に出る
 const fs=require('fs'),path=require('path');
+{let _s=+(process.env.SEED||12345);Math.random=()=>{_s=(_s*16807)%2147483647;return _s/2147483647;};}   // 試算は毎回同じ乱数（航路図の候補など）。SEED で変えられる
 const CORE_FILES=['data','state','economy','story'];
 let core=CORE_FILES.map(f=>fs.readFileSync(path.join(__dirname,'..','src',f+'.js'),'utf8')).join('\n');
 core=core.replace("if(typeof skillPick!=='undefined'&&!skillPick)return;","");
@@ -45,6 +46,7 @@ function gapReport(){const L=x=>x>=3600?(x/3600).toFixed(1)+'時間':Math.round(
 // 画面を触っている1秒
 function act(){
   tick(1);const P=prodRate();if(S.chal!=='c7'&&(P<2000||t%10<3)){S.E+=tapGain()*2;S.Erun+=tapGain()*2;S.pulse=10;}
+  if(S.voy&&!S.chal){if(t%10<3)phGain(PH_TAP*2,PH_TAP_MIN);if(!process.env.NOPH){let k;while((k=[0,1,2,3].filter(i=>phOpen(i)&&phCost(i)<=S.ph*0.25).sort((a,b)=>phCost(a)-phCost(b))[0])!=null)phBuyDev(k);}}   // ③ 光子：手元の4分の1までで列を買う（残りは引き直すときの帆に）
   checkStory();chalWatch();if(t%5===0)achCheck();gapTick();
   let g=true,gi=0;while(g&&gi++<300){g=false;
     if(S.stage<maxStage()&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
@@ -87,7 +89,7 @@ function uniManage(){lightWatch();if(!canFold()){endAt=null;return;}if(endAt==nu
 let lightDay=null;function lightWatch(){if(!lightDay&&law('lc')>=10&&S.maxStage>=maxStage())lightDay=(t/86400).toFixed(2)+'日目';}
 function voyManage(){if(!S.voy)return;spendL();uniManage();lightWatch();
   while(FOUND.length<S.found)FOUND.push(DEST[FOUND.length].name+' '+(t/86400).toFixed(2)+'日目');
-  const g=tGain();if(redrawReady()){redraw();REDRAW.push((t/86400).toFixed(2)+'日目 +'+g);lastP=t;}
+  const g=tGain();if(redrawReady()){redraw();sailAutoSpend();REDRAW.push((t/86400).toFixed(2)+'日目 +'+g+(S.sail?' 帆'+S.sail:''));lastP=t;}
   let b=true;while(b){b=false;const c=TRAIL.map(a=>[a.id,trailNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.T).sort((x,y)=>x[1].cost*(x[0]==='vs'?0.5:1)-y[1].cost*(y[0]==='vs'?0.5:1));if(c.length){buyTrail(c[0][0]);b=true;}}}
 function summary(){if(process.env.DBG)console.log('DBG maxE',S.maxE.toExponential(2),'E',S.E.toExponential(2),'stage',S.stage,'vbest',S.vbest.toExponential(2),'years',S.years.toExponential(2));if(ULOG.length||S.uni)console.log('宇宙',ULOG.join('、')||'-','／法則',JSON.stringify(S.law),'残り',S.U,'／光の上限10段',lcDay||'まだ','／光になれる日',lightDay||'まだ');if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('チャレンジ',CLOG.join(' / ')||'-');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
 
