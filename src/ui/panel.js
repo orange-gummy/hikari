@@ -150,7 +150,7 @@ function glowScene(W,H,hz){const n=AFTERGLOW.length,span=Math.min(W-48,Math.max(
     '<linearGradient id="gRay" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".85"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></linearGradient>'+
     '<linearGradient id="gLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgb(255,200,150)" stop-opacity="0"/><stop offset=".2" stop-color="rgb(255,200,150)" stop-opacity=".5"/><stop offset=".8" stop-color="rgb(255,200,150)" stop-opacity=".5"/><stop offset="1" stop-color="rgb(255,200,150)" stop-opacity="0"/></linearGradient>'+
     '<linearGradient id="gTail" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient><radialGradient id="gDot"><stop offset="0" stop-color="rgb(255,214,170)" stop-opacity=".6"/><stop offset="1" stop-color="rgb(255,214,170)" stop-opacity="0"/></radialGradient></defs>'+
-    '<rect x="0" y="0" width="'+W+'" height="'+hz+'" fill="url(#gSky)"/><ellipse class="gBreath" cx="'+(W/2)+'" cy="'+hz+'" rx="'+(W*0.62)+'" ry="'+Math.min(220,hz*0.5)+'" fill="url(#gSun)"/>';
+    '<rect x="0" y="0" width="'+W+'" height="'+hz+'" fill="url(#gSky)"/><g class="gSunE"><ellipse class="gBreath" cx="'+(W/2)+'" cy="'+hz+'" rx="'+(W*0.62)+'" ry="'+Math.min(220,hz*0.5)+'" fill="url(#gSun)"/></g>';
   // 日が沈んだあとの星（地平線に近いほど少ない）
   {let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};const top=Math.max(0,hz-120),m=Math.round(W*top/5200);
     for(let k=0;k<m;k++){const y=rnd()*top,a=(0.15+0.55*rnd())*(1-0.6*y/Math.max(1,top));const tw=rnd()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(rnd()*5).toFixed(1)+'s"':'')+' cx="'+(rnd()*W).toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(0.35+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+a.toFixed(2)+'"/>';}
@@ -163,17 +163,21 @@ function glowScene(W,H,hz){const n=AFTERGLOW.length,span=Math.min(W-48,Math.max(
   // ときどき横切る流れ星
   v+='<g class="gShoot"><line x1="'+(W*0.72)+'" y1="'+(hz*0.12)+'" x2="'+(W*0.72-70)+'" y2="'+(hz*0.12+38)+'" stroke="url(#gTail)" stroke-width="1.2"/></g>';
   v+='<line x1="0" y1="'+hz+'" x2="'+W+'" y2="'+hz+'" stroke="url(#gLine)" stroke-width=".8"/>';
-  AFTERGLOW.forEach((a,i)=>{const l=glow(a.id),x=xs[i],sel=a.id===glowSel,steps=Math.min(l,8),h=st+steps*st+(l>8?Math.min(st,Math.log2(l-7)*6):0),fx=GLOWFX&&GLOWFX.id===a.id&&Date.now()-GLOWFX.t<1200,nq=glowNext(a.id),can=nq&&S.L>=nq.cost;
-    v+='<g data-gs="'+a.id+'" style="cursor:pointer"><rect x="'+(x-sp/2)+'" y="'+Math.max(0,hz-h-40)+'" width="'+sp+'" height="'+(h+100)+'" fill="transparent"/>'+
+  // 2026-11-17 動き：開くと筋が左から順に伸び上がる（gRise、#glowOv.gIntro のとき）、ふだんはかすかに揺れる（gSway）、選ぶと class on で明るさだけ切り替える（描き直さない）、灯すと伸びて先端から光の粒がはじける
+  AFTERGLOW.forEach((a,i)=>{const l=glow(a.id),x=xs[i],sel=a.id===glowSel,steps=Math.min(l,8),h=st+steps*st+(l>8?Math.min(st,Math.log2(l-7)*6):0),fx=GLOWFX&&GLOWFX.id===a.id&&Date.now()-GLOWFX.t<1200,nq=glowNext(a.id),can=nq&&S.L>=nq.cost,org='transform-origin:'+x.toFixed(1)+'px '+hz+'px';
+    v+='<g data-gs="'+a.id+'" class="gG'+(sel?' on':'')+'" style="cursor:pointer;--i:'+i+'"><rect x="'+(x-sp/2)+'" y="'+Math.max(0,hz-h-40)+'" width="'+sp+'" height="'+(h+100)+'" fill="transparent"/>'+
+      '<g class="gRise" style="'+org+'"><g class="gSway" style="'+org+';animation-delay:-'+(i*1.3).toFixed(1)+'s">'+
       (l?'<rect x="'+(x-4-Math.min(l,20)*0.4)+'" y="'+(hz-h)+'" width="'+(8+Math.min(l,20)*0.8)+'" height="'+h+'" fill="url(#gRay)" opacity="'+(0.18+Math.min(l,20)*0.015)+'"/>':'')+
-      '<rect x="'+(x-(sel?1:0.7)-Math.min(l,20)*0.06)+'" y="'+(hz-h)+'" width="'+((sel?2:1.4)+Math.min(l,20)*0.12)+'" height="'+h+'" fill="url(#gRay)" opacity="'+(sel?1:0.7)+'">'+(fx?'<animate attributeName="y" from="'+(hz-h+st)+'" to="'+(hz-h)+'" dur=".9s" calcMode="spline" keySplines=".2 .8 .3 1"/><animate attributeName="height" from="'+(h-st)+'" to="'+h+'" dur=".9s" calcMode="spline" keySplines=".2 .8 .3 1"/>':'')+'</rect>'+
-      '<circle cx="'+x+'" cy="'+hz+'" r="14" fill="url(#gDot)"'+(fx?' class="gPop"':'')+'/><circle cx="'+x+'" cy="'+hz+'" r="3.2" fill="rgb(255,226,190)"/>';
+      '<rect class="gCore" x="'+(x-0.85-Math.min(l,20)*0.06)+'" y="'+(hz-h)+'" width="'+(1.7+Math.min(l,20)*0.12)+'" height="'+h+'" fill="url(#gRay)">'+(fx?'<animate attributeName="y" from="'+(hz-h+st)+'" to="'+(hz-h)+'" dur=".9s" calcMode="spline" keySplines=".2 .8 .3 1"/><animate attributeName="height" from="'+(h-st)+'" to="'+h+'" dur=".9s" calcMode="spline" keySplines=".2 .8 .3 1"/>':'')+'</rect>';
     for(let k=1;k<=steps;k++)v+='<circle cx="'+x+'" cy="'+(hz-k*st)+'" r="1.5" fill="rgb(255,214,170)" opacity=".8"/>';
     if(can)v+='<circle class="gTip" cx="'+x+'" cy="'+(hz-h)+'" r="2.8" fill="rgb(255,236,210)"/>';
     for(let k=0;k<Math.min(4,Math.ceil(l/2));k++){const dx=((k%2?1:-1)*(3+k*2)).toFixed(1),d=(k*0.9+i*0.37).toFixed(2);   // 先端からこぼれる光
       v+='<circle cx="'+x+'" cy="'+(hz-h)+'" r="1" fill="rgb(255,226,190)" opacity="0"><animate attributeName="cy" from="'+(hz-h)+'" to="'+(hz-h+40)+'" dur="2.6s" begin="'+d+'s" repeatCount="indefinite"/><animate attributeName="cx" from="'+x+'" to="'+(x+ +dx)+'" dur="2.6s" begin="'+d+'s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;0" dur="2.6s" begin="'+d+'s" repeatCount="indefinite"/></circle>';}
-    if(sel)v+='<circle cx="'+x+'" cy="'+hz+'" r="10" fill="none" stroke="rgb(255,214,170)" stroke-opacity=".8" stroke-width=".8"/>';
-    v+='<text x="'+x+'" y="'+(hz+26)+'" text-anchor="middle" font-size="12" fill="'+(sel?'#eceef2':'rgba(236,238,242,.6)')+'">'+a.name+'</text><text x="'+x+'" y="'+(hz+44)+'" text-anchor="middle" font-size="11" fill="'+(can?'rgba(255,214,170,.95)':'rgba(236,238,242,.4)')+'">'+(nq?'残光 '+fmt(nq.cost):'灯りきった')+'</text></g>';});
+    if(fx)for(let k=0;k<14;k++){const an=-Math.PI/2+(Math.random()-0.5)*2.2,dd=30+Math.random()*70,tx=x+Math.cos(an)*dd,ty=hz-h+Math.sin(an)*dd,b=(0.55+Math.random()*0.25).toFixed(2),du=(1+Math.random()*0.8).toFixed(2);   // 灯したとき：先端から光の粒がはじけて昇る
+      v+='<circle cx="'+x+'" cy="'+(hz-h)+'" r="'+(0.8+Math.random()*1.2).toFixed(1)+'" fill="rgb(255,236,210)" opacity="0"><animate attributeName="cx" from="'+x+'" to="'+tx.toFixed(1)+'" dur="'+du+'s" begin="'+b+'s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="cy" from="'+(hz-h)+'" to="'+ty.toFixed(1)+'" dur="'+du+'s" begin="'+b+'s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="opacity" values="0;1;0" dur="'+du+'s" begin="'+b+'s" fill="freeze"/></circle>';}
+    v+='</g></g><circle cx="'+x+'" cy="'+hz+'" r="14" fill="url(#gDot)"'+(fx?' class="gPop"':'')+'/><circle cx="'+x+'" cy="'+hz+'" r="3.2" fill="rgb(255,226,190)"/>'+
+      '<circle class="gSelR" cx="'+x+'" cy="'+hz+'" r="10" fill="none" stroke="rgb(255,214,170)" stroke-opacity=".8" stroke-width=".8"/>'+
+      '<g class="gLbl"><text class="gNm" x="'+x+'" y="'+(hz+26)+'" text-anchor="middle" font-size="12">'+a.name+'</text><text x="'+x+'" y="'+(hz+44)+'" text-anchor="middle" font-size="11" fill="'+(can?'rgba(255,214,170,.95)':'rgba(236,238,242,.4)')+'">'+(nq?'残光 '+fmt(nq.cost):'灯りきった')+'</text></g></g>';});
   for(let k=0;k<14;k++){const x=x0+((k*0.618)%1)*span,d=(k*0.71).toFixed(2),dur=(6+(k%4)).toFixed(1);   // 地平線から、光の粒がゆっくり立ちのぼる
     v+='<circle cx="'+x.toFixed(1)+'" cy="'+hz+'" r="'+(0.6+(k%3)*0.3).toFixed(1)+'" fill="rgb(255,214,170)" opacity="0"><animate attributeName="cy" from="'+hz+'" to="'+(hz-180)+'" dur="'+dur+'s" begin="'+d+'s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.6;0" dur="'+dur+'s" begin="'+d+'s" repeatCount="indefinite"/></circle>';}
   if(glowFlow){glowFlow=false;for(let k=0;k<18;k++){const x=x0+Math.random()*span,d=(0.2+k*0.1).toFixed(2),r=(0.8+Math.random()*1.1).toFixed(1);
@@ -191,7 +195,9 @@ function glowAutoSpend(){let b=true;while(b){b=false;const c=AFTERGLOW.map(a=>[a
 // 合間に開いたとき、いま終えた周の結果を一行で出す
 function glowResult(){const r=S.lastRun;if(!r||Date.now()-r.at>10*60*1000)return '';
   return r.k==='home'?r.n+' 周目<i>·</i>故郷まで '+durLong(r.sec)+'<i>·</i><em>+'+fmt(r.g)+'</em>':'航路を引き直した<i>·</i>いちばん遠く '+lyText(r.far)+' 光年<i>·</i><em>航跡 +'+fmt(r.g)+'</em>';}
-function openGlow(after){if(!glowAffordable()){after();return;}glowOpen=true;glowAfter=after;glowFlow=true;document.getElementById('glowOv').classList.add('on');renderGlowOv();}
+let glowIntroT=null;
+function glowIntroOff(){clearTimeout(glowIntroT);document.getElementById('glowOv').classList.remove('gIntro');}
+function openGlow(after){if(!glowAffordable()){after();return;}glowOpen=true;glowAfter=after;glowFlow=true;const ov=document.getElementById('glowOv');ov.classList.add('on','gIntro');renderGlowOv();clearTimeout(glowIntroT);glowIntroT=setTimeout(glowIntroOff,3200);}   // 開くときの動き（gIntro）は約3秒
 function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.remove('on');const f=glowAfter;glowAfter=null;if(f)f();}
 // 景色は小窓いっぱい。下の説明の高さを測ってから、その上に地平線を引く
 function renderGlowOv(){const ov=document.getElementById('glowOv'),b=document.getElementById('glowBody');
@@ -199,10 +205,16 @@ function renderGlowOv(){const ov=document.getElementById('glowOv'),b=document.ge
     '<div class="gBot">'+glowDetail()+'<button class="act" id="glowGo" style="margin-top:10px">船を出す</button></div><div class="gSky"></div>';
   const W=ov.clientWidth,H=ov.clientHeight,bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height,hz=Math.round(Math.max(top+150,H-bot-70));
   b.querySelector('.gSky').innerHTML=glowScene(W,H,hz);
-  b.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;renderGlowOv();});
-  const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){SND.play('light');GLOWFX={id:glowSel,t:Date.now()};renderGlowOv();}};
+  b.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>glowPick(g.dataset.gs));
+  glowBindBuy();
   document.getElementById('glowGo').onclick=closeGlow;}
-addEventListener('resize',()=>{if(glowOpen)renderGlowOv();});
+// 選ぶ：描き直さず、筋の明るさ（class on）と下の説明だけを入れ替える
+function glowPick(id){if(id===glowSel)return;glowSel=id;const b=document.getElementById('glowBody');b.querySelectorAll('[data-gs]').forEach(g=>g.classList.toggle('on',g.dataset.gs===id));
+  const d=b.querySelector('.gDet');if(d){d.outerHTML=glowDetail();const n=b.querySelector('.gDet');n.classList.add('gSwap');}glowBindBuy();}
+// 灯す：筋が伸びて先端から光の粒、新しい値が下から入り、残光の数が減っていく
+function glowBindBuy(){const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{const L0=S.L;if(buyGlow(glowSel)){SND.play('light');GLOWFX={id:glowSel,t:Date.now()};glowIntroOff();renderGlowOv();
+  const v=document.querySelector('#glowBody .gVal');if(v)v.classList.add('gRoll');const lb=document.querySelector('#glowBody .gL b'),L1=S.L,t0=performance.now();if(lb){const st=()=>{const p=Math.min(1,(performance.now()-t0)/700),e=1-Math.pow(1-p,3);lb.textContent=fmt(Math.round(L0+(L1-L0)*e));if(p<1&&glowOpen)requestAnimationFrame(st);};st();}}};}
+addEventListener('resize',()=>{if(glowOpen){glowIntroOff();renderGlowOv();}});
 function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[fmt(S.L),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
   if(part==='restart'){
     if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">残光 '+fmt(S.L)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。残光は、進んだ距離が2倍になるたびに入ってくる。</div>';

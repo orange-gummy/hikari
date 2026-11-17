@@ -379,3 +379,23 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscro
 /* 版の表記（2026-11-16） */
 #bVer{position:absolute;z-index:2;right:max(16px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));font-family:var(--ui);font-size:10px;letter-spacing:.08em;color:rgba(200,205,225,.32);pointer-events:none}
 #sVer{margin-top:16px;font-family:var(--ui);font-size:10px;letter-spacing:.08em;color:rgba(200,205,225,.38);text-align:center}
+
+/* 残照の地平の動き（2026-11-17）：開くと地平線が明るみ、筋が左から順に伸び上がり、上と下の文字が遅れて出る。ふだんは筋がかすかに揺れる。選ぶと明るさだけ切り替え、説明が下から入る。灯すと新しい値が下から入る */
+.gScene .gRise,.gScene .gSway{transform-box:view-box}
+.gScene .gSway{animation:gSway 7s ease-in-out infinite}
+@keyframes gSway{0%,100%{transform:skewX(0deg);opacity:.9}50%{transform:skewX(.7deg);opacity:1}}
+#glowOv.gIntro .gRise{animation:gRise 1.1s cubic-bezier(.2,.8,.3,1) both;animation-delay:calc(var(--i)*.12s + .5s)}
+@keyframes gRise{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
+#glowOv.gIntro .gLbl{animation:gFade .8s both;animation-delay:calc(var(--i)*.12s + .9s)}
+#glowOv.gIntro .gSunE{animation:gFade 1.4s both}
+#glowOv.gIntro .gTop{animation:gFade .9s .3s both}
+#glowOv.gIntro .gBot{animation:gUp .9s 1.5s both}
+@keyframes gFade{from{opacity:0}to{opacity:1}}
+@keyframes gUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.gScene .gG .gCore{opacity:.7;transition:opacity .35s}.gScene .gG.on .gCore{opacity:1}
+.gScene .gG .gNm{fill:rgba(236,238,242,.6);transition:fill .35s}.gScene .gG.on .gNm{fill:#eceef2}
+.gScene .gSelR{opacity:0;transition:opacity .35s}.gScene .gG.on .gSelR{opacity:1}
+.gDet.gSwap{animation:gUp .35s both}
+.gVal.gRoll b{display:inline-block;animation:gRoll .8s .2s cubic-bezier(.2,.8,.3,1) both}
+@keyframes gRoll{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.gScene .gSway,#glowOv.gIntro *{animation:none!important}}
