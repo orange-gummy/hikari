@@ -11,8 +11,7 @@ function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
 function maxStage(){return S.voy?MAX_STAGE+law('lc'):TOP_STAGE;}   // 航海（③④）は今までどおり ④ 光の上限で上がる。故郷への周回は9が22個まで
 function stageCost(s){if(s<=12)return STAGE_COST[s];const m=stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);const k=s-MAX_STAGE,ch=Math.min(k,FINAL_N-1);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(FINAL_MULT,ch)*Math.pow(m,k-ch);}   // 9が12個と13個への加速は、値段の上がり方を FINAL_MULT 倍に抑える（1周目の終わりまで届く目標を残す）
-function routeFx(k,d){const c=routeCur(),f=c&&ROUTE_FX[c];return f&&f[k]!=null?f[k]:d;}   // 航路図：いまの宙域の星系の効き目（p 生産・v 速さ・c 値段）
-function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c*routeFx('c',1);}
+function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
 function regionMult(i){const m=REGIONS[S.region].m;return (m[i]||1)*(m.all||1);}
 function milMult(n){let m=1;const b=has('eA')?3:2;for(const x of MILESTONES)if(n>=x)m*=b;return m;}
@@ -59,7 +58,7 @@ function memHas(i){if(S.cleared||S.voy)return true;return i===6?!S.greyLost:i>=S
 function memTarget(i){return memHas(i)?1:0;}
 function onMilestone(){FXQ.milestone=true;if(has('eC'))S.crit=30;}
 function baseRateNoFusion(){let b=0;for(const i of PRODI)if(i!==2)b+=devBase(i);return b*globalMult();}
-function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult();r*=routeFx('p',1);   // 航路図：星系の生産の倍率
+function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult();if(routeCur()==='rough')r*=ROUTE_ROUGH_P;   // 航路図：荒れた宙域
   if(S.chal==='eM'&&r>1)r=Math.pow(r,chalP());                                    // 「薄い光」：桁が小さくなる
   if(has('eM')&&r>1)r=Math.pow(r,sp('eM'));                                       // 濃い光
   if(has('a8')&&S.loopTime<600)r*=sp('a8');                                       // 出だしの風
@@ -68,7 +67,7 @@ function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*global
 function devShare(i){return devRateRaw(i)*globalMult();}
 function tapGain(){return Math.max(1,prodRate()*0.05)*(has('c2')?3:1)*(has('cA')?5:1)*((S.tier[5]||1)>=3?1+0.02*S.dev[5]*synK():1);}
 function growth(i){return DEVICES[i].growth||DEVICE_GROWTH;}
-function devCost(i,k){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i])*routeFx('c',1);return c*(Math.pow(g,k)-1)/(g-1);}
+function devCost(i,k){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);return c*(Math.pow(g,k)-1)/(g-1);}
 function devMax(i){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);return Math.max(0,Math.floor(Math.log(S.E*(g-1)/c+1)/Math.log(g)));}
 function batteryCap(){return batteryCapRaw(prodRate());}
 function batteryRate(){return 0.03+(has('e2')?0.02:0);}
@@ -172,17 +171,17 @@ function routeInit(){S.route={n:voyDoublings(S.vdist||0),cur:null,opts:routeOpts
 function routeCur(){return S.voy&&S.route?S.route.cur:null;}
 function routeAuto(){const R=S.route;return R.pick||(R.opts.includes(R.cur)?R.cur:R.opts[0]);}
 function routeEnter(n){const R=S.route,c=routeAuto();R.cur=c;R.path.push(c);R.n=n;R.pick=null;R.opts=routeOpts();
-  if(c==='calm')S.windT=(S.windT||0)+ROUTE_CALM;else if(c==='unknown')S.shard=(S.shard||0)+1;
+  if(c==='wreck')R.wreck++;else if(c==='calm')S.windT=(S.windT||0)+ROUTE_CALM;else if(c==='unknown')S.shard=(S.shard||0)+1;
   FXQ.route=c;S.fork={opts:R.opts.slice(),life:FORK_LIFE};FXQ.fork=true;}
-function voyAdvance(d){if(!S.route)routeInit();d*=routeFx('v',1);S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
-  const n=voyDoublings(S.vdist);while(S.route.n<n)routeEnter(S.route.n+1);if(n>S.vL){const g=(n-S.vL)*lPer();S.L+=g;S.lTotal+=g;S.vL=n;}
+function voyAdvance(d){if(!S.route)routeInit();const rc=S.route.cur;if(rc==='neb')d*=ROUTE_NEB;else if(rc==='rough')d*=ROUTE_ROUGH;S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
+  const n=voyDoublings(S.vdist);while(S.route.n<n)routeEnter(S.route.n+1);if(n>S.vL){const g=(n-S.vL)*lPer()*(S.route.cur==='cluster'?2:1);S.L+=g;S.lTotal+=g;S.vL=n;}
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function redrawReady(){return S.voy&&tGain()>=Math.max(3,Math.ceil(S.tTotal*REDRAW_R));}
 // 分かれ道：得られるもの（そのときの強さに合わせる）
-function forkText(id){const f=ROUTE_FX[id];if(id==='calm')return '追い風 +'+Math.round(ROUTE_CALM/60)+'分';if(id==='unknown')return '記憶のかけら +1';const t=[];if(f.p)t.push('生産 ×'+f.p);if(f.c)t.push('値段 ×'+f.c);if(f.v)t.push('速さ ×'+f.v);return t.join('・');}
+function forkText(id){return id==='cluster'?'この宙域の残光 ×2':id==='wreck'?'引き直しの航跡 +'+Math.round(ROUTE_WRECK*100)+'%':id==='neb'?'この宙域を ×'+ROUTE_NEB+' の速さで':id==='calm'?'追い風 +'+Math.round(ROUTE_CALM/60)+'分':id==='rough'?'速さ ×'+ROUTE_ROUGH+'・生産 ×'+ROUTE_ROUGH_P:'記憶のかけら +1';}
 function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0)S.fork=null;}}   // 窓の下の分岐図は、宙域の境目に来たときだけ出る
 function chooseFork(id){if(!S.voy||!S.route||!S.route.opts.includes(id))return false;S.route.pick=id;S.fork=null;S.st.forks=(S.st.forks||0)+1;return true;}   // 次の宙域へ向かう星系を選ぶ（境目に来たときに効く）
-function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)):0;}
+function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))):0;}
 function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;routeInit();S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
 function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=DEST[DEST.length-1].ly;}   // この宇宙で宇宙の果てに着いたら
