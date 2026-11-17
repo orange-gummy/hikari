@@ -326,7 +326,7 @@ function paintPhoton(){const n=document.getElementById('phN');if(!n)return;n.tex
   if(document.getElementById('sailLv')){document.getElementById('sailLv').textContent=(S.sail||0)+' 段';document.getElementById('sailFx').textContent='船の時間 ×'+fmtG(sailMult())+'　→　次の段で ×'+fmtG(sailMult()*SAIL_X);
   const nx=document.getElementById('sailNx');nx.textContent='光子 '+fmt(sailCost())+(S.ph>=sailCost()?'　（引き直せば張れる）':'');}
   PH_DEV.forEach((d,k)=>{const b=document.getElementById('phb'+k);if(!b)return;document.getElementById('phc'+k).textContent=fmt(Math.floor(S.phDev[k]||0))+'（買った '+(S.phBuy[k]||0)+'）';
-    document.getElementById('pht'+k).textContent=k===0?'光子 +'+fmt(phRate())+' / 秒':PH_DEV[k-1].name+' +'+fmt((S.phDev[k]||0)*d.rate*sailMult())+' / 秒';
+    document.getElementById('pht'+k).textContent=k===0?'光子 +'+fmt(phRate())+' / 秒':PH_DEV[k-1].name+' +'+fmt((S.phDev[k]||0)*d.rate*phMult())+' / 秒';
     b.textContent='光子 '+fmt(phCost(k));b.disabled=S.ph<phCost(k);});}
 /* ③ さらに遠くへ（GALAXY タブ） */
 function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
