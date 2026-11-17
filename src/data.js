@@ -70,7 +70,7 @@ const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階1
 const MAX_STAGE=22;
 const TOP_STAGE=MAX_STAGE+10;
 const VOY_CAP=TOP_STAGE+250;   // 2026-11-17：航海には天井がない（9の数を伸ばし続ける）。数の上限（1e308）を越えないための目安
-const LIGHT_N=+((typeof process!=='undefined'&&process.env.LIGHT_N)||40);   // ⑤ 光になれる9の数（宇宙を一度畳んだあと）   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
+const LIGHT_N=+((typeof process!=='undefined'&&process.env.LIGHT_N)||46);   // ⑤ 光になれる9の数（宇宙を一度畳んだあと）   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
 const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.8),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||5);   // 追い風（2026-11-16）：留守の間のエネルギーは OFF_NOW（8割）だけすぐ入り、残りは追い風の時間（S.windT 秒）になって、遊んでいる間に生産 ×WIND_X で吹く（2026-11-16 にエネルギーから時間に変えた）
 // 航路の分かれ道（2026-11-16）：航海で遊んでいる間、FORK_INT 秒ごとに分かれ道が出る。選ばなければ FORK_LIFE 秒でまっすぐ進む
 const FORK_INT=+((typeof process!=='undefined'&&process.env.FORK_INT)||600),FORK_LIFE=180,NEB_T=600;
@@ -85,7 +85,7 @@ const ROUTE_TYPES=['cluster','wreck','neb','calm','rough'],ROUTE_UNKNOWN=0.12,RO
 // 引き直しをすすめる目安：得られる航跡が「今までの合計 × REDRAW_R」以上（以前は合計以上＝1）
 const FORK_LINES={cluster:'星団の光が、帆いっぱいに当たる。',neb:'星雲の中を、光が速く流れていく。',wreck:'古い星の残骸に、誰かの航跡が残っていた。',calm:'静かな空域。故郷の光が、少しだけ近い。',rough:'荒れた宙域。船がきしむ。',unknown:'見たことのない星。何かを、思い出しかけた。'};
 const LC_A=+((typeof process!=='undefined'&&process.env.LC_A)||5),LC_B=+((typeof process!=='undefined'&&process.env.LC_B)||1.52);   // ④ 光の上限の値段（2026-11-16 に急にした。⑤まで遊び方Cで3〜4週間）
-const REDRAW_R=+((typeof process!=='undefined'&&process.env.REDRAW_R)||0.3);
+const REDRAW_R=+((typeof process!=='undefined'&&process.env.REDRAW_R)||1);
 const TIME_K=0.3;   // 故郷への周回で9が12個より先は、故郷の時間と生産の速まりを γ のこの乗にとどめる（周回が数分に縮まないように）
 const FINAL_N=2;   // 9が12個から数えて、この数の段階は FINAL_MULT 倍で上がる
 const FINAL_MULT=25;   // 9が11個 → 12個の加速は、ひとつ前の段階の値段のこの倍（ほかは STAGE_MULT 倍）。1周目の後半に届く目標にするため
@@ -144,7 +144,7 @@ const SKILLS=[
 /* 再出発（第二層）：故郷に着いたあと、もう一度遠い宙域から船を出す（強くてニューゲーム） */
 // ③ さらに遠くへ：故郷を出発点に、目的地を順に目指す長い航海
 const DEST=[{name:'隣の銀河',ly:2.5e6},{name:'銀河群',ly:3e7},{name:'大規模構造',ly:5e8},{name:'宇宙の果て',ly:4.65e10}];
-const VOY_BASE=+((typeof process!=='undefined'&&process.env.VOY_BASE)||1);        // 航海の距離の伸びの基準倍率
+const VOY_BASE=+((typeof process!=='undefined'&&process.env.VOY_BASE)||20);        // 航海の距離の伸びの基準倍率
 const TRAIL=[  // 航跡の強化
   {id:'va',name:'航跡の加速',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で9を1つ増やす値段の上がり方 ×'+fmtN(vaMultAt(l))},   // 2026-11-17：「航海の速さ（距離 ×2.7）」から作り替え。③でも9の数が伸びるように
   {id:'ls',name:'記憶の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'航海で入る記憶 ×'+Math.pow(2,l)},
