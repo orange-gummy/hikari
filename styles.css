@@ -422,10 +422,12 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscro
 #sailBody{position:absolute;inset:0}
 #sailBody .gSky{position:absolute;inset:0;z-index:0}
 .sScene .gTw{animation:gTw 4.5s ease-in-out infinite}
-.sScene .sSheet{transform-box:view-box;animation:sBillow 5s ease-in-out infinite}
-@keyframes sBillow{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.05)}}
-.sScene .sNew{animation:sNew 1.2s cubic-bezier(.2,.8,.3,1) both,sBillow 5s 1.2s ease-in-out infinite}
-@keyframes sNew{from{transform:scale(.2,.05);opacity:0}to{transform:none;opacity:1}}
-#sailOv.sIntro .sSheet path,#sailOv.sIntro .sSheet circle{animation:gFade 1s both}
+.sScene .sTurn{transform-box:view-box;animation:sTurn 90s linear infinite}
+@keyframes sTurn{to{transform:rotate(360deg)}}
+.sScene .sRay{animation:sRay 4s ease-in-out infinite}
+@keyframes sRay{0%,100%{opacity:.3}50%{opacity:1}}
+.sScene .sNew{transform-box:view-box;animation:sNew 1.2s cubic-bezier(.2,.8,.3,1) both}
+@keyframes sNew{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+#sailOv.sIntro .sTurn{animation:gFade 1.2s both,sTurn 90s linear infinite}
 #sailOv.sIntro .gTop{animation:gFade .9s .2s both}
 #sailOv.sIntro .gBot{animation:gUp .9s .8s both}

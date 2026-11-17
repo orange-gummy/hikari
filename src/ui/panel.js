@@ -203,21 +203,32 @@ function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.
 let sailOpen=false,sailAfter=null,sailFX=0;
 function openSail(after){if((S.phPend||0)<sailCost()){S.phPend=0;after();return;}sailOpen=true;sailAfter=after;const ov=document.getElementById('sailOv');ov.classList.add('on','sIntro');renderSailOv();setTimeout(()=>ov.classList.remove('sIntro'),2600);}
 function closeSail(){sailOpen=false;S.phPend=0;document.getElementById('sailOv').classList.remove('on');const f=sailAfter;sailAfter=null;if(f)f();}
-// 帆の絵：中央の帆柱に、段の数だけ光の帆が上へ重なる。帆は風を受けてふくらみ、縁は光の点で描く
-function sailScene(W,H){const n=Math.min(S.sail||0,12),cxp=W/2,base=H*0.72,top=H*0.16,mh=base-top,ink=a=>'rgba(255,236,210,'+a+')';
-  let v='<svg class="sScene" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs><linearGradient id="sFill" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgb(255,236,210)" stop-opacity=".02"/><stop offset=".5" stop-color="rgb(255,236,210)" stop-opacity=".16"/><stop offset="1" stop-color="rgb(255,236,210)" stop-opacity=".03"/></linearGradient><radialGradient id="sGlow"><stop offset="0" stop-color="rgb(255,236,210)" stop-opacity=".35"/><stop offset="1" stop-color="rgb(255,236,210)" stop-opacity="0"/></radialGradient></defs>';
-  {let sd=3;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};for(let k=0;k<Math.round(W*H/2600);k++){const tw=rnd()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(rnd()*5).toFixed(1)+'s"':'')+' cx="'+(rnd()*W).toFixed(1)+'" cy="'+(rnd()*H).toFixed(1)+'" r="'+(0.3+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+(0.15+rnd()*0.5).toFixed(2)+'"/>';}}
-  v+='<ellipse cx="'+cxp+'" cy="'+(top+mh*0.45)+'" rx="'+(W*0.42)+'" ry="'+(mh*0.6)+'" fill="url(#sGlow)" opacity="'+(0.3+0.05*n).toFixed(2)+'"/>';
-  v+='<line x1="'+cxp+'" y1="'+(top-10)+'" x2="'+cxp+'" y2="'+(base+30)+'" stroke="'+ink(.55)+'" stroke-width="1"/>';
-  const rows=Math.max(n,1),sh=Math.min(54,mh/Math.max(rows,3));
-  for(let k=0;k<n;k++){const y1=base-(k+1)*sh,y0=y1+sh*0.88,w=Math.min(W*0.4,130)*(1-k*0.045),bul=w*0.18,isNew=sailFX&&k===n-1;
-    const d='M'+(cxp-w)+' '+y1+' Q'+cxp+' '+(y1-bul*0.25)+' '+(cxp+w)+' '+y1+' Q'+(cxp+w+bul)+' '+((y1+y0)/2)+' '+(cxp+w)+' '+y0+' Q'+cxp+' '+(y0-bul*0.25)+' '+(cxp-w)+' '+y0+' Q'+(cxp-w-bul)+' '+((y1+y0)/2)+' '+(cxp-w)+' '+y1+'Z';
-    v+='<g class="sSheet'+(isNew?' sNew':'')+'" style="transform-origin:'+cxp+'px '+((y1+y0)/2)+'px;animation-delay:-'+(k*0.7).toFixed(1)+'s"><path d="'+d+'" fill="url(#sFill)" stroke="'+ink(.6)+'" stroke-width=".8"/>';
-    for(let j=0;j<=8;j++){const t=j/8,x=cxp-w+2*w*t;v+='<circle cx="'+x.toFixed(1)+'" cy="'+(y1-bul*0.25*4*t*(1-t)).toFixed(1)+'" r="1" fill="'+ink(.85)+'"/>';}
-    v+='</g>';}
-  if(!n)v+='<text x="'+cxp+'" y="'+(base-mh*0.45)+'" text-anchor="middle" font-size="12" fill="'+ink(.45)+'">まだ帆はない</text>';
-  for(let k=0;k<16;k++){const x=cxp+(k%2?1:-1)*(20+((k*37)%110)),d=(k*0.53).toFixed(2),du=(5+(k%4)).toFixed(1);v+='<circle cx="'+x+'" cy="'+(base+10)+'" r="'+(0.6+(k%3)*0.3)+'" fill="'+ink(.9)+'" opacity="0"><animate attributeName="cy" from="'+(base+10)+'" to="'+(top-20)+'" dur="'+du+'s" begin="'+d+'s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.7;0" dur="'+du+'s" begin="'+d+'s" repeatCount="indefinite"/></circle>';}
-  if(sailFX){for(let k=0;k<18;k++){const a=Math.random()*6.283,dd=40+Math.random()*90,y=base-n*sh+sh*0.4;v+='<circle cx="'+cxp+'" cy="'+y.toFixed(1)+'" r="1.2" fill="#fff4e6" opacity="0"><animate attributeName="cx" from="'+cxp+'" to="'+(cxp+Math.cos(a)*dd).toFixed(1)+'" dur="1.2s" begin=".2s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="cy" from="'+y.toFixed(1)+'" to="'+(y+Math.sin(a)*dd*0.6).toFixed(1)+'" dur="1.2s" begin=".2s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="opacity" values="0;1;0" dur="1.2s" begin=".2s" fill="freeze"/></circle>';}sailFX=0;}
+// 帆の絵（2026-11-17 作り直し）：宇宙で光を受ける光子の帆。SAIL_STYLE 'petal'＝船を中心に12枚の花びらの帆が開いていく／'square'＝ひし形の膜を4本の桁で張り、段ごとに大きく細かくなる
+let SAIL_STYLE='petal';
+function sailScene(W,H){const n=S.sail||0,cxp=W/2,cyp=H*0.43,R0=Math.min(W*0.36,H*0.27,230),ink=a=>'rgba(255,236,210,'+a+')',f2=x=>x.toFixed(1);
+  let v='<svg class="sScene" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs><radialGradient id="sGlow"><stop offset="0" stop-color="rgb(255,236,210)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,236,210)" stop-opacity="0"/></radialGradient><linearGradient id="sMem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="rgb(255,240,220)" stop-opacity=".22"/><stop offset=".5" stop-color="rgb(200,215,255)" stop-opacity=".07"/><stop offset="1" stop-color="rgb(255,240,220)" stop-opacity=".16"/></linearGradient></defs>';
+  {let sd=3;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};for(let k=0;k<Math.round(W*H/2600);k++){const tw=rnd()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(rnd()*5).toFixed(1)+'s"':'')+' cx="'+f2(rnd()*W)+'" cy="'+f2(rnd()*H)+'" r="'+(0.3+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+(0.15+rnd()*0.5).toFixed(2)+'"/>';}}
+  // 遠くの光源から、細い光の筋が帆へ降りそそぐ
+  for(let k=0;k<9;k++){const x=cxp-R0*1.6+k*R0*0.4,d=(k*0.37).toFixed(2);v+='<line class="sRay" x1="'+f2(x-R0*0.9)+'" y1="'+f2(cyp-R0*1.6)+'" x2="'+f2(x+R0*0.3)+'" y2="'+f2(cyp+R0*0.2)+'" stroke="'+ink(.18)+'" stroke-width=".6" style="animation-delay:-'+d+'s"/>';}
+  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+f2(R0*1.25)+'" fill="url(#sGlow)" opacity="'+(0.35+Math.min(n,12)*0.05).toFixed(2)+'"/>';
+  v+='<g class="sTurn" style="transform-origin:'+cxp+'px '+cyp+'px">';
+  if(SAIL_STYLE==='petal'){const m=12,lit=Math.min(n,m),outer=Math.max(0,n-m);
+    for(let k=0;k<m;k++){const a0=-Math.PI/2+k*2*Math.PI/m,a1=a0+2*Math.PI/m,am=(a0+a1)/2,on=k<lit,r=R0*(on?1:0.62),bow=r*0.14,isNew=sailFX&&k===lit-1&&!outer;
+      const p0=[cxp+Math.cos(a0)*R0*0.12,cyp+Math.sin(a0)*R0*0.12],p1=[cxp+Math.cos(a0)*r,cyp+Math.sin(a0)*r],p2=[cxp+Math.cos(a1)*r,cyp+Math.sin(a1)*r],p3=[cxp+Math.cos(a1)*R0*0.12,cyp+Math.sin(a1)*R0*0.12],cm=[cxp+Math.cos(am)*(r+bow),cyp+Math.sin(am)*(r+bow)];
+      const d='M'+f2(p0[0])+' '+f2(p0[1])+'L'+f2(p1[0])+' '+f2(p1[1])+'Q'+f2(cm[0])+' '+f2(cm[1])+' '+f2(p2[0])+' '+f2(p2[1])+'L'+f2(p3[0])+' '+f2(p3[1])+'Z';
+      v+='<g'+(isNew?' class="sNew" style="transform-origin:'+cxp+'px '+cyp+'px"':'')+'><path d="'+d+'" fill="'+(on?'url(#sMem)':'none')+'" stroke="'+ink(on?.55:.14)+'" stroke-width="'+(on?.8:.6)+'"'+(on?'':' stroke-dasharray="2 4"')+'/>';
+      if(on)for(let j=1;j<=6;j++){const t=j/7,rr=R0*0.12+(r-R0*0.12)*t;v+='<circle cx="'+f2(cxp+Math.cos(a0)*rr)+'" cy="'+f2(cyp+Math.sin(a0)*rr)+'" r=".9" fill="'+ink(.8)+'"/>';}
+      v+='</g>';}
+    for(let o=0;o<Math.min(outer,6);o++){const rr=R0*(1.12+o*0.07);v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+f2(rr)+'" fill="none" stroke="'+ink(.35-o*0.04)+'" stroke-width=".7" stroke-dasharray="1 5"/>';}}
+  else{const k=Math.min(n,14),s=R0*(0.45+0.04*k),g=Math.max(1,Math.min(6,Math.ceil(k/2)));
+    const P=[[cxp,cyp-s],[cxp+s,cyp],[cxp,cyp+s],[cxp-s,cyp]],bow=s*0.08;
+    const d='M'+f2(P[0][0])+' '+f2(P[0][1])+P.map((q,i)=>{const nq=P[(i+1)%4],mx=(q[0]+nq[0])/2,my=(q[1]+nq[1])/2,dx=mx-cxp,dy=my-cyp,dl=Math.hypot(dx,dy);return 'Q'+f2(mx-dx/dl*bow)+' '+f2(my-dy/dl*bow)+' '+f2(nq[0])+' '+f2(nq[1]);}).join('')+'Z';
+    v+='<g'+(sailFX?' class="sNew" style="transform-origin:'+cxp+'px '+cyp+'px"':'')+'><path d="'+d+'" fill="url(#sMem)" stroke="'+ink(.6)+'" stroke-width=".9"/>';
+    for(let i=1;i<g;i++){const t=i/g;v+='<line x1="'+f2(P[0][0]+(P[1][0]-P[0][0])*t)+'" y1="'+f2(P[0][1]+(P[1][1]-P[0][1])*t)+'" x2="'+f2(P[3][0]+(P[2][0]-P[3][0])*t)+'" y2="'+f2(P[3][1]+(P[2][1]-P[3][1])*t)+'" stroke="'+ink(.16)+'" stroke-width=".5"/><line x1="'+f2(P[0][0]+(P[3][0]-P[0][0])*t)+'" y1="'+f2(P[0][1]+(P[3][1]-P[0][1])*t)+'" x2="'+f2(P[1][0]+(P[2][0]-P[1][0])*t)+'" y2="'+f2(P[1][1]+(P[2][1]-P[1][1])*t)+'" stroke="'+ink(.16)+'" stroke-width=".5"/>';}
+    v+='<line x1="'+f2(P[0][0])+'" y1="'+f2(P[0][1])+'" x2="'+f2(P[2][0])+'" y2="'+f2(P[2][1])+'" stroke="'+ink(.5)+'" stroke-width=".8"/><line x1="'+f2(P[1][0])+'" y1="'+f2(P[1][1])+'" x2="'+f2(P[3][0])+'" y2="'+f2(P[3][1])+'" stroke="'+ink(.5)+'" stroke-width=".8"/>';
+    P.forEach(q=>v+='<circle cx="'+f2(q[0])+'" cy="'+f2(q[1])+'" r="1.6" fill="#fff4e6"/>');v+='</g>';}
+  v+='</g><circle cx="'+cxp+'" cy="'+cyp+'" r="3" fill="#fff4e6"/><circle cx="'+cxp+'" cy="'+cyp+'" r="9" fill="none" stroke="'+ink(.5)+'" stroke-width=".6"/>';
+  if(sailFX){for(let k=0;k<22;k++){const a=Math.random()*6.283,dd=R0*(0.6+Math.random()*0.7);v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="1.2" fill="#fff4e6" opacity="0"><animate attributeName="cx" from="'+cxp+'" to="'+f2(cxp+Math.cos(a)*dd)+'" dur="1.3s" begin=".15s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="cy" from="'+cyp+'" to="'+f2(cyp+Math.sin(a)*dd)+'" dur="1.3s" begin=".15s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="opacity" values="0;1;0" dur="1.3s" begin=".15s" fill="freeze"/></circle>';}sailFX=0;}
   return v+'</svg>';}
 function renderSailOv(){const ov=document.getElementById('sailOv'),b=document.getElementById('sailBody'),can=(S.phPend||0)>=sailCost();
   b.innerHTML='<div class="gTop"><div class="gLab">PHOTON SAIL</div><div class="gL"><span>光子</span><b>'+fmt(S.phPend||0)+'</b></div><div class="gRes">航路を引き直す前に、ためた光子で帆を張れる。光子は持ち越せない。</div></div>'+
