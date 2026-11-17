@@ -50,7 +50,7 @@ function chalP(){return CHAL[S.chal]&&CHAL[S.chal].p?CHAL[S.chal].p[(S.chalLv||1
 function sp(id){return STAR_P[id].p[Math.max(1,Math.min(3,S.chalTier[id]||1))-1];}   // 上位の星の強さ（越えた段で変わる）
 function starText(id){return STAR_P[id]?STAR_P[id].t(sp(id)):'';}
 function wMult(){return 1+0.01*S.W;}   // 使わずに持っている歪み1つにつき生産+1%
-function globalMult(){return Math.pow(timeGamma(S.stage),1+0.1*law('td'))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+sp('pL')*S.stage:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
+function globalMult(){return memMult()*Math.pow(timeGamma(S.stage),1+0.1*law('td'))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+sp('pL')*S.stage:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
 function achMult(){return 1+ACH_BONUS*S.ach.length;}
 function resonant(){const c={};for(const i of PRODI){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
@@ -73,7 +73,8 @@ function batteryCap(){return batteryCapRaw(prodRate());}
 function batteryRate(){return 0.03+(has('e2')?0.02:0);}
 function windMigrate(){if(!(S.wind>0))return;const P=prodRate();S.windT=(S.windT||0)+Math.min(P>0?S.wind/(P*(WIND_X-1)):0,offlineCap()*(1-OFF_NOW)/(WIND_X-1));delete S.wind;}   // 版6の途中まで追い風はエネルギーで貯めていた。留守の上限に見合う時間までに切り詰めて移す
 function offlineCap(){return (has('c7')?sp('c7'):has('c3')?24:has('c1')?8:2)*3600;}
-function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22))*wMultAt(glow('wm'));}
+function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22));}
+function memMult(){return 1+MW_K/100*glow('mw')*Math.max(0,S.L||0);}   // 記憶の重み
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
 function anchorCut(){return 0;}
 // 故郷の時間の速まり：9が（12＋光の上限）個までは γ のまま、その先は γ の TIME_K 乗でゆるやかに
@@ -148,7 +149,10 @@ function resetRun(){   // 再出発・航海の開始・航路の引き直しで
 /* ② チャレンジ：上位の星を灯す */
 // 段1は②（航海に出る前）に、段2・3は航海に出てから挑む（2026-11-16）。航海中に挑むと、航海をいったん預けて故郷への周回に入り、終わると航海に戻る
 function voyaged(){return S.voy||!!S.voyStash||S.uni>0||S.found>0;}
-function canChallengeAt(lv){if(!lv)return false;if(lv===1)return !S.voy&&!S.voyStash&&(S.cleared||S.restarts>0);return voyaged()&&!S.chal;}
+// 段1は、故郷に着いた回数で1つずつ挑めるようになる（2026-11-17）：灯した星の数＋1 の CHAL_GATE 倍の回数着くと次に挑める。②の周回を15〜20回にするため
+function arrivals(){return S.restarts+(S.cleared?1:0);}
+function chalGateNeed(){return CHAL_GATE*((S.lit||[]).length+1);}
+function canChallengeAt(lv){if(!lv)return false;if(lv===1)return !S.voy&&!S.voyStash&&(S.cleared||S.restarts>0)&&arrivals()>=chalGateNeed();return voyaged()&&!S.chal;}
 function canChallenge(id){return id?canChallengeAt(chalNext(id)):(!S.voy&&(S.cleared||S.restarts>0));}
 const STASH_KEYS=['route','ph','phDev','phBuy','sail','E','Erun','dev','frac','upg','tier','stage','maxStage','battery','batDep','over','peakP','runTime','pulse','burst','skills','prevSkills','loopTime','W','prestiges','sig','years','dist','region','sling','coast','crit','cleared','lost','greyLost','vdist','vL','lastBuy','nebT','fork','forkT'];
 function voyStashSave(){const o={};for(const k of STASH_KEYS)o[k]=JSON.parse(JSON.stringify(S[k]===undefined?null:S[k]));S.voyStash=o;S.voy=false;}
@@ -192,7 +196,7 @@ function voyAdvance(d){if(!S.route)routeInit();const rc=S.route.cur;if(rc==='neb
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function redrawReady(){return S.voy&&tGain()>=Math.max(3,Math.ceil(S.tTotal*REDRAW_R));}
 // 分かれ道：得られるもの（そのときの強さに合わせる）
-function forkText(id){return id==='cluster'?'この宙域の残光 ×2':id==='wreck'?'引き直しの航跡 +'+Math.round(ROUTE_WRECK*100)+'%':id==='neb'?'この宙域を ×'+ROUTE_NEB+' の速さで':id==='calm'?'追い風 +'+Math.round(ROUTE_CALM/60)+'分':id==='rough'?'速さ ×'+ROUTE_ROUGH+'・生産 ×'+ROUTE_ROUGH_P:'記憶のかけら +1';}
+function forkText(id){return id==='cluster'?'この宙域の記憶 ×2':id==='wreck'?'引き直しの航跡 +'+Math.round(ROUTE_WRECK*100)+'%':id==='neb'?'この宙域を ×'+ROUTE_NEB+' の速さで':id==='calm'?'追い風 +'+Math.round(ROUTE_CALM/60)+'分':id==='rough'?'速さ ×'+ROUTE_ROUGH+'・生産 ×'+ROUTE_ROUGH_P:'記憶のかけら +1';}
 function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0)S.fork=null;}}   // 窓の下の分岐図は、宙域の境目に来たときだけ出る
 function chooseFork(id){if(!S.voy||!S.route||!S.route.opts.includes(id))return false;S.route.pick=id;S.fork=null;S.st.forks=(S.st.forks||0)+1;return true;}   // 次の宙域へ向かう星系を選ぶ（境目に来たときに効く）
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))):0;}

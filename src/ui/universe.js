@@ -51,13 +51,13 @@ function renderUniverse(){
       '<div class="note" style="margin:4px 0 8px">'+(nx?nx.text:(L.id==='lc'?'光の上限を書き換えきった。9を22個並べると、光になれる。':'書き換えきった。'))+'</div>';
     if(L.id==='ut'&&l>0)d+='<div class="uTint">'+UNI_TINT.slice(0,l+1).map((t,i)=>'<button data-tint="'+i+'" aria-label="'+t.name+'" aria-pressed="'+(S.uTint===i)+'"><i style="background:'+rgb(t.a,1)+';box-shadow:0 0 8px '+rgb(t.a,0.7)+'"></i>'+t.name+'</button>').join('')+'</div>';
     if(nx)d+='<button class="act" id="uLaw"'+(S.U<nx.cost?' disabled':'')+' style="border-color:rgba(200,210,255,.6);color:#dfe4ff">書き換える　法則 '+nx.cost+'</button>';}
-  d+=canFold()?'<button class="act" id="uFold" style="margin-top:10px">宇宙を畳む　法則 +'+uGain()+'</button>':'<div class="note" style="margin-top:8px">宇宙の果てに着くと、宇宙を畳める。距離・航跡とその強化は戻り、見つけた色と装置・灯した星・残光の強化・実績は残る。</div>';
+  d+=canFold()?'<button class="act" id="uFold" style="margin-top:10px">宇宙を畳む　法則 +'+uGain()+'</button>':'<div class="note" style="margin-top:8px">宇宙の果てに着くと、宇宙を畳める。距離・航跡とその強化は戻り、見つけた色と装置・灯した星・記憶の強化・実績は残る。</div>';
   pbody.innerHTML='<div class="phead"><span class="lab">UNIVERSE '+roman(S.uni+1)+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">法則 '+fmt(S.U)+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
   pbody.querySelectorAll('[data-law]').forEach(g=>g.onclick=()=>{uniSel=g.dataset.law;uniPast=-1;renderUniverse();});
   pbody.querySelectorAll('[data-up]').forEach(g=>g.onclick=()=>{uniPast=+g.dataset.up;renderUniverse();});
   pbody.querySelectorAll('[data-tint]').forEach(b=>b.onclick=()=>{S.uTint=+b.dataset.tint;save();renderUniverse();});
   const bk=document.getElementById('uBack');if(bk)bk.onclick=()=>{uniPast=-1;renderUniverse();};
   const lb=document.getElementById('uLaw');if(lb)lb.onclick=()=>{if(buyLaw(uniSel)){SND.play('light');fla=Math.max(fla,0.12);renderPanel(true);paintSpeed();}};
-  const fb=document.getElementById('uFold');if(fb)fb.onclick=()=>confirmBox('宇宙を畳む','法則を '+uGain()+' 得て、新しい宇宙で故郷から航海をやり直す。距離・航跡とその強化は戻る。見つけた色と装置・灯した星・残光の強化・実績は残る。',()=>startFold());
+  const fb=document.getElementById('uFold');if(fb)fb.onclick=()=>confirmBox('宇宙を畳む','法則を '+uGain()+' 得て、新しい宇宙で故郷から航海をやり直す。距離・航跡とその強化は戻る。見つけた色と装置・灯した星・記憶の強化・実績は残る。',()=>startFold());
 }
 function durText(sec){const h=sec/3600;return h>=24?(h/24).toFixed(1)+'日':h>=1?h.toFixed(1)+'時間':Math.max(1,Math.round(sec/60))+'分';}

@@ -21,7 +21,7 @@ function renderStats(){const key='st|'+Math.floor(S.st.play/30)+'|'+S.st.loops.l
     stRow('窓をタップした回数',S.taps.toLocaleString('ja-JP'))+stRow('いちばん多く持ったエネルギー',fmt(S.maxE||S.E))+stRow('実績',S.ach.length+' / '+ACHIEVEMENTS.length);
   h+=stHead('HOME')+stRow('緊急停止した回数',st.stops.toLocaleString('ja-JP'))+stRow('得た歪みの合計',fmt(S.wTotal||0))+stRow('いま覚えているスキル',S.skills.length+' / '+SKILLS.filter(k=>!k.glow).length);
   if(layerOpen('star')){const L=st.loops,best=L.length?Math.min(...L.map(l=>l.sec)):0,arr=S.restarts+(S.cleared||S.voy?1:0);
-    h+=stHead('STAR')+stRow('故郷に着いた回数',arr)+stRow('再出発した回数',S.restarts)+stRow('得た残光の合計',fmt(S.lTotal||0))+
+    h+=stHead('STAR')+stRow('故郷に着いた回数',arr)+stRow('再出発した回数',S.restarts)+stRow('得た記憶の合計',fmt(S.lTotal||0))+
       (L.length?stRow('故郷までの1周（いちばん短い）',durLong(best))+stRow('故郷までの1周（いちばん最近）',durLong(L[L.length-1].sec)):'')+
       stRow('灯した上位の星',S.lit.length+' / '+SKILLS.filter(k=>k.glow).length);
     if(L.length>=2)h+='<div class="note" style="margin:8px 0 0">故郷までの1周の時間（灯った点がいちばん短い周）</div>'+loopChart(L);

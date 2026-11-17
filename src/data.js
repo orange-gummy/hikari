@@ -145,17 +145,20 @@ const DEST=[{name:'隣の銀河',ly:2.5e6},{name:'銀河群',ly:3e7},{name:'大�
 const VOY_BASE=60;        // 航海の距離の伸びの基準倍率
 const TRAIL=[  // 航跡の強化
   {id:'vs',name:'航海の速さ',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で進む距離 ×'+fmtN(Math.pow(2.7,l))},
-  {id:'ls',name:'残光の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'航海で入る残光 ×'+Math.pow(2,l)},
+  {id:'ls',name:'記憶の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'航海で入る記憶 ×'+Math.pow(2,l)},
   {id:'pf',name:'光子の灯り',max:0,cost:l=>4*Math.pow(2,l),text:l=>'光子の列の生産 ×'+fmtN(Math.pow(PF_X,l))},   // 2026-11-17：帆が毎回同じ段で止まらないように、航海ごとに光子が育つ
   {id:'ps',name:'先回り',max:5,cost:l=>10*Math.pow(3,l),text:l=>'航路を引き直したあと、段階'+(2*l)+'から始まる'}
 ];
 function fmtN(n){return n<1e4?String(Math.round(n)):n.toExponential(1).replace('+','');}
 function colRGB(c){return c<7?COLORS[c].rgb:NEW_COLORS[c-7].rgb;}   // 装置の色（7〜は航海で見つけた色）
 const RESTART_BASE=30;   // 1回着くごとの残光。再出発の回数1回につき+10%
-function stageMultAt(l){return Math.max(50,STAGE_MULT*Math.pow(0.75,l));}
+const RM_K=+((typeof process!=='undefined'&&process.env.RM_K)||0.85),RM_MIN=+((typeof process!=='undefined'&&process.env.RM_MIN)||100);
+function stageMultAt(l){return Math.max(RM_MIN,STAGE_MULT*Math.pow(RM_K,l));}
+const CHAL_GATE=+((typeof process!=='undefined'&&process.env.CHAL_GATE)||2);
+const MW_K=+((typeof process!=='undefined'&&process.env.MW_K)||1);   // 記憶の重み：1段ごとに、持っている記憶1つにつき生産 +1%
 function wMultAt(l){return l<=3?[1,2,5,10][l]:10*Math.pow(2,l-3);}
 const AFTERGLOW=[  // max:0 は上限なし
-  {id:'wm',name:'歪みの増幅',max:0,cost:l=>5*Math.pow(2,l),text:l=>'得られる歪み ×'+wMultAt(l),what:'緊急停止で得る歪み',val:l=>'×'+wMultAt(l),hint:'スキルを早く覚えられる'},
+  {id:'mw',name:'記憶の重み',max:0,cost:l=>5*Math.pow(2,l),text:l=>'使わずに持っている記憶1つにつき、生産 +'+(MW_K*l)+'%',what:'持っている記憶1つあたりの生産',val:l=>'+'+(MW_K*l)+'%',hint:'灯さずに持っておくほど強い'},   // 2026-11-17：歪みの増幅をやめ、持っている記憶で強くなる（灯すか持つかの選択）
   {id:'sk',name:'船内時間',max:0,cost:l=>5*Math.pow(2,l),text:l=>'船内時間 ×'+(1+0.25*l)+'。生産も故郷の時間も速くなる',what:'船内時間',val:l=>'×'+(1+0.25*l),hint:'生産も故郷の時間も速くなる'},
   {id:'rm',name:'航路の記憶',max:0,cost:l=>5*Math.pow(2,l),text:l=>'光速の99%より先の加速コストの上がり方 ×'+Math.round(stageMultAt(l)),what:'99%より先の加速、1段ごとの値段',val:l=>'×'+Math.round(stageMultAt(l)),hint:'周回が短くなる'},
   {id:'am',name:'自動化の記憶',max:2,cost:l=>[5,10][l],text:l=>['','自動購入（太陽帆〜真空エネルギー炉）を覚えた状態で始まる','加速・TIER・流星群の自動化も覚えた状態で始まる'][l],what:'はじめから覚えている自動化',val:l=>['なし','装置の購入','加速・TIER・流星群も'][l],hint:'手を動かさなくても進む'}
@@ -250,9 +253,9 @@ const ACHIEVEMENTS=[
   ['rs5','五度目の帰り道','再出発を5回する',s=>s.restarts>=5],
   ['rs10','何度でも','再出発を10回する',s=>s.restarts>=10],
   ['fast','帰り道を覚えた','出発から1日以内に故郷に着く',s=>s.cleared&&s.loopTime<86400],
-  ['lit1','灯す','残光で上位の星を灯す',s=>s.lit.length>=1],
+  ['lit1','灯す','記憶で上位の星を灯す',s=>s.lit.length>=1],
   ['lit8','星座','上位の星を8つすべて灯す',s=>s.lit.length>=8],
-  ['l100','残光を集める','残光を合計100集める',s=>s.lTotal>=100],
+  ['l100','記憶を集める','記憶を合計100集める',s=>s.lTotal>=100],
   ['rm3','見知った道','航路の記憶を3段にする',s=>(s.ag.rm||0)>=3],
   ['voy','旅立ち','さらに遠くへ出る',s=>s.voy],
   ['g1','知らない色','隣の銀河に着く',s=>s.found>=1],
