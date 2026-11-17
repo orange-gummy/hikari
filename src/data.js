@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='2026.11.17.13';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
+const VERSION='2026.11.17.14';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
 /* =====================================================================
    DATA  ― 数値・台本・色の定義（将来 data/*.js に切り出す）
    ===================================================================== */
@@ -142,7 +142,7 @@ const SKILLS=[
 /* 再出発（第二層）：故郷に着いたあと、もう一度遠い宙域から船を出す（強くてニューゲーム） */
 // ③ さらに遠くへ：故郷を出発点に、目的地を順に目指す長い航海
 const DEST=[{name:'隣の銀河',ly:2.5e6},{name:'銀河群',ly:3e7},{name:'大規模構造',ly:5e8},{name:'宇宙の果て',ly:4.65e10}];
-const VOY_BASE=+((typeof process!=='undefined'&&process.env.VOY_BASE)||60);        // 航海の距離の伸びの基準倍率
+const VOY_BASE=+((typeof process!=='undefined'&&process.env.VOY_BASE)||1);        // 航海の距離の伸びの基準倍率
 const TRAIL=[  // 航跡の強化
   {id:'vs',name:'航海の速さ',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で進む距離 ×'+fmtN(Math.pow(2.7,l))},
   {id:'ls',name:'記憶の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'航海で入る記憶 ×'+Math.pow(2,l)},
