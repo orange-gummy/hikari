@@ -24,12 +24,13 @@ let devGlow=0,SKYV=0;   // SKYV：晴れた昼の空の濃さ（前のコマの�
 let BAND=null;
 function bandCanvas(w,h){if(BAND&&BAND.w===w&&BAND.h===h)return BAND.c;const c=document.createElement('canvas');c.width=Math.ceil(w*DPR);c.height=Math.ceil(h*DPR);const x=c.getContext('2d');x.scale(DPR,DPR);
   let seed=11;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-  const dot=(px,py,r,col,a)=>{const g=x.createRadialGradient(px,py,0,px,py,r*3);g.addColorStop(0,'rgba('+col+','+a+')');g.addColorStop(1,'rgba('+col+',0)');x.fillStyle=g;x.beginPath();x.arc(px,py,r*3,0,6.283);x.fill();};
-  const y0=h*0.36,n=Math.round(1600*w/420);
-  for(let i=0;i<n;i++){const u=rnd(),xx=u*w,wd=Math.exp(-Math.pow((u-0.62)*3.2,2)),yy=y0+(rnd()-0.5)*(10+38*wd)-(u-0.5)*22,k=Math.abs(rnd()-0.5);dot(xx,yy,0.35+rnd()*0.6,k<0.2?'255,236,215':'200,180,255',(0.15+0.55*wd)*rnd());}
-  const g=x.createRadialGradient(w*0.62,y0-3,0,w*0.62,y0-3,60);g.addColorStop(0,'rgba(255,236,220,.22)');g.addColorStop(1,'rgba(255,236,220,0)');x.fillStyle=g;x.fillRect(0,0,w,h);
+  // 星は小さな点でくっきり描き、にじみは一部の明るい星だけに（2026-11-17。全部をぼかしの丸で描いていて、銀河がぼやけて見えていた）
+  const dot=(px,py,r,col,a)=>{if(a>0.35&&r>0.6){const g=x.createRadialGradient(px,py,0,px,py,r*2.6);g.addColorStop(0,'rgba('+col+','+(a*0.35)+')');g.addColorStop(1,'rgba('+col+',0)');x.fillStyle=g;x.beginPath();x.arc(px,py,r*2.6,0,6.283);x.fill();}x.fillStyle='rgba('+col+','+a+')';x.beginPath();x.arc(px,py,r*0.7,0,6.283);x.fill();};
+  const y0=h*0.36,n=Math.round(2600*w/420);
+  for(let i=0;i<n;i++){const u=rnd(),xx=u*w,wd=Math.exp(-Math.pow((u-0.62)*3.2,2)),yy=y0+(rnd()-0.5)*(10+38*wd)-(u-0.5)*22,k=Math.abs(rnd()-0.5);dot(xx,yy,0.35+rnd()*0.6,k<0.2?'255,236,215':'200,180,255',Math.min(1,(0.2+0.7*wd)*rnd()));}
+  const g=x.createRadialGradient(w*0.62,y0-3,0,w*0.62,y0-3,60);g.addColorStop(0,'rgba(255,236,220,.12)');g.addColorStop(1,'rgba(255,236,220,0)');x.fillStyle=g;x.fillRect(0,0,w,h);
   BAND={c,w,h};return c;}
-function drawBand(){if(!S.voy||LANDED||HOMEA||FR.w<=0)return;const c=bandCanvas(FR.w,FR.h);cx.save();cx.globalAlpha=0.85;cx.drawImage(c,FR.x,FR.y+Math.sin(T*0.002)*2,FR.w,FR.h);cx.restore();}
+function drawBand(){if(!S.voy||LANDED||HOMEA||FR.w<=0)return;const c=bandCanvas(FR.w,FR.h);cx.save();cx.globalAlpha=0.85;cx.drawImage(c,FR.x,FR.y,FR.w,FR.h);cx.restore();}
 let FRK=1,FRA=0,FRP=0;   // FRK：1コマ（60分の1秒）を1とした経過時間（流れ星が使う）
 // 演出の多くは1コマずつ進むので、画面の書き換えの速さで演出の速さが変わっていた。書き換えに関係なく平均60コマ/秒で進める（2026-11-16）：
 // 120Hz・144Hz・240Hz ではコマを間引き、30Hz では1回の書き換えで2コマ進める（重い端末では2コマ目を省き、遅れを溜めない）
