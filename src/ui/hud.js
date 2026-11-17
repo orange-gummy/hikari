@@ -18,10 +18,16 @@ function paintCons2(){const on=!!(S.voy||S.found>0);if(on!==cons2On){cons2On=on;
 function arcD(r,a0,a1){return 'M'+(88+r*Math.cos(a0)).toFixed(2)+' '+(88+r*Math.sin(a0)).toFixed(2)+'A'+r+' '+r+' 0 0 1 '+(88+r*Math.cos(a1)).toFixed(2)+' '+(88+r*Math.sin(a1)).toFixed(2);}
 const TKG=el('g',{},ringEl);for(let i=0;i<72;i++){const a=i/72*6.283,r2=i%6===0?80:83;el('line',{x1:88+86*Math.cos(a),y1:88+86*Math.sin(a),x2:88+r2*Math.cos(a),y2:88+r2*Math.sin(a),stroke:'rgba(236,238,242,0.3)','stroke-width':0.5},TKG);}
 const SEG=[];for(let i=0;i<12;i++){const a0=-1.5708+i/12*6.283+0.05;SEG.push(el('path',{d:arcD(74,a0,a0+6.283/12-0.1),fill:'none','stroke-width':2.2,'stroke-linecap':'round'},ringEl));}
+/* 9が12個で1周するごとに、リングの外へ細い光の輪を1本（2026-11-17）。PHOTON の表示では帆の輪と重なるので出さない */
+const LAPS=[];ringEl.style.overflow='visible';
+function paintLaps(k){while(LAPS.length<k){const r=79+LAPS.length*3.4;LAPS.push([el('circle',{cx:88,cy:88,r,fill:'none',stroke:'rgb(255,250,240)','stroke-width':0.6},ringEl),el('circle',{cx:88,cy:88-r,r:1.3,fill:'#fff'},ringEl)]);}
+  LAPS.forEach((c,j)=>{const on=j<k,al=on?Math.max(0.12,0.42-0.05*j):0;c[0].setAttribute('stroke-opacity',al.toFixed(2));c[1].setAttribute('opacity',on?(al+0.3).toFixed(2):'0');});}
 function nextMemIndex(){if(S.cleared)return -1;if(S.lost<6)return S.lost;if(!S.greyLost)return 6;return -1;}
 function paintColorUI(ag){
   const n=nines(S.stage);
-  for(let i=0;i<12;i++){if(i<n-12)SEG[i].setAttribute('stroke','rgb(255,250,240)');else if(i<n){const ci=i%6;SEG[i].setAttribute('stroke',rgb(mix(COLORS[ci].rgb,G,1-A[ci]),1));}else SEG[i].setAttribute('stroke','rgba(255,255,255,0.12)');}
+  if(n<=24){for(let i=0;i<12;i++){if(i<n-12)SEG[i].setAttribute('stroke','rgb(255,250,240)');else if(i<n){const ci=i%6;SEG[i].setAttribute('stroke',rgb(mix(COLORS[ci].rgb,G,1-A[ci]),1));}else SEG[i].setAttribute('stroke','rgba(255,255,255,0.12)');}}
+  else{const m=n%12;for(let i=0;i<12;i++)SEG[i].setAttribute('stroke',i<m?'rgb(255,250,240)':'rgba(255,250,240,0.4)');}   // 9が25個から：いまの周の分だけ明るく
+  paintLaps(phView()?0:Math.floor(n/12));
   const nm=nextMemIndex();let warn=false;if(nm>=0&&nm<6){warn=S.years/LOSE_YEARS[nm]>0.85;}else if(nm===6)warn=S.stage>=GREY_STAGE-1;
   for(let i=0;i<7;i++){const a=A[i],col=mix(COLORS[i].rgb,[90,92,100],1-a);let op=1;if(warn&&i===nm&&A[i]>0.5)op=0.35+0.65*Math.abs(Math.sin(T*0.12));
     CD[i].setAttribute('fill',rgb(POP[i]>0.3?COLORS[i].rgb:col,1));CD[i].setAttribute('opacity',op.toFixed(2));CD[i].setAttribute('r',(1.4+1.0*Math.max(a,POP[i])+POP[i]*2.2).toFixed(2));CHL[i].setAttribute('fill',rgb(COLORS[i].rgb,(0.18*a*op+POP[i]*0.3).toFixed(3)));CHL[i].setAttribute('r',(6+POP[i]*7).toFixed(2));}
@@ -101,7 +107,8 @@ function paintHUD(){const vt=document.getElementById('viewT'),on=S.voy&&!S.chal;
   const nm=nextMemIndex(),m=document.getElementById('mem');if(nm>=0&&nm<6){m.textContent='記憶が薄れるまで あと'+fmtY(Math.max(0,LOSE_YEARS[nm]-S.years))+'年';m.style.color=S.years/LOSE_YEARS[nm]>0.85?'#ffb38a':'';}else if(nm===6){m.textContent='最後の記憶が揺らいでいる';m.style.color='#ffb38a';}else m.textContent='';}
   paintRoute();}
 /* 上の速さの表示：9は省略せずに並べ、長くなったら小さくして折り返す（2026-11-17） */
-function hvSize(h,t){const n=t.length;h.style.fontSize=(n<=7?26:n<=10?21:n<=13?17:n<=16?14:12)+'px';h.style.wordBreak=n>16?'break-all':'';h.style.lineHeight=n>16?'1.2':'';}
+function hvSize(h,t){const n=t.length,long=n>16;let f=n<=7?26:n<=10?21:n<=13?17:long?12:14;h.style.wordBreak=long?'break-all':'';h.style.lineHeight=long?'1.2':'';h.style.fontSize=f+'px';
+  if(long&&h.clientWidth>0){const key=t+'|'+h.clientWidth;if(h.dataset.fit===key){h.style.fontSize=h.dataset.fs+'px';return;}while(f>6&&h.scrollHeight>f*1.2*2+2){f-=0.5;h.style.fontSize=f+'px';}h.dataset.fit=key;h.dataset.fs=f;}}   // 長いときは2行に収まる大きさまで小さくする（上の表示の高さを変えない）
 function paintSpeed(){const s=S.stage,g=fmtG(timeGamma(s)),h=document.getElementById('hV'),dil=s>=DILATION_STAGE;
   document.getElementById('hLab').textContent='VELOCITY';h.textContent=s<=5?KMS[s].toLocaleString('ja-JP')+' km/s':stagePct(s)+'%\u00a0c';hvSize(h,h.textContent);
   document.getElementById('hG').textContent=(s>=13?'9 × '+nines(s)+'　':'')+(dil?'船の1秒＝外の'+g+'秒':s<=5?'光速の'+stagePct(s)+'%':'秒速'+kmsOf(s).toLocaleString('ja-JP')+'km');
