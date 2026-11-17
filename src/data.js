@@ -144,15 +144,17 @@ const SKILLS=[
 const DEST=[{name:'隣の銀河',ly:2.5e6},{name:'銀河群',ly:3e7},{name:'大規模構造',ly:5e8},{name:'宇宙の果て',ly:4.65e10}];
 const VOY_BASE=+((typeof process!=='undefined'&&process.env.VOY_BASE)||1);        // 航海の距離の伸びの基準倍率
 const TRAIL=[  // 航跡の強化
-  {id:'vs',name:'航海の速さ',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で進む距離 ×'+fmtN(Math.pow(2.7,l))},
+  {id:'va',name:'航跡の加速',max:0,cost:l=>3*Math.pow(2,l),text:l=>'航海で9を1つ増やす値段の上がり方 ×'+fmtN(vaMultAt(l))},   // 2026-11-17：「航海の速さ（距離 ×2.7）」から作り替え。③でも9の数が伸びるように
   {id:'ls',name:'記憶の源',max:0,cost:l=>5*Math.pow(2,l),text:l=>'航海で入る記憶 ×'+Math.pow(2,l)},
   {id:'pf',name:'光子の灯り',max:0,cost:l=>4*Math.pow(2,l),text:l=>'光子の列の生産 ×'+fmtN(Math.pow(PF_X,l))},   // 2026-11-17：帆が毎回同じ段で止まらないように、航海ごとに光子が育つ
-  {id:'ps',name:'先回り',max:5,cost:l=>10*Math.pow(3,l),text:l=>'航路を引き直したあと、段階'+(2*l)+'から始まる'}
+  {id:'ps',name:'先回り',max:4,cost:l=>10*Math.pow(3,l),text:l=>'引き直したあと、前の航海の9の数の'+(20*l)+'%から始まる'}   // 2026-11-17：「段階2l から」は光速の90%までで意味がなかった
 ];
 function fmtN(n){return n<1e4?String(Math.round(n)):n.toExponential(1).replace('+','');}
 function colRGB(c){return c<7?COLORS[c].rgb:NEW_COLORS[c-7].rgb;}   // 装置の色（7〜は航海で見つけた色）
 const RESTART_BASE=30;   // 1回着くごとの残光。再出発の回数1回につき+10%
 const RM_K=+((typeof process!=='undefined'&&process.env.RM_K)||0.85),RM_MIN=+((typeof process!=='undefined'&&process.env.RM_MIN)||100);
+const VA_K=+((typeof process!=='undefined'&&process.env.VA_K)||0.9),VA_MIN=+((typeof process!=='undefined'&&process.env.VA_MIN)||20);
+function vaMultAt(l){return Math.max(VA_MIN,stageMultAt(glow('rm'))*Math.pow(VA_K,l));}   // 航海の1段ごとの倍率（航跡の加速で下がる）
 function stageMultAt(l){return Math.max(RM_MIN,STAGE_MULT*Math.pow(RM_K,l));}
 const CHAL_GATE=+((typeof process!=='undefined'&&process.env.CHAL_GATE)||2);
 const MW_K=+((typeof process!=='undefined'&&process.env.MW_K)||1);   // 記憶の重み：1段ごとに、持っている記憶1つにつき生産 +1%
