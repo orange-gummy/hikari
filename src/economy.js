@@ -172,6 +172,7 @@ function sailMult(){return S.voy&&!S.chal?Math.pow(SAIL_X,S.sail||0):1;}
 function phRate(){return S.voy&&!S.chal?(S.phDev[0]||0)*PH_DEV[0].rate*sailMult():0;}
 function phCost(k){return PH_DEV[k].cost*Math.pow(PH_DEV[k].g,S.phBuy[k]||0);}
 function phBuyDev(k){if(!phOpen(k)||S.ph<phCost(k))return false;S.ph-=phCost(k);S.phBuy[k]=(S.phBuy[k]||0)+1;S.phDev[k]=(S.phDev[k]||0)+1;return true;}
+function phGain(sec,min){if(!S.voy||S.chal)return 0;const g=Math.max(min,phRate()*sec);S.ph+=g;return g;}   // タップと流れ星で入る光子
 function sailCost(){return SAIL_COST*Math.pow(SAIL_G,S.sail||0);}
 function raiseSail(){if(!S.voy||S.chal||S.ph<sailCost())return false;S.ph-=sailCost();S.sail=(S.sail||0)+1;FXQ.sail=S.sail;return true;}
 function phReset(){S.ph=0;S.phDev=[1,0,0,0];S.phBuy=[0,0,0,0];S.sail=0;}

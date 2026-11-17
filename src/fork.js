@@ -17,7 +17,11 @@ function routeSym(id,col,k){k=k||1;const sw=(1/k).toFixed(2),r=v=>(v*k).toFixed(
   if(id==='rough')return '<path d="M'+r(-6)+' 0L'+r(-3)+' '+r(-4)+'L0 '+r(3)+'L'+r(3)+' '+r(-4)+'L'+r(6)+' 0" fill="none" stroke="'+col+'" stroke-width="1"/>';
   return '<circle r="'+r(5)+'" fill="none" stroke="'+col+'" stroke-width="1" stroke-dasharray="2 2"/><circle r="'+r(1)+'" fill="'+col+'"/>';}
 // 計器の分岐図として：窓の下の端に、細い線の枝分かれと記号
-function forkGauge(f){const W=FR.w,H=FR.h,n=f.opts.length,gw=Math.min(W-28,340),rb=RC.y-FR.y+(ringEl.getBoundingClientRect().height/2||60),gh=Math.max(40,Math.min(n===3?84:64,H-rb-46)),x0=(W-gw)/2,y0=H-gh-22,bx=x0+gw*(W<500?0.18:0.28),ym=y0+gh/2,ex=x0+gw*(W<500?0.34:0.5);
+// 窓の下にリング（と ENERGY · PHOTON の切り替え）との間の高さが足りないときは、分岐図をやめて一行にする（2026-11-17。スマホで文字がリングに重なっていた）
+function forkRow(f){const W=FR.w,H=FR.h,ink=a=>'rgba(236,238,242,'+a+')';   // 高さが足りないときは、左下の隅に小さな入口だけ（押すと GALAXY の VOYAGE に航路図）
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><g class="fkOpt" data-fk="__map" tabindex="0" role="button" aria-label="次の宙域を選ぶ"><rect x="6" y="'+(H-40)+'" width="120" height="34" fill="transparent"/><text x="16" y="'+(H-25)+'" font-size="8.5" letter-spacing="1.5" fill="'+ink(0.5)+'" font-family="Michroma,Jura,sans-serif">NEXT SECTOR</text><text x="16" y="'+(H-11)+'" font-size="10.5" fill="#f6f7fb">道が '+f.opts.length+' つ　›</text></g></svg>';}
+function forkGauge(f){const W=FR.w,H=FR.h,n=f.opts.length,gw=Math.min(W-28,340),rb=RC.y-FR.y+(ringEl.getBoundingClientRect().height/2||60)+(S.voy&&!S.chal?30:0),gh=Math.max(40,Math.min(n===3?84:64,H-rb-46)),x0=(W-gw)/2,y0=H-gh-22,bx=x0+gw*(W<500?0.18:0.28),ym=y0+gh/2,ex=x0+gw*(W<500?0.34:0.5);
+  if(H-rb-46<(n===3?70:52))return forkRow(f);
   const ink=a=>'rgba(236,238,242,'+a+')',tight=n>1&&gh/(n-1)<34;
   let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'+fkDefs()+
     '<text x="'+f1(x0)+'" y="'+f1(y0-8)+'" font-size="8.5" letter-spacing="1.5" fill="'+ink(0.45)+'" font-family="Michroma,Jura,sans-serif">NEXT SECTOR</text>'+
@@ -33,7 +37,7 @@ function paintFork(){const f=S.fork,show=f&&S.voy&&!BRK&&!RST&&!climax&&!FOLD&&!
   if(!show){if(forkKey){forkKey='';forkEl.innerHTML='';forkEl.classList.remove('on');document.body.classList.remove('forkOn');}return;}
   const key=f.opts.join(',')+'|'+Math.round(FR.w)+'x'+Math.round(FR.h);
   if(key!==forkKey){forkKey=key;forkEl.innerHTML=forkGauge(f);forkEl.classList.add('on');document.body.classList.add('forkOn');
-    forkEl.querySelectorAll('[data-fk]').forEach(g=>{const go=e=>{e.stopPropagation();e.preventDefault();pickFork(g.dataset.fk);};g.addEventListener('pointerdown',e=>e.stopPropagation());g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e);});});}
+    forkEl.querySelectorAll('[data-fk]').forEach(g=>{const go=e=>{e.stopPropagation();e.preventDefault();if(g.dataset.fk==='__map'){curTab='voy';renderPanel(true);return;}pickFork(g.dataset.fk);};g.addEventListener('pointerdown',e=>e.stopPropagation());g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e);});});}
   // 残り時間：中心の小さな輪が欠けていく
   const lf=forkEl.querySelector('.fkLife');if(lf){const k=Math.max(0,f.life/FORK_LIFE);const L=+lf.getAttribute('r')*6.283;lf.setAttribute('stroke-dasharray',(L*k).toFixed(1)+' '+L.toFixed(1));}
   forkEl.style.opacity=f.life<10?Math.max(0,f.life/10).toFixed(2):'';}

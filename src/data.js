@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='2026.11.17.7';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
+const VERSION='2026.11.17.8';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
 /* =====================================================================
    DATA  ― 数値・台本・色の定義（将来 data/*.js に切り出す）
    ===================================================================== */
@@ -76,7 +76,7 @@ const FORK_INT=+((typeof process!=='undefined'&&process.env.FORK_INT)||600),FORK
 const FORKS=[{id:'cluster',name:'明るい星団',col:[255,226,190]},{id:'wreck',name:'古い星の残骸',col:[220,200,170]},{id:'neb',name:'星雲',col:[150,170,255]},{id:'calm',name:'静かな空域',col:[200,235,255]},{id:'rough',name:'荒れた宙域',col:[255,150,130]},{id:'unknown',name:'未知の星系',col:[210,190,255]}];
 // ③ 光子（2026-11-17 試作）：航海で開く、もう一つの装置の列。いちばん下が光子を作り、上の装置は下の装置を生む。光子は列と「光子の帆」に使う。帆の段ごとに船の時間が掛け算で速くなる
 const PH_DEV=[{name:'光子の受け皿',cost:10,g:1.6,rate:1},{name:'光の井戸',cost:1e3,g:2.2,rate:0.2,find:1},{name:'星の炉心',cost:1e5,g:3,rate:0.1,find:2},{name:'銀河の灯',cost:1e8,g:4,rate:0.05,find:3}];
-const SAIL_COST=50,SAIL_G=6,SAIL_X=1.5;
+const SAIL_COST=50,SAIL_G=6,SAIL_X=1.5,PH_TAP=2,PH_TAP_MIN=1,PH_MET=30,PH_MET_MIN=5;   // 窓をタップすると光子の生産2秒分（最低1）、流れ星を捕まえると30秒分（最低5）
 const ROUTE_TYPES=['cluster','wreck','neb','calm','rough'],ROUTE_UNKNOWN=0.12,ROUTE_CALM=1200,ROUTE_NEB=3,ROUTE_ROUGH=5,ROUTE_ROUGH_P=0.5,ROUTE_WRECK=0.1;
 // 引き直しをすすめる目安：得られる航跡が「今までの合計 × REDRAW_R」以上（以前は合計以上＝1）
 const FORK_LINES={cluster:'星団の光が、帆いっぱいに当たる。',neb:'星雲の中を、光が速く流れていく。',wreck:'古い星の残骸に、誰かの航跡が残っていた。',calm:'静かな空域。故郷の光が、少しだけ近い。',rough:'荒れた宙域。船がきしむ。',unknown:'見たことのない星。何かを、思い出しかけた。'};
