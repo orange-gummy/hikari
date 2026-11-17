@@ -89,7 +89,7 @@ function windMin(){return Math.max(1,Math.ceil((S.windT||0)/60));}   // 追い�
 function windText(){const m=windMin();return m<60?m+'分':m<6000?Math.round(m/60)+'時間':'99時間+';}
 // ③ 真ん中の表示の切り替え（2026-11-17 試作）：航海中は PHOTON（光子と光子の帆）と ENERGY を切り替える
 function phView(){return S.voy&&!S.chal&&S.view==='ph';}
-document.getElementById('viewT').addEventListener('click',e=>{e.stopPropagation();S.view=S.view==='ph'?'e':'ph';SND.play('tap');paintHUD();});
+document.getElementById('viewT').addEventListener('click',e=>{e.stopPropagation();const ph=S.view!=='ph';SND.play('tap');curTab=ph?(lastTab.galaxy&&!tabHidden(lastTab.galaxy)?lastTab.galaxy:'photon'):(lastTab.home||'drive');renderPanel(true);S.view=ph?'ph':'e';paintHUD();});   // 切り替えるとタブも GALAXY／HOME へ
 document.getElementById('viewT').addEventListener('pointerdown',e=>e.stopPropagation());
 function paintHUD(){const vt=document.getElementById('viewT'),on=S.voy&&!S.chal;vt.style.display=on?'':'none';if(on)vt.dataset.v=phView()?'ph':'e';document.getElementById('spdL').textContent=phView()?'PHOTON':'ENERGY';
   if(phView()){const q=fmtParts(S.ph);document.getElementById('eV').textContent=q[0];document.getElementById('eU').textContent=q[1];const L2=(q[0]+q[1]).length;document.getElementById('spdV').style.fontSize=(L2<=6?28:L2<=9?23:19)+'px';document.getElementById('rate').innerHTML='+'+fmt(phRate())+' / 秒<span class="wind">光子の帆 '+(S.sail||0)+' 段　船の時間 ×'+fmtG(sailMult())+'</span>';}
