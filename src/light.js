@@ -1,16 +1,16 @@
 'use strict';
 /* =====================================================================
    ⑤ 光になる（一度きりの終わり）
-   光の上限を書き換えきり、9が22個まで届くと LIGHT 層が開く。「光になる」で最後の加速。
+   宇宙を一度畳んだあと、航海で9が LIGHT_N 個に届くと LIGHT 層が開く（2026-11-17、前は光の上限10段で9が22個）。「光になる」で最後の加速。
    星が止まり、数字・タブ・リング・窓の枠が光の粒になって一つずつほどけ、暗闇に白い点ひとつと一文。
    タップで画面が戻り、④の続きを遊べる。窓の中心には小さな白い光がずっと残る。
    ===================================================================== */
-function canLight(){return S.voy&&law('lc')>=LAWS.find(L=>L.id==='lc').max&&S.stage>=maxStage();}
-function lightCost(){return accelCost(maxStage()+1);}
+function canLight(){return S.voy&&lightReach();}
+function lightCost(){return accelCost(S.stage+1);}
 function becomeLight(){if(!canLight()||S.E<lightCost())return false;S.E-=lightCost();S.lightDone=true;S.lightAt=Date.now();S.lightUni=S.uni+1;save();return true;}
 /* LIGHT タブ：光速を示す縦の線へ、光の線が伸びる。その手前に、いまの船 */
 function renderLight(){const done=S.lightDone,ready=canLight(),c=lightCost(),key='l|'+[done,ready,S.E>=c,S.stage,law('lc')].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
-  const W=360,H=170,y=82,xc=300,n=Math.min(S.uni+1,14),prog=done?1:Math.min(1,S.stage/maxStage());
+  const W=360,H=170,y=82,xc=300,n=Math.min(S.uni+1,14),prog=done?1:Math.min(1,nines(S.stage)/LIGHT_N);
   let v='<svg class="uniSky" viewBox="0 0 '+W+' '+H+'" aria-label="光速への線"><defs><linearGradient id="lgl" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".85" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient><radialGradient id="lgg"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>'+
     '<line x1="20" y1="'+y+'" x2="'+xc+'" y2="'+y+'" stroke="url(#lgl)" stroke-width=".8"/>'+
     '<circle cx="'+xc+'" cy="'+y+'" r="38" fill="url(#lgg)"/><line x1="'+xc+'" y1="'+(y-36)+'" x2="'+xc+'" y2="'+(y+36)+'" stroke="#fff" stroke-opacity=".9" stroke-width="1"/>'+
@@ -22,7 +22,7 @@ function renderLight(){const done=S.lightDone,ready=canLight(),c=lightCost(),key
   let d;
   if(done){const dt=new Date(S.lightAt||Date.now());d='<div class="row" style="padding:0"><span style="font-size:14px">光になった</span></div><div class="note" style="margin:4px 0 10px">'+dt.getFullYear()+'年'+(dt.getMonth()+1)+'月'+dt.getDate()+'日、宇宙 '+roman(S.lightUni||S.uni+1)+'で。<br>旅は、まだ続けられる。窓の中心の光は、そのとき追いついた光。</div><button class="act" id="ltAgain">もう一度見る</button>';}
   else{d='<div class="row" style="padding:0"><span style="font-size:14px">光になる</span></div><div class="note" style="margin:4px 0 10px">最後の加速。光の速さに届くと、船の時間は止まる。一度きり。そのあとも、宇宙を畳む旅は続けられる。'+
-      (ready?'':'<br>9を22個並べると、最後の加速ができる。')+'</div><button class="act" id="ltGo"'+(ready&&S.E>=c?'':' disabled')+' style="border-color:rgba(255,255,255,.7);color:#fff;letter-spacing:.2em;box-shadow:0 0 18px rgba(255,255,255,.12)">光になる'+(ready&&S.E<c?'　あと'+fmt(c-S.E):'')+'</button>';}
+      (ready?'':'<br>9を'+LIGHT_N+'個並べると、最後の加速ができる。')+'</div><button class="act" id="ltGo"'+(ready&&S.E>=c?'':' disabled')+' style="border-color:rgba(255,255,255,.7);color:#fff;letter-spacing:.2em;box-shadow:0 0 18px rgba(255,255,255,.12)">光になる'+(ready&&S.E<c?'　あと'+fmt(c-S.E):'')+'</button>';}
   pbody.innerHTML='<div class="phead"><span class="lab">LIGHT</span><span class="num" style="font-size:12px;color:var(--ink-dim)">9 × '+nines(S.stage)+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
   const go=document.getElementById('ltGo');if(go)go.onclick=()=>confirmBox('光になる','最後の加速。一度きり。終わったあとも、宇宙を畳む旅は続けられる。',()=>{if(becomeLight())startLightEnd(false);});
   const ag=document.getElementById('ltAgain');if(ag)ag.onclick=()=>startLightEnd(true);}

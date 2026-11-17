@@ -68,7 +68,9 @@ const SPEEDS=[0,10/C_KMS,30/C_KMS,100/C_KMS,300/C_KMS,1000/C_KMS,0.01,0.05,0.1,0
 const STAGE_MULT=500;   // 光速の99%より先は、段階ごとに加速コストがこの倍率で上がる
 const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階12（光速の99%）まで。その先は STAGE_MULT 倍ずつ（stageCost）
 const MAX_STAGE=22;
-const TOP_STAGE=MAX_STAGE+10;   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
+const TOP_STAGE=MAX_STAGE+10;
+const VOY_CAP=TOP_STAGE+250;   // 2026-11-17：航海には天井がない（9の数を伸ばし続ける）。数の上限（1e308）を越えないための目安
+const LIGHT_N=+((typeof process!=='undefined'&&process.env.LIGHT_N)||40);   // ⑤ 光になれる9の数（宇宙を一度畳んだあと）   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
 const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.8),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||5);   // 追い風（2026-11-16）：留守の間のエネルギーは OFF_NOW（8割）だけすぐ入り、残りは追い風の時間（S.windT 秒）になって、遊んでいる間に生産 ×WIND_X で吹く（2026-11-16 にエネルギーから時間に変えた）
 // 航路の分かれ道（2026-11-16）：航海で遊んでいる間、FORK_INT 秒ごとに分かれ道が出る。選ばなければ FORK_LIFE 秒でまっすぐ進む
 const FORK_INT=+((typeof process!=='undefined'&&process.env.FORK_INT)||600),FORK_LIFE=180,NEB_T=600;
@@ -180,7 +182,7 @@ const CHAL={
 };
 /* ④ 新しい宇宙（法則）。宇宙の果てに着くと、宇宙を畳んで作り直せる */
 const LAWS=[
-  {id:'lc',name:'光の上限',max:10,col:[235,238,250],cost:l=>Math.ceil(LC_A*Math.pow(LC_B,l)),text:l=>'航海で並べられる9が1つ増え、全速で効く範囲も1つ広がる（9が'+(21+l)+'個 → '+(22+l)+'個）'},
+  {id:'lc',name:'光の上限',max:10,col:[235,238,250],cost:l=>Math.ceil(LC_A*Math.pow(LC_B,l)),text:l=>'時間の遅れがそのまま効く範囲が1つ広がる（9が'+(11+l)+'個 → '+(12+l)+'個まで）'},
   {id:'td',name:'時の遅れ',max:8,col:[170,200,255],cost:l=>1+Math.floor(l/2),text:l=>'生産の倍率 γ が強くなる（γ<sup>'+(1+0.1*(l-1)).toFixed(1)+'</sup> → γ<sup>'+(1+0.1*l).toFixed(1)+'</sup>）'},
   {id:'ar',name:'引き直しの記憶',max:1,col:[255,214,170],cost:()=>2,text:()=>'航路の引き直しが自動になる（航跡が今までの合計以上たまったとき）'},
   {id:'ut',name:'宇宙の色合い',max:4,col:[150,230,210],cost:()=>1,text:l=>'宇宙の色合いを選べる（'+(l+1)+'種類）。見た目だけ'}

@@ -9,7 +9,8 @@ function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)retu
 function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
-function maxStage(){return TOP_STAGE+(S.voy?(process.env.NOCAP?200:law('lc')):0);}   // 天井は故郷への周回も航海も9が22個から。航海では ④ 光の上限1段ごとに1つ上がる（2026-11-17。前は航海だけ9が12個からで、章が進むと天井が下がっていた）
+function lightReach(){return S.uni>0&&nines(S.maxStage)>=LIGHT_N;}   // ⑤ 宇宙を一度畳んだあと、航海で9が LIGHT_N 個に届く
+function maxStage(){return S.voy?VOY_CAP:TOP_STAGE;}   // 故郷への周回は9が22個まで。航海には天井がない（2026-11-17、VOY_CAP は数の上限を越えないための目安）
 function stageCost(s){if(s<=12)return STAGE_COST[s];const m=S.voy?vaMultAt(tg('va')):stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);const k=s-MAX_STAGE,ch=Math.min(k,FINAL_N-1);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(FINAL_MULT,ch)*Math.pow(m,k-ch);}   // 9が12個と13個への加速は、値段の上がり方を FINAL_MULT 倍に抑える（1周目の終わりまで届く目標を残す）
 function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
@@ -211,7 +212,7 @@ function fold(){const g=uGain();if(g<1)return 0;
   S.uTint=S.uni%UNI_TINT.length;FXQ.fold=g;return g;}
 function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}
-function autoRedrawReady(){return law('ar')>0&&S.voy&&S.stage>=maxStage()-1&&redrawReady();}
+function autoRedrawReady(){return law('ar')>0&&S.voy&&redrawReady();}
 function trailNext(id){const a=TRAIL.find(x=>x.id===id),l=tg(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyTrail(id){const n=trailNext(id);if(!n||S.T<n.cost)return false;S.T-=n.cost;S.tg[id]=n.l+1;return true;}
 // ③では緊急停止とスキル選びが自動になる
