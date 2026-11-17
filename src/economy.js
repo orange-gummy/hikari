@@ -88,7 +88,7 @@ function tick(dt,offMul){
   if(offMul){const g=P*offMul*dt,now=S.chal?1:OFF_NOW;gain=g*now;S.windT=(S.windT||0)+dt*offMul*(1-now)/(WIND_X-1);}   // 留守の間：一部だけすぐ入り、残りは追い風に（チャレンジ中は全部すぐ入る）
   else{gain=P*dt;if(S.windT>0){const w=Math.min(S.windT,dt);gain+=P*w*(WIND_X-1);S.windT-=w;}forkTick(dt);}
   if(S.nebT>0)S.nebT=Math.max(0,S.nebT-dt);   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
-  S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;
+  S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;voyWarp();
   autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&!n.lock&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
   for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
   const dy=yearsPerSec()*dt;S.years+=dy;
@@ -192,6 +192,9 @@ function trailNext(id){const a=TRAIL.find(x=>x.id===id),l=tg(id);return a.max&&l
 function buyTrail(id){const n=trailNext(id);if(!n||S.T<n.cost)return false;S.T-=n.cost;S.tg[id]=n.l+1;return true;}
 // ③では緊急停止とスキル選びが自動になる
 function voyStopReady(){return S.voy&&S.stage>=BRAKE_STAGE&&wGain()>=Math.max(5,2*(S.W+skillSpent()));}
+/* 航海では止まらない（2026-11-17）：緊急停止をなくし、止めたらもらえるはずの歪み（wGain）を走りながら受け取る。
+   S.wRun＝この周ですでに受け取った分。周の集めたエネルギー（Erun）が減ったら（引き直し・畳む・チャレンジなどで最初から）0に戻す */
+function voyWarp(){if(!S.voy||S.chal)return;if(S.Erun<(S.wRunE||0))S.wRun=0;S.wRunE=S.Erun;const g=wGain(),d=g-(S.wRun||0);if(d>=1){S.wRun=g;S.W+=d;S.wTotal+=d;voyLearn();}}
 function voyLearn(){if(!S.voy)return;for(const id of S.prevSkills){if(has(id))continue;const k=SKILLS.find(x=>x.id===id);if(skillAvailable(k)&&S.W>=k.cost){S.W-=k.cost;S.skills.push(id);}}
   let go=true;while(go){go=false;const c=SKILLS.filter(k=>skillAvailable(k)&&S.W>=k.cost).sort((a,b)=>a.cost-b.cost)[0];if(c){S.W-=c.cost;S.skills.push(c.id);go=true;}}}
 function glowNext(id){const a=AFTERGLOW.find(x=>x.id===id),l=glow(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}

@@ -18,7 +18,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
     const gc=mix([255,200,110],G,1-A[3]);for(let k=0;k<(fxLow?30:80);k++){const d=R(24,36);P.push({x:sx+R(-40,40),y:sy+R(-8,8),vx:(tx-sx)/d+R(-1.2,1.2),vy:(ty-sy)/d+R(-1.2,1.2),l:1,c:gc,r:R(1,2.4),dr:0.9/d});}
     fla=Math.max(fla,fxLow?0.05:0.14);const v=document.getElementById('spdV');setTimeout(()=>{v.style.transform='scale(1.3)';v.style.color='#ffd38a';setTimeout(()=>{v.style.transform='';v.style.color='';},900);},450);}
   if(FXQ.autoDone!=null){const i=FXQ.autoDone;FXQ.autoDone=null;toast(DEVICES[i].name+'が <b>'+S.dev[i]+'台</b> に届いた');if(curTab==='drive')renderDrive(true);}
-  if(FXQ.tier!=null){const i=FXQ.tier;FXQ.tier=null;SND.play('tier',DEVICES[i].col);TIERFX={i,t:Date.now()};if(curTab==='drive')refreshTier(i);const u=devUI.find(x=>x.i===i);if(u&&u.el){const sv=u.el.querySelector('svg').getBoundingClientRect(),c=mix(colRGB(DEVICES[i].col),G,1-A[DEVICES[i].col]);TRIP.push({x:sv.left+sv.width/2,y:sv.top+sv.height/2,t:0,c});
+  if(FXQ.tier!=null){const i=FXQ.tier;FXQ.tier=null;SND.play('tier',DEVICES[i].col);TIERFX={i,t:Date.now()};if(curTab==='drive')refreshTier(i);const u=devUI.find(x=>x.i===i);const sv0=u&&u.el&&u.el.querySelector('svg')?u.el.querySelector('svg').getBoundingClientRect():null;if(sv0&&sv0.width>0){const sv=sv0,c=mix(colRGB(DEVICES[i].col),G,1-A[DEVICES[i].col]);TRIP.push({x:sv.left+sv.width/2,y:sv.top+sv.height/2,t:0,c});
     u.el.dataset.sweep='1';u.el.style.background='';u.el.style.backgroundImage='linear-gradient(90deg,transparent,'+rgb(c,0.22)+',transparent)';u.el.style.backgroundSize='40% 100%';u.el.style.backgroundRepeat='no-repeat';const an=u.el.animate&&u.el.animate([{backgroundPosition:'-60% 0'},{backgroundPosition:'160% 0'}],{duration:900,easing:'ease-out'});if(an)an.onfinish=()=>{u.el.style.backgroundImage='';delete u.el.dataset.sweep;};}}
   if(FXQ.letter){toast('故郷からの便り　<b>+'+fmt(FXQ.letter)+'</b>');FXQ.letter=0;}
   if(FXQ.restart){FXQ.restart=0;if(curTab==='drive')renderDrive(true);}
@@ -28,7 +28,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.autoShower){FXQ.autoShower=false;if(!document.querySelector('.modal.on,#title.on')&&!skillOpen)startShower();}
   // ④ 引き直しの記憶：航路の引き直しも自動で
   if(autoRedrawReady()&&!LIGHTFX&&!BRK&&!RST&&!climax&&!ACC&&!FOLD&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(0,true);BRK.vr=true;}
-  if(voyStopReady()&&!FOLD&&!LIGHTFX&&!BRK&&!RST&&!climax&&!ACC&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){autoBrake();}
+  // 航海の自動の緊急停止は 2026-11-17 になくした（歪みは走りながら入る、economy.js voyWarp()）
   if(FXQ.found){const ks=FXQ.found;FXQ.found=null;SND.play('light');fla=Math.max(fla,0.22);ks.forEach(k=>toast('新しい色　<b style="color:'+rgb(NEW_COLORS[k].rgb,1)+'">'+NEW_COLORS[k].name+'</b>　'+DEVICES[ANCHOR+1+k].name+'が使えるようになった'));if(curTab==='drive')renderDrive(true);}
   if(FXQ.chalDone){const {id,lv}=FXQ.chalDone;FXQ.chalDone=null;SND.play('light');fla=Math.max(fla,0.22);toast(lv===1?'チャレンジを越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が灯った':'「'+CHAL[id].name+'」段'+lv+'を越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が強くなった');renderPanel(true);}
   if(FXQ.voyBack){FXQ.voyBack=false;applyLoadedVisuals();renderPanel(true);paintGoal();toast('預けていた航海に戻った');}
