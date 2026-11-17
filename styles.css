@@ -415,3 +415,17 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscro
 #viewT[data-v="e"] span[data-v="e"],#viewT[data-v="ph"] span[data-v="ph"]{color:#fff1dc}
 #viewT[data-v="ph"] span[data-v="ph"]{text-shadow:0 0 8px rgba(255,236,200,.6)}
 .sail{padding:4px 0 10px;border-bottom:1px solid rgba(236,238,242,.07);margin-bottom:6px}
+
+/* 光子の帆の画面（2026-11-17 試作）：航路を引き直すときに開く */
+#sailOv{position:fixed;inset:0;z-index:11;background:#04050C;display:none;overflow:hidden}
+#sailOv.on{display:block}
+#sailBody{position:absolute;inset:0}
+#sailBody .gSky{position:absolute;inset:0;z-index:0}
+.sScene .gTw{animation:gTw 4.5s ease-in-out infinite}
+.sScene .sSheet{transform-box:view-box;animation:sBillow 5s ease-in-out infinite}
+@keyframes sBillow{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.05)}}
+.sScene .sNew{animation:sNew 1.2s cubic-bezier(.2,.8,.3,1) both,sBillow 5s 1.2s ease-in-out infinite}
+@keyframes sNew{from{transform:scale(.2,.05);opacity:0}to{transform:none;opacity:1}}
+#sailOv.sIntro .sSheet path,#sailOv.sIntro .sSheet circle{animation:gFade 1s both}
+#sailOv.sIntro .gTop{animation:gFade .9s .2s both}
+#sailOv.sIntro .gBot{animation:gUp .9s .8s both}

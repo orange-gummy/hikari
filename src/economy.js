@@ -174,8 +174,10 @@ function phCost(k){return PH_DEV[k].cost*Math.pow(PH_DEV[k].g,S.phBuy[k]||0);}
 function phBuyDev(k){if(!phOpen(k)||S.ph<phCost(k))return false;S.ph-=phCost(k);S.phBuy[k]=(S.phBuy[k]||0)+1;S.phDev[k]=(S.phDev[k]||0)+1;return true;}
 function phGain(sec,min){if(!S.voy||S.chal)return 0;const g=Math.max(min,phRate()*sec);S.ph+=g;return g;}   // タップと流れ星で入る光子
 function sailCost(){return SAIL_COST*Math.pow(SAIL_G,S.sail||0);}
-function raiseSail(){if(!S.voy||S.chal||S.ph<sailCost())return false;S.ph-=sailCost();S.sail=(S.sail||0)+1;FXQ.sail=S.sail;return true;}
-function phReset(){S.ph=0;S.phDev=[1,0,0,0];S.phBuy=[0,0,0,0];S.sail=0;}
+// 帆は航路を引き直すときにだけ張る（2026-11-17）：引き直すときの光子（S.phPend）で段を上げ、帆は引き直しても残る。宇宙を畳むと最初から
+function raiseSail(){if((S.phPend||0)<sailCost())return false;S.phPend-=sailCost();S.sail=(S.sail||0)+1;FXQ.sail=S.sail;return true;}
+function sailAutoSpend(){while((S.phPend||0)>=sailCost())raiseSail();S.phPend=0;}
+function phReset(keepSail){S.ph=0;S.phDev=[1,0,0,0];S.phBuy=[0,0,0,0];if(!keepSail)S.sail=0;}
 function phTick(dt){if(!S.voy||S.chal)return;const m=sailMult();for(let k=PH_DEV.length-1;k>=1;k--)if(S.phDev[k]>0)S.phDev[k-1]+=S.phDev[k]*PH_DEV[k].rate*m*dt;S.ph+=phRate()*dt;}
 function routeOpts(){const ids=ROUTE_TYPES.slice().sort(()=>Math.random()-0.5).slice(0,2+(Math.random()<0.5?1:0));if(Math.random()<ROUTE_UNKNOWN)ids[ids.length-1]='unknown';return ids;}
 function routeInit(){S.route={n:voyDoublings(S.vdist||0),cur:null,opts:routeOpts(),pick:null,path:[],wreck:0};}
@@ -193,7 +195,7 @@ function forkText(id){return id==='cluster'?'この宙域の残光 ×2':id==='wr
 function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0)S.fork=null;}}   // 窓の下の分岐図は、宙域の境目に来たときだけ出る
 function chooseFork(id){if(!S.voy||!S.route||!S.route.opts.includes(id))return false;S.route.pick=id;S.fork=null;S.st.forks=(S.st.forks||0)+1;return true;}   // 次の宙域へ向かう星系を選ぶ（境目に来たときに効く）
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))):0;}
-function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;routeInit();phReset();S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
+function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;S.phPend=S.ph;resetRun();S.vdist=0;S.vL=0;routeInit();phReset(true);S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
 function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=DEST[DEST.length-1].ly;}   // この宇宙で宇宙の果てに着いたら
 function uGain(){if(!canFold())return 0;return 2+Math.floor(Math.log2(Math.max(1,S.ubest/DEST[DEST.length-1].ly)));}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
