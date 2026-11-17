@@ -5,8 +5,8 @@
 /* タブ */
 let curTab='drive',buyMode='1';
 /* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
-const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
-const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
+const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['voy','photon','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
+const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',photon:'PHOTON',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
 const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
 function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||S.voyStash||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(law('lc')>=10||S.lightDone));}
 function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}
@@ -29,7 +29,7 @@ function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if
 function setSel(b,v){const s=v?'true':'false';if(b.getAttribute('aria-selected')!==s)b.setAttribute('aria-selected',s);}
 function setCls(b,c,v){if(b.classList.contains(c)!==!!v)b.classList.toggle(c,!!v);}
 function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){setSel(b,b.dataset.l===curLayer);return;}setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
-function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;return (t==='battery'&&((S.chal==='c7'&&S.chalLv>=2)||!S.flags.bat))||(t==='reset'&&((S.maxStage<BRAKE_STAGE&&S.restarts===0)||(S.voy&&!S.chal)))||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
+function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;if(t==='photon'&&(!S.voy||S.chal))return true;return (t==='battery'&&((S.chal==='c7'&&S.chalLv>=2)||!S.flags.bat))||(t==='reset'&&((S.maxStage<BRAKE_STAGE&&S.restarts===0)||(S.voy&&!S.chal)))||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&!S.flags.bat);}
 let devUI=[],TIERFX=null;
 /* 次の章までの道しるべ（2026-11-16）：STAR・GALAXY・UNIVERSE・LIGHT の層の上に一行。いまの章と、次の扉までの進み具合 */
@@ -46,7 +46,7 @@ function renderPanel(force){
   curLayer=layerOf(curTab)||'home';lastTab[curLayer]=curTab;
   const isSet=curTab==='set',ps=document.getElementById('pset');pbody.style.display=isSet?'none':'';ps.style.display=isSet?'':'none';
   paintTabs();paintChap();
-  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='uni')renderUniverse();else if(curTab==='light')renderLight();else if(curTab==='set')renderSet();else if(curTab==='stats')renderStats();else renderLog();
+  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='photon')renderPhoton();else if(curTab==='uni')renderUniverse();else if(curTab==='light')renderLight();else if(curTab==='set')renderSet();else if(curTab==='stats')renderStats();else renderLog();
 }
 function devVisible(i){return devOpen(i);}
 function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}
@@ -274,6 +274,22 @@ function routeMap(W){const R=S.route;if(!R)return '';const H=140,n=R.n,TOT=voyDo
   if(n<TOT){v+='<div class="note" style="margin:6px 0 2px">次の宙域（'+lyText(1e4*Math.pow(2,n))+' 光年から）</div>';
     R.opts.forEach(id=>{const o=FORKS.find(x=>x.id===id),on=id===go;v+='<button class="rRow'+(on?' on':'')+'" data-rt="'+id+'"><svg width="22" height="22" viewBox="-11 -11 22 22">'+routeSym(id,col(id))+'</svg><span class="rN">'+o.name+'</span><span class="rE">'+forkText(id)+'</span><span class="rS">'+(on?(R.pick?'この道へ':'選ばなければ'):'')+'</span></button>';});}
   return v;}
+/* ③ 光子（2026-11-17 試作）：PHOTON タブ。光子の帆と、光子の列。数字は paintPhoton() がその場で書き換える */
+function renderPhoton(){const open=PH_DEV.map((_,k)=>phOpen(k)?1:0).join('');pbody.dataset.k='ph|'+open;
+  let h='<div class="phead"><span class="lab">PHOTON</span><span class="num" style="font-size:12px;color:var(--ink-dim)">光子 <b id="phN">0</b></span></div>'+
+    '<div class="sail"><div class="row" style="padding:0"><span>光子の帆</span><span class="num" id="sailLv"></span></div><div class="note" style="margin:2px 0 6px" id="sailFx"></div>'+
+    '<button class="act" id="sailGo" style="border-color:rgba(255,236,200,.6);color:#fff1dc"></button></div>';
+  PH_DEV.forEach((d,k)=>{if(!phOpen(k)){if(k===PH_DEV.findIndex((_,j)=>!phOpen(j)))h+='<div class="dv"><div class="dvRow"><div style="flex:1"><div class="dvName" style="color:var(--ink-dim)">？？？</div><div class="dvTrait">'+DEST[(d.find||1)-1].name+'に着くと現れる</div></div></div></div>';return;}
+    h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+d.name+'　<span class="num" id="phc'+k+'" style="font-size:12px;color:var(--ink-dim)"></span></div><div class="dvTrait" id="pht'+k+'"></div></div><button class="buy" id="phb'+k+'"></button></div></div>';});
+  h+='<div class="note" style="margin-top:10px">光子の受け皿が光子を集め、上の装置は下の装置を生む。帆を張るたびに、船の時間が ×'+SAIL_X+' ずつ速く流れる（生産・光子・進む距離がまとめて速くなる）。航路を引き直すと、光子と帆は最初から。</div>';
+  pbody.innerHTML=h;document.getElementById('sailGo').onclick=()=>{if(raiseSail()){SND.play('light');fla=Math.max(fla,0.1);paintPhoton();}};
+  PH_DEV.forEach((_,k)=>{const b=document.getElementById('phb'+k);if(b)b.onclick=()=>{if(phBuyDev(k)){SND.play('buy',4);paintPhoton();}};});paintPhoton();}
+function paintPhoton(){const n=document.getElementById('phN');if(!n)return;n.textContent=fmt(S.ph);
+  document.getElementById('sailLv').textContent=(S.sail||0)+' 段';document.getElementById('sailFx').textContent='船の時間 ×'+fmtG(sailMult())+'　→　次の段で ×'+fmtG(sailMult()*SAIL_X);
+  const sg=document.getElementById('sailGo');sg.textContent='帆を張る　光子 '+fmt(sailCost());sg.disabled=S.ph<sailCost();
+  PH_DEV.forEach((d,k)=>{const b=document.getElementById('phb'+k);if(!b)return;document.getElementById('phc'+k).textContent=fmt(Math.floor(S.phDev[k]||0))+'（買った '+(S.phBuy[k]||0)+'）';
+    document.getElementById('pht'+k).textContent=k===0?'光子 +'+fmt(phRate())+' / 秒':PH_DEV[k-1].name+' +'+fmt((S.phDev[k]||0)*d.rate*sailMult())+' / 秒';
+    b.textContent='光子 '+fmt(phCost(k));b.disabled=S.ph<phCost(k);});}
 /* ③ さらに遠くへ（GALAXY タブ） */
 function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
   if(part==='voy'&&!S.voy&&canVoyage())h+='<div class="phead"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。故郷への周回は終わり、航海では船は止まらない。歪みは走りながらたまり、スキルは自動で覚える。残光とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';

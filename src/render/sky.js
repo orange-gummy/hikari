@@ -37,8 +37,15 @@ let FRK=1,FRA=0,FRP=0;   // FRK：1コマ（60分の1秒）を1とした経過�
 function frame(){requestAnimationFrame(frame);const n=performance.now();FRA=Math.min(50,FRA+(FRP?n-FRP:16.667));FRP=n;
   let k=0;while(FRA>=14.667&&k<2){FRA-=16.667;k++;if(!FREEZE)frameStep();if(performance.now()-n>8)break;}
   if(FRA>16.667)FRA=16.667;}
+/* ③ 光子の帆（2026-11-17 試作）：PHOTON の表示のとき、リングの外に帆の段だけ細い光の輪が重なり、ゆっくり回る。光の粒が中心から外へ流れる */
+let SAILP=[];
+function drawSail(){if(typeof phView!=='function'||!phView()||LANDED||HOMEA)return;const n=Math.min(S.sail||0,14),r0=74*RCS+10;
+  cx.save();cx.lineCap='round';for(let k=0;k<n;k++){const r=r0+k*5*RCS,a=0.42-k*0.022,rot=T*0.004*(k%2?-1:1)+k;cx.setLineDash([2+k%3*3,6+k%4*2]);cx.lineDashOffset=rot*20;cx.beginPath();cx.arc(RC.x,RC.y,r,0,6.283);cx.strokeStyle='rgba(255,236,200,'+Math.max(0.08,a).toFixed(3)+')';cx.lineWidth=0.9;cx.stroke();}
+  cx.setLineDash([]);cx.restore();
+  if(Math.random()<0.25+0.05*n){const an=Math.random()*6.283;SAILP.push({a:an,r:r0*0.5,v:0.6+Math.random()*(0.8+n*0.15),l:1});}
+  for(let i=SAILP.length-1;i>=0;i--){const q=SAILP[i];q.r+=q.v;q.l-=0.012;if(q.l<=0){SAILP.splice(i,1);continue;}const x=RC.x+Math.cos(q.a)*q.r,y=RC.y+Math.sin(q.a)*q.r;cx.beginPath();cx.arc(x,y,0.9,0,6.283);cx.fillStyle='rgba(255,240,215,'+(0.7*q.l).toFixed(3)+')';cx.fill();}}
 function frameStep(){FRK=1;if(++MEAS_N>=20){MEAS_N=0;measure();}   // リングと窓の位置を、ときどき測り直す
-const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
+const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawSail();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
 /* ④ 宇宙を畳む：星がすべて中心へ流れ込み（4秒）→ 光の点ひとつ（2秒）→ 点がほどけて新しい色合いの空が広がる */
 let FOLD=null;
 function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
