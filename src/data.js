@@ -77,7 +77,7 @@ const FORKS=[{id:'cluster',name:'明るい星団',col:[255,226,190]},{id:'wreck'
 // ③ 光子（2026-11-17 試作）：航海で開く、もう一つの装置の列。いちばん下が光子を作り、上の装置は下の装置を生む。光子は列と「光子の帆」に使う。帆の段ごとに船の時間が掛け算で速くなる
 const PH_DEV=[{name:'光子の受け皿',cost:10,g:1.6,rate:1},{name:'光の井戸',cost:1e3,g:2.2,rate:0.2,find:1},{name:'星の炉心',cost:1e5,g:3,rate:0.1,find:2},{name:'銀河の灯',cost:1e8,g:4,rate:0.05,find:3}];
 const _E=k=>(typeof process!=='undefined'&&process.env[k]);
-const SAIL_COST=+(_E('SAIL_COST')||50),SAIL_G=+(_E('SAIL_G')||10),SAIL_X=+(_E('SAIL_X')||1.25),SAIL_PH=+(_E('SAIL_PH')||0),PF_X=+(_E('PF_X')||3),   // 帆：段ごとに生産と航海の距離 ×1.25（光子の生産にはかけない）、値段は段ごとに10倍（2026-11-17 試算で調整。×1.5・6倍・光子にもかけると、宇宙の果てが1日以上早まった）
+const SAIL_COST=+(_E('SAIL_COST')||50),SAIL_G=+(_E('SAIL_G')||10),SAIL_X=+(_E('SAIL_X')||1.15),SAIL_PH=+(_E('SAIL_PH')||0),PF_X=+(_E('PF_X')||1.3),   // 帆：段ごとに生産と航海の距離 ×1.25（光子の生産にはかけない）、値段は段ごとに10倍（2026-11-17 試算で調整。×1.5・6倍・光子にもかけると、宇宙の果てが1日以上早まった）
 PH_TAP=2,PH_TAP_MIN=1,PH_MET=30,PH_MET_MIN=5;   // 窓をタップすると光子の生産2秒分（最低1）、流れ星を捕まえると30秒分（最低5）
 const ROUTE_TYPES=['cluster','wreck','neb','calm','rough'],ROUTE_UNKNOWN=0.12,ROUTE_CALM=1200,ROUTE_NEB=3,ROUTE_ROUGH=5,ROUTE_ROUGH_P=0.5,ROUTE_WRECK=0.1;
 // 引き直しをすすめる目安：得られる航跡が「今までの合計 × REDRAW_R」以上（以前は合計以上＝1）
