@@ -59,13 +59,16 @@ function drawFold(){const f=FOLD;if(!f)return;f.t++;const t=f.t,X=RC.x||CW/2,Y=R
   if(t>=380){const a=Math.sin(Math.PI*cl((t-380)/180));cx.save();cx.font='400 17px "Shippori Mincho B1",serif';cx.textAlign='center';cx.fillStyle='rgba(236,238,242,'+(0.85*a).toFixed(3)+')';cx.fillText('宇宙 '+roman(S.uni+1),X,Y+125*RCS);cx.restore();}}
 /* 新しい宇宙の色合い：窓の中心に、その宇宙の色をうっすら重ねる（宇宙 I の白は重ねない） */
 function drawTint(){if(!S.uTint||LANDED||HOMEA||FR.w<=0)return;const c=UNI_TINT[S.uTint%UNI_TINT.length],X=FR.x+FR.w/2,Y=FR.y+FR.h*0.45,r=Math.max(FR.w,FR.h)*0.75;const g=cx.createRadialGradient(X,Y,0,X,Y,r);g.addColorStop(0,rgb(c.a,0.13));g.addColorStop(0.55,rgb(c.b,0.05));g.addColorStop(1,rgb(c.a,0));cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);}
-let HAZE_A=0.034;
+let HAZE_A=0.034,HAZE_WIN=true;   // HAZE_WIN：もやを窓（#frame）の四隅に置く
 function frameInner(){
   if(!STILL)T++;for(let i=0;i<7;i++){A[i]+=(TG[i]-A[i])*(TG[i]?0.03:0.022);if(TG[i])RV[i]=Math.min(1,RV[i]+0.012);POP[i]*=0.93;}BB*=0.993;
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
   cx.clearRect(0,0,CW,CH);drawTint();drawBand();
   // 四隅の記憶の色のもや（2026-11-16 にやめ、11-17 に弱く戻した。HAZE_A＝濃さ、もとは 0.045）
-  if(!LANDED&&HAZE_A>0)for(let i=0;i<5;i++){const o=COLORS[i];if(o.nx==null)continue;const a=A[i],c=mix(o.rgb,G,1-a);for(let j=0;j<3;j++){const bx=o.nx*CW+Math.sin(T*0.004+j*2.1+i)*40,by=o.ny*CH+Math.cos(T*0.0033+j*1.7+i)*34;blob(bx,by,o.nr*sc*(0.45+0.15*j),c,HAZE_A*(0.08+0.92*a));}}
+  if(!LANDED&&HAZE_A>0){const win=HAZE_WIN&&FR.w>0,hx=win?FR.x:0,hy=win?FR.y:0,hw=win?FR.w:CW,hh=win?FR.h:CH,hs=win?Math.max(hw,hh)/600:sc;
+    if(win){cx.save();cx.beginPath();cx.roundRect(hx,hy,hw,hh,18);cx.clip();}
+    for(let i=0;i<5;i++){const o=COLORS[i];if(o.nx==null)continue;const a=A[i],c=mix(o.rgb,G,1-a),ox=win?(o.nx<0.5?0.02:0.98):o.nx,oy=win?(o.ny<0.5?0.04:0.96):o.ny;for(let j=0;j<3;j++){const bx=hx+ox*hw+Math.sin(T*0.004+j*2.1+i)*40*hs,by=hy+oy*hh+Math.cos(T*0.0033+j*1.7+i)*34*hs;blob(bx,by,o.nr*hs*(0.45+0.15*j)*(win?1.875:1),c,HAZE_A*(win?1.3:1)*(0.08+0.92*a));}}
+    if(win)cx.restore();}
   SKYV=0;   // 背景のオーロラ（aurBand）は 2026-11-16 に外した（宇宙らしく見えないため）。戻すときは for(i<5) で aurBand(cx,i,COLORS[i],A[i]*(1-0.8*SKYV),RV[i])   // 晴れた昼の空が出ている間は、オーロラを弱める
   // stars
   const tw=0.25*aw,CXs=RC.x||CW/2,CYs=RC.y||CH/2,rs=420*sc*(1-CONV*0.92)*ZOOM;
