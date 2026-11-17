@@ -47,8 +47,7 @@ renderPanelTabsOnly();if(curTab==='stats')renderStats();if(skillOpen&&S.W!==last
 }
 let HVR=null;
 function rollHV(){if(!HVR)return;const h=document.getElementById('hV'),el2=Date.now()-HVR.t0;const to=HVR.to,from=Math.max(0,HVR.from);if(el2<0){h.textContent=from<=5?KMS[from].toLocaleString('ja-JP')+' km/s':stagePct(from)+'% c';return;}
-  const sizeFor=t=>(t.length<=7?26:t.length<=10?21:t.length<=13?17:14)+'px';
-  if(to>=13){if(!HVR.done){const prev=stagePct(to-1),fin=stagePct(to),add=fin.slice(prev.length);h.innerHTML=prev+'<span class="new9">'+add+'</span>% c';h.style.fontSize=sizeFor(fin+'% c');HVR.done=1;}if(el2>1300){paintSpeed();HVR=null;}return;}
+  if(to>=13){if(!HVR.done){const prev=stagePct(to-1),fin=stagePct(to),add=fin.slice(prev.length);h.innerHTML=prev+'<span class="new9">'+add+'</span>%\u00a0c';hvSize(h,fin+'% c');HVR.done=1;}if(el2>1300){paintSpeed();HVR=null;}return;}
   const p=Math.min(1,el2/900),q=eo(p);
   if(to<=5){const v=KMS[from]+(KMS[to]-KMS[from])*q;h.textContent=Math.round(v).toLocaleString('ja-JP')+' km/s';}
   else{const v0=stageBeta(from)*100,v1=stageBeta(to)*100,v=v0+(v1-v0)*q;h.textContent=(v<1?v.toFixed(2):v<10?v.toFixed(1):Math.floor(v).toString())+'% c';}

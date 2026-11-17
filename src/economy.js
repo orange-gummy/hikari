@@ -5,9 +5,9 @@
 function nines(s){return s<11?0:s-10;}
 function stageBeta(s){return s<=11?SPEEDS[s]:1-Math.pow(10,-nines(s));}
 function stageGamma(s){if(s<11){const b=SPEEDS[s];return 1/Math.sqrt(1-b*b);}const e=Math.pow(10,-nines(s));return 1/Math.sqrt(e*(2-e));}
-function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)return String(Math.round(SPEEDS[s]*100));return s===12?'99':s<=22?'99.'+'9'.repeat(s-12):'99.999…';}
+function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)return String(Math.round(SPEEDS[s]*100));return s===12?'99':'99.'+'9'.repeat(s-12);}   // 9は省略せずに並べる（2026-11-17）
 function stageLabel(s){return stagePct(s);}
-function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':'光速の'+stagePct(s)+'%';}
+function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':s>22?'光速の99.999…%（9が'+nines(s)+'個）':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
 function lightReach(){return S.uni>0&&nines(S.maxStage)>=LIGHT_N;}   // ⑤ 宇宙を一度畳んだあと、航海で9が LIGHT_N 個に届く
 function maxStage(){return S.voy?VOY_CAP:TOP_STAGE;}   // 故郷への周回は9が22個まで。航海には天井がない（2026-11-17、VOY_CAP は数の上限を越えないための目安）

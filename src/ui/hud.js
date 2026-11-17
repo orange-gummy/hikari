@@ -100,9 +100,11 @@ function paintHUD(){const vt=document.getElementById('viewT'),on=S.voy&&!S.chal;
   document.getElementById('yr').textContent=Math.floor(S.years).toLocaleString('ja-JP');{const yr=yearsPerSec()*timeMult;document.getElementById('yrRate').textContent=yr<0.01?'+'+fmtY(yr*86400)+' 年/日':'+'+fmtY(yr)+' 年/秒';}
   const nm=nextMemIndex(),m=document.getElementById('mem');if(nm>=0&&nm<6){m.textContent='記憶が薄れるまで あと'+fmtY(Math.max(0,LOSE_YEARS[nm]-S.years))+'年';m.style.color=S.years/LOSE_YEARS[nm]>0.85?'#ffb38a':'';}else if(nm===6){m.textContent='最後の記憶が揺らいでいる';m.style.color='#ffb38a';}else m.textContent='';}
   paintRoute();}
+/* 上の速さの表示：9は省略せずに並べ、長くなったら小さくして折り返す（2026-11-17） */
+function hvSize(h,t){const n=t.length;h.style.fontSize=(n<=7?26:n<=10?21:n<=13?17:n<=16?14:12)+'px';h.style.wordBreak=n>16?'break-all':'';h.style.lineHeight=n>16?'1.2':'';}
 function paintSpeed(){const s=S.stage,g=fmtG(timeGamma(s)),h=document.getElementById('hV'),dil=s>=DILATION_STAGE;
-  document.getElementById('hLab').textContent='VELOCITY';h.textContent=s<=5?KMS[s].toLocaleString('ja-JP')+' km/s':stagePct(s)+'% c';h.style.fontSize=(h.textContent.length<=7?26:h.textContent.length<=10?21:h.textContent.length<=13?17:14)+'px';
-  document.getElementById('hG').textContent=dil?'船の1秒＝外の'+g+'秒':s<=5?'光速の'+stagePct(s)+'%':'秒速'+kmsOf(s).toLocaleString('ja-JP')+'km';
+  document.getElementById('hLab').textContent='VELOCITY';h.textContent=s<=5?KMS[s].toLocaleString('ja-JP')+' km/s':stagePct(s)+'%\u00a0c';hvSize(h,h.textContent);
+  document.getElementById('hG').textContent=(s>=13?'9 × '+nines(s)+'　':'')+(dil?'船の1秒＝外の'+g+'秒':s<=5?'光速の'+stagePct(s)+'%':'秒速'+kmsOf(s).toLocaleString('ja-JP')+'km');
   document.getElementById('spdG').textContent=dil?'時間の進み /'+g:speedText(s);}
 /* 字幕 */
 let subT=[];
