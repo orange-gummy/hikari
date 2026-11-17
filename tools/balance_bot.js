@@ -46,7 +46,7 @@ function gapReport(){const L=x=>x>=3600?(x/3600).toFixed(1)+'時間':Math.round(
 // 画面を触っている1秒
 function act(){
   tick(1);const P=prodRate();if(S.chal!=='c7'&&(P<2000||t%10<3)){S.E+=tapGain()*2;S.Erun+=tapGain()*2;S.pulse=10;}
-  if(S.voy&&!S.chal){if(t%10<3)phGain(PH_TAP*2,PH_TAP_MIN);if(!process.env.NOPH){let k;while((k=[0,1,2,3].filter(i=>phOpen(i)&&phCost(i)<=S.ph*0.25).sort((a,b)=>phCost(a)-phCost(b))[0])!=null)phBuyDev(k);}}   // ③ 光子：手元の4分の1までで列を買う（残りは引き直すときの帆に）
+  if(S.voy&&!S.chal){if(t%10<3)phGain(PH_TAP*2,PH_TAP_MIN);if(!process.env.NOPH&&!phAutoOpen())phBuyPart();}   // ③ 光子：手元の4分の1までで列を買う（残りは引き直すときの帆に）
   checkStory();chalWatch();if(t%5===0)achCheck();gapTick();
   let g=true,gi=0;while(g&&gi++<300){g=false;
     if(S.stage<maxStage()&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}

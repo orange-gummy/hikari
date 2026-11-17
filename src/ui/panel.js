@@ -314,13 +314,15 @@ function routeMap(W){const R=S.route;if(!R)return '';const H=140,n=R.n,TOT=voyDo
     R.opts.forEach(id=>{const o=FORKS.find(x=>x.id===id),on=id===go;v+='<button class="rRow'+(on?' on':'')+'" data-rt="'+id+'"><svg width="22" height="22" viewBox="-11 -11 22 22">'+routeSym(id,col(id))+'</svg><span class="rN">'+o.name+'</span><span class="rE">'+forkText(id)+'</span><span class="rS">'+(on?(R.pick?'この道へ':'選ばなければ'):'')+'</span></button>';});}
   return v;}
 /* ③ 光子（2026-11-17 試作）：PHOTON タブ。光子の帆と、光子の列。数字は paintPhoton() がその場で書き換える */
-function renderPhoton(){const open=PH_DEV.map((_,k)=>phOpen(k)?1:0).join(''),sailT=curTab==='sail';pbody.dataset.k='ph|'+open+'|'+curTab;   // PHOTON は装置だけ、SAIL は光子の帆だけ（HOME の DRIVE と BOOST と同じ分け方）
+function renderPhoton(){const open=PH_DEV.map((_,k)=>phOpen(k)?1:0).join(''),sailT=curTab==='sail';pbody.dataset.k='ph|'+open+'|'+curTab+'|'+S.phAuto+'|'+phAutoOpen();   // PHOTON は装置だけ、SAIL は光子の帆だけ（HOME の DRIVE と BOOST と同じ分け方）
   let h='<div class="phead"><span class="lab">'+(sailT?'SAIL':'PHOTON')+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">光子 <b id="phN">0</b></span></div>';
   if(sailT)h+='<div class="sail"><div class="row" style="padding:0"><span>光子の帆</span><span class="num" id="sailLv"></span></div><div class="note" style="margin:2px 0 6px" id="sailFx"></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の段</span><span class="num" id="sailNx"></span></div></div><div class="note" style="margin-top:10px">帆は、航路を引き直すときに、それまでにためた光子で張る。帆は引き直しても残り、1段ごとに船の時間が ×'+SAIL_X+' 速く流れる（生産・光子・進む距離がまとめて速くなる）。光子は引き直すとなくなる。</div>';
-  else PH_DEV.forEach((d,k)=>{if(!phOpen(k)){if(k===PH_DEV.findIndex((_,j)=>!phOpen(j)))h+='<div class="dv"><div class="dvRow"><div style="flex:1"><div class="dvName" style="color:var(--ink-dim)">？？？</div><div class="dvTrait">'+DEST[(d.find||1)-1].name+'に着くと現れる</div></div></div></div>';return;}
+  else if(phAutoOpen())h+='<div class="row"><span class="note" style="margin:0">自動で買う（光子の4分の1まで。残りは帆に）</span><button class="auto" id="phAuto"'+(S.phAuto!==0?' data-on':'')+'>'+(S.phAuto!==0?'自動':'手動')+'</button></div>';
+  if(!sailT)PH_DEV.forEach((d,k)=>{if(!phOpen(k)){if(k===PH_DEV.findIndex((_,j)=>!phOpen(j)))h+='<div class="dv"><div class="dvRow"><div style="flex:1"><div class="dvName" style="color:var(--ink-dim)">？？？</div><div class="dvTrait">'+DEST[(d.find||1)-1].name+'に着くと現れる</div></div></div></div>';return;}
     h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+d.name+'　<span class="num" id="phc'+k+'" style="font-size:12px;color:var(--ink-dim)"></span></div><div class="dvTrait" id="pht'+k+'"></div></div><button class="buy" id="phb'+k+'"></button></div></div>';});
   pbody.innerHTML=h;const sgo=document.getElementById('sailGo');if(sgo)sgo.onclick=()=>{if(raiseSail()){SND.play('light');fla=Math.max(fla,0.1);paintPhoton();}};
+  const pa=document.getElementById('phAuto');if(pa)pa.onclick=()=>{S.phAuto=S.phAuto!==0?0:1;renderPhoton();};
   PH_DEV.forEach((_,k)=>{const b=document.getElementById('phb'+k);if(b)b.onclick=()=>{if(phBuyDev(k)){SND.play('buy',4);paintPhoton();}};});paintPhoton();}
 function paintPhoton(){const n=document.getElementById('phN');if(!n)return;n.textContent=fmt(S.ph);
   if(document.getElementById('sailLv')){document.getElementById('sailLv').textContent=(S.sail||0)+' 段';document.getElementById('sailFx').textContent='船の時間 ×'+fmtG(sailMult())+'　→　次の段で ×'+fmtG(sailMult()*SAIL_X);

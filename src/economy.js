@@ -90,7 +90,7 @@ function tick(dt,offMul){
   if(offMul){const g=P*offMul*dt,now=S.chal?1:OFF_NOW;gain=g*now;S.windT=(S.windT||0)+dt*offMul*(1-now)/(WIND_X-1);}   // 留守の間：一部だけすぐ入り、残りは追い風に（チャレンジ中は全部すぐ入る）
   else{gain=P*dt;if(S.windT>0){const w=Math.min(S.windT,dt);gain+=P*w*(WIND_X-1);S.windT-=w;}forkTick(dt);}
   if(S.nebT>0)S.nebT=Math.max(0,S.nebT-dt);   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
-  S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;voyWarp();phTick(dt*(offMul||1));
+  S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;voyWarp();phTick(dt*(offMul||1));phAutoBuy();
   autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&!n.lock&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
   for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
   const dy=yearsPerSec()*dt;S.years+=dy;
@@ -178,6 +178,9 @@ function phMult(){return (SAIL_PH?sailMult():1)*Math.pow(PF_X,tg('pf'));}   // �
 function phRate(){return S.voy&&!S.chal?(S.phDev[0]||0)*PH_DEV[0].rate*phMult():0;}
 function phCost(k){return PH_DEV[k].cost*Math.pow(PH_DEV[k].g,S.phBuy[k]||0);}
 function phBuyDev(k){if(!phOpen(k)||S.ph<phCost(k))return false;S.ph-=phCost(k);S.phBuy[k]=(S.phBuy[k]||0)+1;S.phDev[k]=(S.phDev[k]||0)+1;return true;}
+function phAutoOpen(){return S.voy&&!S.chal&&(S.found||0)>=PH_AUTO_FIND;}
+function phBuyPart(){let k,n=0;while(n<200&&(k=PH_DEV.map((_,i)=>i).filter(i=>phOpen(i)&&phCost(i)<=S.ph*PH_AUTO_R).sort((a,b)=>phCost(a)-phCost(b))[0])!=null){phBuyDev(k);n++;}return n;}   // 手元の4分の1までで安い順に買う
+function phAutoBuy(){if(phAutoOpen()&&S.phAuto!==0)phBuyPart();}
 function phGain(sec,min){if(!S.voy||S.chal)return 0;const g=Math.max(min,phRate()*sec);S.ph+=g;return g;}   // タップと流れ星で入る光子
 function sailCost(){return SAIL_COST*Math.pow(SAIL_G,S.sail||0);}
 // 帆は航路を引き直すときにだけ張る（2026-11-17）：引き直すときの光子（S.phPend）で段を上げ、帆は引き直しても残る。宇宙を畳むと最初から

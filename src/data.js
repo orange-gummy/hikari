@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='2026.11.17.18';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
+const VERSION='2026.11.17.19';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
 /* =====================================================================
    DATA  ― 数値・台本・色の定義（将来 data/*.js に切り出す）
    ===================================================================== */
@@ -70,7 +70,7 @@ const STAGE_COST=[0,5,12,25,50,100,200,400,800,1500,3000,8000,2e4];   // 段階1
 const MAX_STAGE=22;
 const TOP_STAGE=MAX_STAGE+10;
 const VOY_CAP=TOP_STAGE+250;   // 2026-11-17：航海には天井がない（9の数を伸ばし続ける）。数の上限（1e308）を越えないための目安
-const LIGHT_N=+((typeof process!=='undefined'&&process.env.LIGHT_N)||46);   // ⑤ 光になれる9の数（宇宙を一度畳んだあと）   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
+const LIGHT_N=+((typeof process!=='undefined'&&process.env.LIGHT_N)||55);   // ⑤ 光になれる9の数（宇宙を一度畳んだあと）   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
 const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.8),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||5);   // 追い風（2026-11-16）：留守の間のエネルギーは OFF_NOW（8割）だけすぐ入り、残りは追い風の時間（S.windT 秒）になって、遊んでいる間に生産 ×WIND_X で吹く（2026-11-16 にエネルギーから時間に変えた）
 // 航路の分かれ道（2026-11-16）：航海で遊んでいる間、FORK_INT 秒ごとに分かれ道が出る。選ばなければ FORK_LIFE 秒でまっすぐ進む
 const FORK_INT=+((typeof process!=='undefined'&&process.env.FORK_INT)||600),FORK_LIFE=180,NEB_T=600;
@@ -80,6 +80,7 @@ const FORKS=[{id:'cluster',name:'明るい星団',col:[255,226,190]},{id:'wreck'
 const PH_DEV=[{name:'光子の受け皿',cost:10,g:1.6,rate:1},{name:'光の井戸',cost:1e3,g:2.2,rate:0.2,find:1},{name:'星の炉心',cost:1e5,g:3,rate:0.1,find:2},{name:'銀河の灯',cost:1e8,g:4,rate:0.05,find:3}];
 const _E=k=>(typeof process!=='undefined'&&process.env[k]);
 const SAIL_COST=+(_E('SAIL_COST')||50),SAIL_G=+(_E('SAIL_G')||10),SAIL_X=+(_E('SAIL_X')||1.15),SAIL_PH=+(_E('SAIL_PH')||0),PF_X=+(_E('PF_X')||1.3),   // 帆：段ごとに生産と航海の距離 ×1.25（光子の生産にはかけない）、値段は段ごとに10倍（2026-11-17 試算で調整。×1.5・6倍・光子にもかけると、宇宙の果てが1日以上早まった）
+PH_AUTO_FIND=1,PH_AUTO_R=0.25,   // 光子の列の自動購入：隣の銀河に着くと開く。手元の光子の4分の1までで安い順に買い、残りは引き直すときの帆に（2026-11-17）
 PH_TAP=2,PH_TAP_MIN=1,PH_MET=30,PH_MET_MIN=5;   // 窓をタップすると光子の生産2秒分（最低1）、流れ星を捕まえると30秒分（最低5）
 const ROUTE_TYPES=['cluster','wreck','neb','calm','rough'],ROUTE_UNKNOWN=0.12,ROUTE_CALM=1200,ROUTE_NEB=3,ROUTE_ROUGH=5,ROUTE_ROUGH_P=0.5,ROUTE_WRECK=0.1;
 // 引き直しをすすめる目安：得られる航跡が「今までの合計 × REDRAW_R」以上（以前は合計以上＝1）
