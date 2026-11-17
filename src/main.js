@@ -33,6 +33,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.chalDone){const {id,lv}=FXQ.chalDone;FXQ.chalDone=null;SND.play('light');fla=Math.max(fla,0.22);toast(lv===1?'チャレンジを越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が灯った':'「'+CHAL[id].name+'」段'+lv+'を越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が強くなった');renderPanel(true);}
   if(FXQ.voyBack){FXQ.voyBack=false;applyLoadedVisuals();renderPanel(true);paintGoal();toast('預けていた航海に戻った');}
   if(FXQ.fork){FXQ.fork=false;SND.play('milestone');}paintFork();
+  if(FXQ.route){const c=FXQ.route;FXQ.route=null;const o=FORKS.find(x=>x.id===c);logLine(FORK_LINES[c],-1);toast('宙域 '+S.route.n+'　<b>'+o.name+'</b>　'+forkText(c));if(curTab==='voy')renderPanel(true);}   // 航路図：新しい宙域に入った
   if(FXQ.redraw){FXQ.redraw=0;if(curTab==='drive')renderDrive(true);}
   if(FXQ.voyage){FXQ.voyage=false;routeMode=null;}
   if(FXQ.milestone){FXQ.milestone=false;SND.play('milestone');}   /* 画面全体のフラッシュはなくした（2026-11-06）。音と、台数の節目の表示だけ */

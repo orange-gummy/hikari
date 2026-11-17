@@ -51,7 +51,7 @@ function act(){
     const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;
     for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
     const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;onBought(b.i);if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
-  if(S.fork){const o=S.fork.opts;chooseFork(['neb','wreck','wind','calm'].find(x=>o.includes(x)));}
+  if(S.fork){const o=S.fork.opts;chooseFork(['neb','cluster','wreck','calm','rough','unknown'].find(x=>o.includes(x)));}
   if(S.voy&&t%60===0)voyManage();   // 航海では遊んでいる間も、引き直しと航跡・残光の強化を判断する
   if(S.voy)return;   // ③では止まらない（歪みとスキルは economy.js voyWarp() が走りながら）
   const w=wGain();if(S.stage>=BRAKE_STAGE&&w>=Math.max(5,1.6*(S.W+skillSpent()))&&t-lastP>90){prestige(false);lastP=t;LOG.push([stamp(),'prest',w]);for(const id of PATH){const k=SKILLS.find(z=>z.id===id);if(k.cost<=100||k.cost<=0.25*S.W)buySkill(id);}}

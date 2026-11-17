@@ -58,7 +58,7 @@ function memHas(i){if(S.cleared||S.voy)return true;return i===6?!S.greyLost:i>=S
 function memTarget(i){return memHas(i)?1:0;}
 function onMilestone(){FXQ.milestone=true;if(has('eC'))S.crit=30;}
 function baseRateNoFusion(){let b=0;for(const i of PRODI)if(i!==2)b+=devBase(i);return b*globalMult();}
-function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult();
+function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult();if(routeCur()==='rough')r*=ROUTE_ROUGH_P;   // 航路図：荒れた宙域
   if(S.chal==='eM'&&r>1)r=Math.pow(r,chalP());                                    // 「薄い光」：桁が小さくなる
   if(has('eM')&&r>1)r=Math.pow(r,sp('eM'));                                       // 濃い光
   if(has('a8')&&S.loopTime<600)r*=sp('a8');                                       // 出だしの風
@@ -150,7 +150,7 @@ function resetRun(){   // 再出発・航海の開始・航路の引き直しで
 function voyaged(){return S.voy||!!S.voyStash||S.uni>0||S.found>0;}
 function canChallengeAt(lv){if(!lv)return false;if(lv===1)return !S.voy&&!S.voyStash&&(S.cleared||S.restarts>0);return voyaged()&&!S.chal;}
 function canChallenge(id){return id?canChallengeAt(chalNext(id)):(!S.voy&&(S.cleared||S.restarts>0));}
-const STASH_KEYS=['E','Erun','dev','frac','upg','tier','stage','maxStage','battery','batDep','over','peakP','runTime','pulse','burst','skills','prevSkills','loopTime','W','prestiges','sig','years','dist','region','sling','coast','crit','cleared','lost','greyLost','vdist','vL','lastBuy','nebT','fork','forkT'];
+const STASH_KEYS=['route','E','Erun','dev','frac','upg','tier','stage','maxStage','battery','batDep','over','peakP','runTime','pulse','burst','skills','prevSkills','loopTime','W','prestiges','sig','years','dist','region','sling','coast','crit','cleared','lost','greyLost','vdist','vL','lastBuy','nebT','fork','forkT'];
 function voyStashSave(){const o={};for(const k of STASH_KEYS)o[k]=JSON.parse(JSON.stringify(S[k]===undefined?null:S[k]));S.voyStash=o;S.voy=false;}
 function voyStashBack(){if(!S.voyStash)return false;const o=S.voyStash;for(const k of STASH_KEYS)S[k]=o[k];S.voyStash=null;S.voy=true;FXQ.voyBack=true;return true;}
 function chalNext(id){const t=S.chalTier[id]||0;return t<3?t+1:0;}   // 次に挑む段（3段すべて越えたら0）
@@ -163,27 +163,32 @@ function voyMult(){return VOY_BASE*Math.pow(2.7,tg('vs'));}
 function canVoyage(){return !S.voy&&S.cleared&&S.lit.length>=SKILLS.filter(k=>k.glow).length;}
 function voyDoublings(d){return d>=1e4?Math.floor(Math.log2(d/1e4))+1:0;}   // 1万光年、2万、4万…と、距離が2倍になるたびに1回
 function lPer(){return Math.floor(RESTART_BASE*(1+0.1*S.restarts))*Math.pow(2,tg('ls'));}   // 距離が2倍になるたびに入る残光
-function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdist=0;S.vL=0;story('voy',VOY_LINES.start);FXQ.voyage=true;return true;}
-function voyAdvance(d){if(S.nebT>0)d*=3;S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
-  const n=voyDoublings(S.vdist);if(n>S.vL){const g=(n-S.vL)*lPer();S.L+=g;S.lTotal+=g;S.vL=n;}
+function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdist=0;S.vL=0;routeInit();S.fork={opts:S.route.opts.slice(),life:FORK_LIFE};story('voy',VOY_LINES.start);FXQ.voyage=true;return true;}
+/* 航路図（2026-11-17）：宙域＝距離が2倍になるごと（voyDoublings）。境目に来るたびに、選んでおいた星系（S.route.pick、なければ前と同じ性格か最初の候補）へ進み、
+   その宙域のあいだ星系の性格が効く。次の宙域の候補を2〜3つ出す。前の「10分ごとの分かれ道」はこれにまとめた */
+function routeOpts(){const ids=ROUTE_TYPES.slice().sort(()=>Math.random()-0.5).slice(0,2+(Math.random()<0.5?1:0));if(Math.random()<ROUTE_UNKNOWN)ids[ids.length-1]='unknown';return ids;}
+function routeInit(){S.route={n:voyDoublings(S.vdist||0),cur:null,opts:routeOpts(),pick:null,path:[],wreck:0};}
+function routeCur(){return S.voy&&S.route?S.route.cur:null;}
+function routeAuto(){const R=S.route;return R.pick||(R.opts.includes(R.cur)?R.cur:R.opts[0]);}
+function routeEnter(n){const R=S.route,c=routeAuto();R.cur=c;R.path.push(c);R.n=n;R.pick=null;R.opts=routeOpts();
+  if(c==='wreck')R.wreck++;else if(c==='calm')S.windT=(S.windT||0)+ROUTE_CALM;else if(c==='unknown')S.shard=(S.shard||0)+1;
+  FXQ.route=c;S.fork={opts:R.opts.slice(),life:FORK_LIFE};FXQ.fork=true;}
+function voyAdvance(d){if(!S.route)routeInit();const rc=S.route.cur;if(rc==='neb')d*=ROUTE_NEB;else if(rc==='rough')d*=ROUTE_ROUGH;S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
+  const n=voyDoublings(S.vdist);while(S.route.n<n)routeEnter(S.route.n+1);if(n>S.vL){const g=(n-S.vL)*lPer()*(S.route.cur==='cluster'?2:1);S.L+=g;S.lTotal+=g;S.vL=n;}
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function redrawReady(){return S.voy&&tGain()>=Math.max(3,Math.ceil(S.tTotal*REDRAW_R));}
 // 分かれ道：得られるもの（そのときの強さに合わせる）
-function forkGain(id){if(id==='wreck')return Math.max(2,Math.ceil(Math.max(tGain(),Math.sqrt(S.tTotal))*0.3));if(id==='calm')return Math.ceil(lPer()*0.5);if(id==='wind')return NEB_T;return 3;}
-function forkText(id){const g=forkGain(id);return id==='neb'?'10分間、航海の距離 ×3':id==='wreck'?'航跡 +'+g:id==='calm'?'残光 +'+g:'追い風 10分ぶん';}
-function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0){S.fork=null;S.forkT=0;}return;}
-  S.forkT=(S.forkT||0)+dt;if(S.forkT>=FORK_INT){const ids=FORKS.map(f=>f.id).sort(()=>Math.random()-0.5).slice(0,2+(Math.random()<0.5?1:0));S.fork={opts:ids,life:FORK_LIFE};FXQ.fork=true;}}
-function chooseFork(id){if(!S.fork||!S.fork.opts.includes(id))return false;const g=forkGain(id);
-  if(id==='neb')S.nebT=NEB_T;else if(id==='wreck'){S.T+=g;S.tTotal+=g;}else if(id==='calm'){S.L+=g;S.lTotal+=g;}else if(id==='wind')S.windT=(S.windT||0)+g;
-  S.fork=null;S.forkT=0;S.st.forks=(S.st.forks||0)+1;return true;}
-function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)):0;}
-function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
+function forkText(id){return id==='cluster'?'この宙域の残光 ×2':id==='wreck'?'引き直しの航跡 +'+Math.round(ROUTE_WRECK*100)+'%':id==='neb'?'この宙域を ×'+ROUTE_NEB+' の速さで':id==='calm'?'追い風 +'+Math.round(ROUTE_CALM/60)+'分':id==='rough'?'速さ ×'+ROUTE_ROUGH+'・生産 ×'+ROUTE_ROUGH_P:'記憶のかけら +1';}
+function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0)S.fork=null;}}   // 窓の下の分岐図は、宙域の境目に来たときだけ出る
+function chooseFork(id){if(!S.voy||!S.route||!S.route.opts.includes(id))return false;S.route.pick=id;S.fork=null;S.st.forks=(S.st.forks||0)+1;return true;}   // 次の宙域へ向かう星系を選ぶ（境目に来たときに効く）
+function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))):0;}
+function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;resetRun();S.vdist=0;S.vL=0;routeInit();S.stage=S.maxStage=2*tg('ps');logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
 function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=DEST[DEST.length-1].ly;}   // この宇宙で宇宙の果てに着いたら
 function uGain(){if(!canFold())return 0;return 2+Math.floor(Math.log2(Math.max(1,S.ubest/DEST[DEST.length-1].ly)));}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
 function fold(){const g=uGain();if(g<1)return 0;
   S.uHist.push({far:S.ubest,gain:g,time:Math.round(S.uTime),law:Object.assign({},S.law),tint:S.uTint});
-  S.U+=g;S.uTotal+=g;S.uni++;resetRun();S.vdist=0;S.vL=0;S.T=0;S.tTotal=0;S.tg={};S.ubest=0;S.uTime=0;
+  S.U+=g;S.uTotal+=g;S.uni++;resetRun();S.vdist=0;S.vL=0;routeInit();S.T=0;S.tTotal=0;S.tg={};S.ubest=0;S.uTime=0;
   S.uTint=S.uni%UNI_TINT.length;FXQ.fold=g;return g;}
 function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}

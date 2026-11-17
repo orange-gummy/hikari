@@ -252,12 +252,35 @@ function renderUnlock(){const ks=SKILLS.filter(k=>k.glow);if(S.chal!==unlockChal
   pbody.querySelectorAll('[data-us]').forEach(g=>g.onclick=()=>{litSel=g.dataset.us;pbody.dataset.k='';renderUnlock();});
   const go=document.getElementById('chGo');if(go)go.onclick=()=>confirmBox('チャレンジ「'+ch.name+'」段'+nx,'今の周回をやめて、遠い宙域から出直す。縛りは「'+ch.rule[ri]+'」。'+ch.gtext[ri]+'と、'+(nx===1?k.name+'が灯る。':'星「'+k.name+'」が強くなる。')+(S.voy?'航海は預けておき、越えるかやめると戻る。':'距離・年月・歪み・スキルはなくなり、残光は得られない。'),()=>{if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();if(startChallenge(k.id)){applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}});
   const q=document.getElementById('chQuit');if(q)q.onclick=()=>confirmBox('チャレンジをやめる',S.voyStash?'縛りがなくなり、預けていた航海に戻る。この段は越えたことにならない。':'縛りがなくなり、今の周回をそのまま続ける。この段は越えたことにならない。',()=>{quitChallenge();pbody.dataset.k='';renderPanel(true);});}
+/* 航路図（2026-11-17）：通ってきた宙域は光の線と星系の記号で残り、いまの宙域が明るく、次の宙域の候補が枝分かれする。先は目的地まで点で続く */
+function routeMap(W){const R=S.route;if(!R)return '';const H=140,n=R.n,TOT=voyDoublings(DEST[DEST.length-1].ly),k0=Math.max(0,n-4),k1=Math.min(TOT,k0+11),step=(W-36)/(k1-k0),X=k=>18+(k-k0)*step,Y=k=>74+Math.sin(k*1.3)*12,ink=a=>'rgba(236,238,242,'+a+')',col=id=>{const o=FORKS.find(x=>x.id===id);return o?'rgb('+o.col.join(',')+')':ink(.6);};
+  let v='<svg class="rMap" width="100%" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="group" aria-label="航路図">';
+  // 先の宙域：点で目的地まで
+  for(let k=n+2;k<=k1;k++){if(k-1>=k0)v+='<line x1="'+X(k-1).toFixed(1)+'" y1="'+Y(k-1).toFixed(1)+'" x2="'+X(k).toFixed(1)+'" y2="'+Y(k).toFixed(1)+'" stroke="'+ink(.12)+'" stroke-width=".8" stroke-dasharray="2 4"/><circle cx="'+X(k).toFixed(1)+'" cy="'+Y(k).toFixed(1)+'" r="1.4" fill="'+ink(.3)+'"/>';}
+  // 目的地
+  DEST.forEach((g,i)=>{const k=voyDoublings(g.ly);if(k<k0||k>k1)return;const got=S.found>i;v+='<line x1="'+X(k).toFixed(1)+'" y1="16" x2="'+X(k).toFixed(1)+'" y2="'+(Y(k)-6).toFixed(1)+'" stroke="'+ink(.12)+'" stroke-width=".6"/><circle cx="'+X(k).toFixed(1)+'" cy="'+Y(k).toFixed(1)+'" r="5" fill="none" stroke="'+(got?'rgba(255,214,170,.7)':ink(.35))+'" stroke-width=".8"/><text x="'+X(k).toFixed(1)+'" y="11" text-anchor="middle" font-size="9" fill="'+(got?'rgba(255,214,170,.8)':ink(.45))+'">'+g.name+'</text>';});
+  // 通ってきた道
+  for(let k=Math.max(1,k0);k<=n;k++){const t=R.path[k-1];if(k>k0)v+='<line x1="'+X(k-1).toFixed(1)+'" y1="'+Y(k-1).toFixed(1)+'" x2="'+X(k).toFixed(1)+'" y2="'+Y(k).toFixed(1)+'" stroke="rgba(255,214,170,.55)" stroke-width="1"/>';if(k<n&&t)v+='<g transform="translate('+X(k).toFixed(1)+' '+Y(k).toFixed(1)+')" opacity=".75">'+routeSym(t,col(t),0.7)+'</g>';}
+  if(k0===0)v+='<circle cx="'+X(0).toFixed(1)+'" cy="'+Y(0).toFixed(1)+'" r="2" fill="rgba(255,214,170,.8)"/><text x="'+X(0).toFixed(1)+'" y="'+(Y(0)+16).toFixed(1)+'" text-anchor="middle" font-size="9" fill="'+ink(.45)+'">故郷</text>';
+  // いまの宙域
+  const cx0=X(n),cy0=Y(n);v+='<circle class="rNow" cx="'+cx0.toFixed(1)+'" cy="'+cy0.toFixed(1)+'" r="9" fill="none" stroke="rgba(255,226,190,.8)" stroke-width=".8"/>'+(R.cur?'<g transform="translate('+cx0.toFixed(1)+' '+cy0.toFixed(1)+')">'+routeSym(R.cur,col(R.cur),0.8)+'</g>':'<circle cx="'+cx0.toFixed(1)+'" cy="'+cy0.toFixed(1)+'" r="2.4" fill="#fff4e6"/>');
+  // 次の宙域の候補
+  if(n<TOT){const go=routeAuto(),m=R.opts.length,nx=X(n+1);R.opts.forEach((id,i)=>{const y=Y(n+1)+(m===1?0:(i-(m-1)/2)*30),on=id===go,c=col(id);
+    v+='<g class="rOpt'+(on?' on':'')+'" data-rt="'+id+'" style="cursor:pointer"><rect x="'+(nx-16).toFixed(1)+'" y="'+(y-14).toFixed(1)+'" width="32" height="28" fill="transparent"/><path d="M'+(cx0+9).toFixed(1)+' '+cy0.toFixed(1)+'C'+(cx0+step*0.5).toFixed(1)+' '+cy0.toFixed(1)+' '+(nx-step*0.5).toFixed(1)+' '+y.toFixed(1)+' '+(nx-9).toFixed(1)+' '+y.toFixed(1)+'" fill="none" stroke="'+c+'" stroke-opacity="'+(on?.85:.35)+'" stroke-width="1"'+(on?'':' stroke-dasharray="3 3"')+'/>'+
+      '<g transform="translate('+nx.toFixed(1)+' '+y.toFixed(1)+')" class="'+(on?'rPick':'')+'">'+routeSym(id,c,on?1:0.85)+'</g></g>';});}
+  v+='<text x="'+(W-18)+'" y="'+(H-6)+'" text-anchor="end" font-size="9" letter-spacing="1" fill="'+ink(.4)+'" font-family="Michroma,Jura,sans-serif">SECTOR '+n+' / '+TOT+'</text></svg>';
+  // 説明：いまの宙域と、次の候補（押して選ぶ）
+  const go=routeAuto();v+='<div class="rNowT">'+(R.cur?'いまの宙域　<b>'+FORKS.find(x=>x.id===R.cur).name+'</b>　'+forkText(R.cur):'故郷を出たところ')+'</div>';
+  if(n<TOT){v+='<div class="note" style="margin:6px 0 2px">次の宙域（'+lyText(1e4*Math.pow(2,n))+' 光年から）</div>';
+    R.opts.forEach(id=>{const o=FORKS.find(x=>x.id===id),on=id===go;v+='<button class="rRow'+(on?' on':'')+'" data-rt="'+id+'"><svg width="22" height="22" viewBox="-11 -11 22 22">'+routeSym(id,col(id))+'</svg><span class="rN">'+o.name+'</span><span class="rE">'+forkText(id)+'</span><span class="rS">'+(on?(R.pick?'この道へ':'選ばなければ'):'')+'</span></button>';});}
+  return v;}
 /* ③ さらに遠くへ（GALAXY タブ） */
 function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
   if(part==='voy'&&!S.voy&&canVoyage())h+='<div class="phead"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。故郷への周回は終わり、航海では船は止まらない。歪みは走りながらたまり、スキルは自動で覚える。残光とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';
   if(part==='wake')h+='<div class="phead"><span class="lab">WAKE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+(S.voy?'':'<div class="note">航海に出ると、航跡で航海を強くできる。</div>');
   if(part==='voy'&&S.voy){const tgn=tGain(),n=nextDest();
-    h+='<div class="phead"><span class="lab">VOYAGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+
+    if(!S.route)routeInit();
+    h+='<div class="phead"><span class="lab">VOYAGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+routeMap(Math.max(300,Math.min(520,(pbody.clientWidth||340))))+
     '<div class="row"><span>引き直すと得る航跡</span><span class="big">'+fmt(tgn)+'</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">この航海で進んだ距離</span><span class="num">'+lyText(S.vdist)+' 光年</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の目的地</span><span class="num">'+(n?n.name+'（'+lyText(n.ly)+' 光年）':'もう、ない')+'</span></div>'+
@@ -270,6 +293,7 @@ function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
       (n2?'<button class="buy" data-t="'+a.id+'"'+(S.T<n2.cost?' disabled':'')+'>航跡 '+fmt(n2.cost)+'</button>':'')+'</div></div>';});}
   pbody.dataset.k='';pbody.innerHTML=h;
   pbody.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(buyTrail(b.dataset.t)){fla=Math.max(fla,0.1);renderPanel(true);}});
+  pbody.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>pickFork(b.dataset.rt));
   const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、残光は残る。',()=>{startBrake(0);BRK.vr=true;});
   const fg=document.getElementById('farGo');if(fg)fg.onclick=()=>showDoor();}   // どこから押しても、章の扉を通って航海へ
 function renderLog(){pbody.dataset.k='';const logMode=curTab==='ach'?'ach':'log';let h='<div class="phead"><span class="lab">'+(logMode==='log'?'LOG':'RECORD')+'</span>'+(logMode==='ach'?'<span class="num" style="font-size:12px;color:var(--ink-dim)">実績 '+S.ach.length+' / '+ACHIEVEMENTS.length+'</span>':'')+'</div>';

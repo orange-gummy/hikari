@@ -8,15 +8,23 @@ const forkEl=document.createElement('div');forkEl.id='forkOv';forkEl.setAttribut
 let forkKey='';
 const f1=n=>n.toFixed(1);
 const fkDefs=()=>'';
+// 星系の記号（航路図と窓の下の分岐図で共通）
+function routeSym(id,col,k){k=k||1;const sw=(1/k).toFixed(2),r=v=>(v*k).toFixed(1);
+  if(id==='neb')return '<circle r="'+r(5)+'" fill="none" stroke="'+col+'" stroke-width="1"/><circle r="'+r(1.6)+'" fill="'+col+'"/>';
+  if(id==='wreck')return '<path d="M0 '+r(-5.5)+'L'+r(5.5)+' 0L0 '+r(5.5)+'L'+r(-5.5)+' 0Z" fill="none" stroke="'+col+'" stroke-width="1"/>';
+  if(id==='calm')return '<rect x="'+r(-4.5)+'" y="'+r(-4.5)+'" width="'+r(9)+'" height="'+r(9)+'" fill="none" stroke="'+col+'" stroke-width="1"/>';
+  if(id==='cluster')return '<circle r="'+r(1.5)+'" fill="'+col+'"/><circle cx="'+r(-4)+'" cy="'+r(2)+'" r="'+r(1.1)+'" fill="'+col+'"/><circle cx="'+r(3.6)+'" cy="'+r(2.6)+'" r="'+r(1.1)+'" fill="'+col+'"/><circle cx="'+r(.6)+'" cy="'+r(-4.2)+'" r="'+r(1.1)+'" fill="'+col+'"/>';
+  if(id==='rough')return '<path d="M'+r(-6)+' 0L'+r(-3)+' '+r(-4)+'L0 '+r(3)+'L'+r(3)+' '+r(-4)+'L'+r(6)+' 0" fill="none" stroke="'+col+'" stroke-width="1"/>';
+  return '<circle r="'+r(5)+'" fill="none" stroke="'+col+'" stroke-width="1" stroke-dasharray="2 2"/><circle r="'+r(1)+'" fill="'+col+'"/>';}
 // 計器の分岐図として：窓の下の端に、細い線の枝分かれと記号
 function forkGauge(f){const W=FR.w,H=FR.h,n=f.opts.length,gw=Math.min(W-28,340),rb=RC.y-FR.y+(ringEl.getBoundingClientRect().height/2||60),gh=Math.max(40,Math.min(n===3?84:64,H-rb-46)),x0=(W-gw)/2,y0=H-gh-22,bx=x0+gw*(W<500?0.18:0.28),ym=y0+gh/2,ex=x0+gw*(W<500?0.34:0.5);
   const ink=a=>'rgba(236,238,242,'+a+')',tight=n>1&&gh/(n-1)<34;
   let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'+fkDefs()+
-    '<text x="'+f1(x0)+'" y="'+f1(y0-8)+'" font-size="8.5" letter-spacing="1.5" fill="'+ink(0.45)+'" font-family="Michroma,Jura,sans-serif">ROUTE · BRANCH</text>'+
+    '<text x="'+f1(x0)+'" y="'+f1(y0-8)+'" font-size="8.5" letter-spacing="1.5" fill="'+ink(0.45)+'" font-family="Michroma,Jura,sans-serif">NEXT SECTOR</text>'+
     '<line x1="'+f1(x0)+'" y1="'+f1(ym)+'" x2="'+f1(bx)+'" y2="'+f1(ym)+'" stroke="'+ink(0.7)+'" stroke-width="1"/><path d="M'+f1(x0)+' '+f1(ym-4)+'l7 4l-7 4z" fill="'+ink(0.9)+'"/>'+
     '<circle class="fkLife" cx="'+f1(bx)+'" cy="'+f1(ym)+'" r="6" fill="#04050C" stroke="'+ink(0.6)+'" stroke-width="1" transform="rotate(-90 '+f1(bx)+' '+f1(ym)+')" stroke-dasharray="37.7 37.7"/>';
   for(let t=0;t<=10;t++){const xx=x0+gw*t/10;v+='<line x1="'+f1(xx)+'" y1="'+f1(y0+gh+6)+'" x2="'+f1(xx)+'" y2="'+f1(y0+gh+(t%5?9:12))+'" stroke="'+ink(0.25)+'" stroke-width=".6"/>';}
-  f.opts.forEach((id,k)=>{const o=FORKS.find(x=>x.id===id),col='rgb('+o.col.join(',')+')',y=n===1?ym:y0+gh*k/(n-1),sym=id==='neb'?'<circle r="5" fill="none" stroke="'+col+'" stroke-width="1"/><circle r="1.6" fill="'+col+'"/>':id==='wreck'?'<path d="M0 -5.5L5.5 0L0 5.5L-5.5 0Z" fill="none" stroke="'+col+'" stroke-width="1"/>':id==='calm'?'<rect x="-4.5" y="-4.5" width="9" height="9" fill="none" stroke="'+col+'" stroke-width="1"/>':'<path d="M-5 3L0 -4L5 3" fill="none" stroke="'+col+'" stroke-width="1"/>';
+  f.opts.forEach((id,k)=>{const o=FORKS.find(x=>x.id===id),col='rgb('+o.col.join(',')+')',y=n===1?ym:y0+gh*k/(n-1),sym=routeSym(id,col);
     v+='<g class="fkOpt" data-fk="'+id+'" tabindex="0" role="button" aria-label="'+o.name+'　'+forkText(id)+'"><rect x="'+f1(bx+6)+'" y="'+f1(y-14)+'" width="'+f1(x0+gw-bx)+'" height="28" fill="transparent"/>'+
       '<path d="M'+f1(bx+6)+' '+f1(ym)+'C'+f1(bx+30)+' '+f1(ym)+' '+f1(bx+20)+' '+f1(y)+' '+f1(ex-10)+' '+f1(y)+'H'+f1(ex-8)+'" fill="none" stroke="'+col+'" stroke-opacity=".75" stroke-width="1"/>'+
       '<g transform="translate('+f1(ex)+' '+f1(y)+')" class="fkNode">'+sym+'</g>'+(tight?'<text x="'+f1(ex+14)+'" y="'+f1(y+4)+'" font-size="10.5" fill="#f6f7fb">'+o.name+'<tspan dx="8" font-size="9.5" fill="'+col+'">'+forkText(id)+'</tspan></text>':'<text x="'+f1(ex+14)+'" y="'+f1(y-1)+'" font-size="11" fill="#f6f7fb">'+o.name+'</text><text x="'+f1(ex+14)+'" y="'+f1(y+12)+'" font-size="9.5" fill="'+col+'">'+forkText(id)+'</text>')+'</g>';});
@@ -30,4 +38,4 @@ function paintFork(){const f=S.fork,show=f&&S.voy&&!BRK&&!RST&&!climax&&!FOLD&&!
   const lf=forkEl.querySelector('.fkLife');if(lf){const k=Math.max(0,f.life/FORK_LIFE);const L=+lf.getAttribute('r')*6.283;lf.setAttribute('stroke-dasharray',(L*k).toFixed(1)+' '+L.toFixed(1));}
   forkEl.style.opacity=f.life<10?Math.max(0,f.life/10).toFixed(2):'';}
 function pickFork(id){const o=FORKS.find(x=>x.id===id),txt=forkText(id);if(!chooseFork(id))return;SND.play('light');fla=Math.max(fla,0.12);
-  toast(o.name+'　<b>'+txt+'</b>');logLine(FORK_LINES[id],-1);forkKey='';paintFork();save();if(curTab==='drive'||curTab==='voy')renderPanel(true);}
+  toast('次の宙域　<b>'+o.name+'</b>　'+txt);forkKey='';paintFork();save();if(curTab==='drive'||curTab==='voy')renderPanel(true);}

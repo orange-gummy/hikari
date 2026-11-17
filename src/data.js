@@ -72,9 +72,11 @@ const TOP_STAGE=MAX_STAGE+10;   // 故郷への周回は、はじめから9が22
 const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.8),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||5);   // 追い風（2026-11-16）：留守の間のエネルギーは OFF_NOW（8割）だけすぐ入り、残りは追い風の時間（S.windT 秒）になって、遊んでいる間に生産 ×WIND_X で吹く（2026-11-16 にエネルギーから時間に変えた）
 // 航路の分かれ道（2026-11-16）：航海で遊んでいる間、FORK_INT 秒ごとに分かれ道が出る。選ばなければ FORK_LIFE 秒でまっすぐ進む
 const FORK_INT=+((typeof process!=='undefined'&&process.env.FORK_INT)||600),FORK_LIFE=180,NEB_T=600;
-const FORKS=[{id:'neb',name:'星雲を抜ける',col:[150,170,255]},{id:'wreck',name:'古い星の残骸に寄る',col:[220,200,170]},{id:'calm',name:'静かな空域へ',col:[255,214,170]},{id:'wind',name:'追い風の流れに乗る',col:[200,235,255]}];
+// 航路図（2026-11-17）：距離が2倍になるごとの「宙域」で、次に向かう星系を選ぶ。星系の性格（その宙域のあいだ効く）
+const FORKS=[{id:'cluster',name:'明るい星団',col:[255,226,190]},{id:'wreck',name:'古い星の残骸',col:[220,200,170]},{id:'neb',name:'星雲',col:[150,170,255]},{id:'calm',name:'静かな空域',col:[200,235,255]},{id:'rough',name:'荒れた宙域',col:[255,150,130]},{id:'unknown',name:'未知の星系',col:[210,190,255]}];
+const ROUTE_TYPES=['cluster','wreck','neb','calm','rough'],ROUTE_UNKNOWN=0.12,ROUTE_CALM=1200,ROUTE_NEB=3,ROUTE_ROUGH=5,ROUTE_ROUGH_P=0.5,ROUTE_WRECK=0.1;
 // 引き直しをすすめる目安：得られる航跡が「今までの合計 × REDRAW_R」以上（以前は合計以上＝1）
-const FORK_LINES={neb:'星雲の中を、光が速く流れていく。',wreck:'古い星の残骸に、誰かの航跡が残っていた。',calm:'静かな空域。故郷の光が、少しだけ近い。',wind:'見えない流れが、帆を押した。'};
+const FORK_LINES={cluster:'星団の光が、帆いっぱいに当たる。',neb:'星雲の中を、光が速く流れていく。',wreck:'古い星の残骸に、誰かの航跡が残っていた。',calm:'静かな空域。故郷の光が、少しだけ近い。',rough:'荒れた宙域。船がきしむ。',unknown:'見たことのない星。何かを、思い出しかけた。'};
 const LC_A=+((typeof process!=='undefined'&&process.env.LC_A)||5),LC_B=+((typeof process!=='undefined'&&process.env.LC_B)||1.52);   // ④ 光の上限の値段（2026-11-16 に急にした。⑤まで遊び方Cで3〜4週間）
 const REDRAW_R=+((typeof process!=='undefined'&&process.env.REDRAW_R)||0.3);
 const TIME_K=0.3;   // 故郷への周回で9が12個より先は、故郷の時間と生産の速まりを γ のこの乗にとどめる（周回が数分に縮まないように）
