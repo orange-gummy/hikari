@@ -67,7 +67,7 @@ let loopStart=0;
 function pri(x){return x[1].cost*(x[0]==='rm'?0.4:1);}   // 航路の記憶を優先
 // 周ごとに、遊んだ時間とチャレンジの周かを出す（2026-11-18。周の長さは寝ている間も含むので、短い周と長い周が交互に見えていた）
 var LASTCH='',PLAYED=0;function arrive(){
-  RLOG.push('周'+(S.restarts+1)+' '+(DAYS?((t-loopStart)/3600).toFixed(1)+'時間（遊んだ'+(PLAYED/3600).toFixed(1)+'時間'+(LASTCH?'・'+LASTCH:'')+'、'+(t/86400).toFixed(2)+'日目に到着）':((t-loopStart)/60).toFixed(1)+'分')+' 停止'+S.prestiges+' 色 '+LOSES.join(' '));
+  RLOG.push('周'+(S.restarts+1)+' '+(DAYS?((t-loopStart)/3600).toFixed(1)+'時間（遊んだ'+(PLAYED/3600).toFixed(1)+'時間'+(LASTCH?'・'+LASTCH+(S.chal?' 目標9×'+nines(S.chalNeed)+'に届かず':''):'')+'・9×'+nines(S.maxStage)+'、'+(t/86400).toFixed(2)+'日目に到着）':((t-loopStart)/60).toFixed(1)+'分')+' 停止'+S.prestiges+' 色 '+LOSES.join(' '));
   LOSES.length=0;LASTCH='';PLAYED=0;S.cleared=true;done=false;lastP=t;loopStart=t;
   if(canVoyage()){startVoyage();voyDay=(t/86400).toFixed(2)+'日目';}else rebirth();
   spendL();
