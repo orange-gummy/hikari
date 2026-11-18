@@ -398,7 +398,14 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscro
 .gDet.gSwap{animation:gUp .35s both}
 .gVal.gRoll b{display:inline-block;animation:gRoll .8s .2s cubic-bezier(.2,.8,.3,1) both}
 @keyframes gRoll{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.gScene .gSway,#glowOv.gIntro *{animation:none!important}}
+/* 記憶の家並み（2026-11-18） */
+.gScene .gHouse{stroke:rgba(236,238,242,.28);transition:stroke .35s}.gScene .gG.on .gHouse{stroke:rgba(255,236,210,.7)}
+.gScene .gYard{opacity:.25;transition:opacity .35s}.gScene .gG.on .gYard{opacity:.9}
+.gScene .gG .gWinOn{opacity:.72;transition:opacity .35s}.gScene .gG.on .gWinOn{opacity:1}
+.gScene .gWin{animation:gWin 6s ease-in-out infinite}@keyframes gWin{0%,100%{opacity:.82}40%{opacity:1}55%{opacity:.7}70%{opacity:.95}}
+.gScene .gTree{transform-box:view-box;animation:gTree 8s ease-in-out infinite}@keyframes gTree{0%,100%{transform:skewX(0)}50%{transform:skewX(1.5deg)}}
+#glowOv.gIntro .gWinOn{animation:gFade .5s both;animation-delay:calc(var(--i)*.12s + 1.1s + var(--w)*.09s)}
+@media (prefers-reduced-motion:reduce){.gScene .gSway,.gScene .gWin,.gScene .gTree,#glowOv.gIntro *{animation:none!important}}
 
 /* 航路図（2026-11-17） */
 .rMap{display:block;margin:4px 0 2px;overflow:hidden}
