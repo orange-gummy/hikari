@@ -29,7 +29,7 @@ function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if
 function setSel(b,v){const s=v?'true':'false';if(b.getAttribute('aria-selected')!==s)b.setAttribute('aria-selected',s);}
 function setCls(b,c,v){if(b.classList.contains(c)!==!!v)b.classList.toggle(c,!!v);}
 function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){setSel(b,b.dataset.l===curLayer);return;}setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
-function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;if((t==='photon'||t==='sail')&&(!S.voy||S.chal))return true;return (t==='battery'&&((S.chal==='c7'&&S.chalLv>=2)||!S.flags.bat))||(t==='reset'&&((S.maxStage<BRAKE_STAGE&&S.restarts===0)||(S.voy&&!S.chal)))||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
+function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;if((t==='photon'||t==='sail')&&(!S.voy||S.chal))return true;return (t==='battery'&&((S.chal==='c7')||!S.flags.bat))||(t==='reset'&&((S.maxStage<BRAKE_STAGE&&S.restarts===0)||(S.voy&&!S.chal)))||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&!S.flags.bat);}
 let devUI=[],TIERFX=null;
 /* 次の章までの道しるべ（2026-11-16）：STAR・GALAXY・UNIVERSE・LIGHT の層の上に一行。いまの章と、次の扉までの進み具合 */

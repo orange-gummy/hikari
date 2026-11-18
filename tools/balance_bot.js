@@ -74,7 +74,7 @@ var LASTCH='',PLAYED=0;function arrive(){
   // 上位の星はチャレンジで灯す：まだ灯っていない星があれば、再出発の代わりに挑む
   if(!S.voy){const id=CHAL_ORDER.find(k=>!S.lit.includes(k));if(id&&startChallenge(id)){CLOG.push(CHAL[id].name+' '+(t/86400).toFixed(2)+'日目〜');chalT=t;LASTCH='チャレンジ '+CHAL[id].name;}}
 }
-const CHAL_ORDER=Object.keys(CHAL),CLOG=[];let chalT=0;
+const CHAL_ORDER=process.env.CHAL_ORDER?process.env.CHAL_ORDER.split(','):Object.keys(CHAL),CLOG=[];let chalT=0;
 function chalWatch(){if(chalT&&!S.chal){if(process.env.DBG)console.log('DBG chal done',CLOG[CLOG.length-1],'loopTime',S.loopTime,'maxStage',S.maxStage,'t',t);CLOG[CLOG.length-1]+=(S.loopTime/3600).toFixed(1)+'時間';chalT=0;if(S.lit.length>=8&&!litDay)litDay=(t/86400).toFixed(2)+'日目';}}
 function spendL(){
   let b=true;while(b){b=false;const c=AFTERGLOW.map(a=>[a.id,glowNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.L).sort((x,y)=>pri(x)-pri(y));if(c.length){buyGlow(c[0][0]);b=true;}}

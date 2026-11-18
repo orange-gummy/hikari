@@ -12,7 +12,7 @@ function freshStats(){return {since:Date.now(),play:0,idle:0,stops:0,loops:[],ch
 let S=freshState();
 // 持っているスキルの集合を使い回す（2026-11-18、試算ツールで1秒に何百回も呼ばれて重かった）。skills と lit は入れ替えか push でしか変わらないので、配列そのものと長さで見張る
 let _hasC=null;
-function has(id){if(id[0]==='a'&&S.chal==='c7'&&S.chalLv>=3)return false;   // 「触れない」段3は自動化が効かない
+function has(id){if(id[0]==='a'&&S.chal==='c7'&&S.chalLv>=2)return false;   // 「触れない」段2から自動化が効かない（2026-11-18 に段3から前倒し）
   const c=_hasC,am=S.ag.am||0;
   if(!c||c.S!==S||c.k!==S.skills||c.kn!==S.skills.length||c.l!==S.lit||c.ln!==S.lit.length||c.am!==am){const set=new Set(S.skills.concat(S.lit));for(let k=1;k<=am;k++)for(const x of AM_GRANT[k])set.add(x);
     _hasC={S,k:S.skills,kn:S.skills.length,l:S.lit,ln:S.lit.length,am,set};}

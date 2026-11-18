@@ -61,6 +61,7 @@ function onMilestone(){FXQ.milestone=true;if(has('eC'))S.crit=30;}
 function baseRateNoFusion(){let b=0;for(const i of PRODI)if(i!==2)b+=devBase(i);return b*globalMult();}
 function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult()*sailMult();   // ③ 光子の帆：船の時間が速く流れる
   if(routeCur()==='rough')r*=ROUTE_ROUGH_P;   // 航路図：荒れた宙域（2026-11-18 まで前の行のコメントに入っていて効いていなかった）
+  if(S.chal==='cG')r*=Math.pow(1/3,(S.lost||0)+(S.greyLost?1:0));   // 「速い故郷」：色を失うたびに生産が3分の1（2026-11-18）
   if(S.chal==='eM'&&r>1)r=Math.pow(r,chalP());                                    // 「薄い光」：桁が小さくなる
   if(has('eM')&&r>1)r=Math.pow(r,sp('eM'));                                       // 濃い光
   if(has('a8')&&S.loopTime<600)r*=sp('a8');                                       // 出だしの風
@@ -133,7 +134,7 @@ function prestige(respec){
   const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
   const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage*sp('pR')):0,keep=0;
   if(respec){S.W+=skillSpent();S.skills=[];}
-  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.lastBuy=[];S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
+  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.lastBuy=[];S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&(S.chalLv||1)<3&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   story('prest1',LINES.prest1);FXQ.prestige=true;voyLearn();
 }
 /* 再出発（第二層） */
@@ -160,7 +161,7 @@ const STASH_KEYS=['route','ph','phDev','phBuy','sail','E','Erun','dev','frac','u
 function voyStashSave(){const o={};for(const k of STASH_KEYS)o[k]=JSON.parse(JSON.stringify(S[k]===undefined?null:S[k]));S.voyStash=o;S.voy=false;}
 function voyStashBack(){if(!S.voyStash)return false;const o=S.voyStash;for(const k of STASH_KEYS)S[k]=o[k];S.voyStash=null;S.voy=true;FXQ.voyBack=true;return true;}
 function chalNext(id){const t=S.chalTier[id]||0;return t<3?t+1:0;}   // 次に挑む段（3段すべて越えたら0）
-function startChallenge(id){if(!CHAL[id])return false;const lv=chalNext(id);if(!canChallengeAt(lv))return false;if(S.voy)voyStashSave();resetRun();S.chal=id;S.chalLv=lv;S.lastBuy=[];if(id==='c7')S.dev[0]=1;FXQ.chal=id;return true;}
+function startChallenge(id){if(!CHAL[id])return false;const lv=chalNext(id);if(!canChallengeAt(lv))return false;if(S.voy)voyStashSave();resetRun();S.chal=id;S.chalLv=lv;S.lastBuy=[];if(id==='c7'&&lv<3)S.dev[0]=1;FXQ.chal=id;return true;}
 function quitChallenge(){S.chal=null;S.chalLv=0;voyStashBack();}
 function chalCheck(){if(!S.chal)return;const id=S.chal,lv=S.chalLv||1,g=CHAL[id].goal[lv-1];if((g.stage&&S.maxStage>=g.stage)||(g.home&&S.dist>=GOAL_LY)){S.chal=null;S.chalLv=0;S.chalTier[id]=Math.max(S.chalTier[id]||0,lv);if(!S.lit.includes(id))S.lit.push(id);if(lv===1)S.st.chal[id]=Date.now();const k=SKILLS.find(x=>x.id===id);logLine(lv===1?k.name+'が灯った。':'「'+CHAL[id].name+'」の段'+lv+'を越えた。',-1);FXQ.chalDone={id,lv};voyStashBack();}}
 /* ③ さらに遠くへ（航跡） */
@@ -240,4 +241,4 @@ function buySkill(id){const k=SKILLS.find(x=>x.id===id);if(typeof skillPick!=='u
 /* 流星群の器 */
 function vesTier(){let t=-1;VES.forEach((v,i)=>{if(S.vessel>=v.need)t=i;});return t;}
 function vesAdd(n){S.vessel=Math.min(VES[VES.length-1].need,(S.vessel||0)+n);}
-function canShower(){return S.flags.bat&&!(S.chal==='c7'&&S.chalLv>=2)&&vesTier()>=0;}
+function canShower(){return S.flags.bat&&!(S.chal==='c7')&&vesTier()>=0;}
