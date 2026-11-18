@@ -46,7 +46,7 @@ function gapReport(){const L=x=>x>=3600?(x/3600).toFixed(1)+'時間':Math.round(
 // 画面を触っている1秒
 // st 秒をまとめて進める（航海の間は VSTEP 秒ずつ。タップは10秒に3回の割合を、まとめた分だけ足す）
 const VSTEP=+(process.env.VSTEP||5);   // 航海の前（①②）もまとめると、加速や停止の時機がずれて結果が変わり、速くもならなかった
-function act(st){st=st||1;const many=st>1;
+function act(st){st=st||1;PLAYED+=st;const many=st>1;
   tick(st);const P=prodRate();if(S.chal!=='c7'&&(many?true:(P<2000||t%10<3))){const n=many?(P<2000?st:st*0.3):1;S.E+=tapGain()*2*n;S.Erun+=tapGain()*2*n;S.pulse=10;}
   if(S.voy&&!S.chal){if(many)phGain(PH_TAP*2*st*0.3,PH_TAP_MIN);else if(t%10<3)phGain(PH_TAP*2,PH_TAP_MIN);if(!process.env.NOPH&&!phAutoOpen())phBuyPart();}   // ③ 光子：手元の4分の1までで列を買う（残りは引き直すときの帆に）
   checkStory();chalWatch();if(t%5===0)achCheck();gapTick(st);
@@ -65,13 +65,14 @@ function idle(sec){if(sec<30||done)return;const tt=Math.min(sec,offlineCap()),mu
 // 着いたら再出発し、残光を安い順に強化と星に使う
 let loopStart=0;
 function pri(x){return x[1].cost*(x[0]==='rm'?0.4:1);}   // 航路の記憶を優先
-function arrive(){
-  RLOG.push('周'+(S.restarts+1)+' '+(DAYS?((t-loopStart)/3600).toFixed(1)+'時間（'+(t/86400).toFixed(2)+'日目に到着）':((t-loopStart)/60).toFixed(1)+'分')+' 停止'+S.prestiges+' 色 '+LOSES.join(' '));
-  LOSES.length=0;S.cleared=true;done=false;lastP=t;loopStart=t;
+// 周ごとに、遊んだ時間とチャレンジの周かを出す（2026-11-18。周の長さは寝ている間も含むので、短い周と長い周が交互に見えていた）
+var LASTCH='',PLAYED=0;function arrive(){
+  RLOG.push('周'+(S.restarts+1)+' '+(DAYS?((t-loopStart)/3600).toFixed(1)+'時間（遊んだ'+(PLAYED/3600).toFixed(1)+'時間'+(LASTCH?'・'+LASTCH:'')+'、'+(t/86400).toFixed(2)+'日目に到着）':((t-loopStart)/60).toFixed(1)+'分')+' 停止'+S.prestiges+' 色 '+LOSES.join(' '));
+  LOSES.length=0;LASTCH='';PLAYED=0;S.cleared=true;done=false;lastP=t;loopStart=t;
   if(canVoyage()){startVoyage();voyDay=(t/86400).toFixed(2)+'日目';}else rebirth();
   spendL();
   // 上位の星はチャレンジで灯す：まだ灯っていない星があれば、再出発の代わりに挑む
-  if(!S.voy){const id=CHAL_ORDER.find(k=>!S.lit.includes(k));if(id&&startChallenge(id)){CLOG.push(CHAL[id].name+' '+(t/86400).toFixed(2)+'日目〜');chalT=t;}}
+  if(!S.voy){const id=CHAL_ORDER.find(k=>!S.lit.includes(k));if(id&&startChallenge(id)){CLOG.push(CHAL[id].name+' '+(t/86400).toFixed(2)+'日目〜');chalT=t;LASTCH='チャレンジ '+CHAL[id].name;}}
 }
 const CHAL_ORDER=Object.keys(CHAL),CLOG=[];let chalT=0;
 function chalWatch(){if(chalT&&!S.chal){if(process.env.DBG)console.log('DBG chal done',CLOG[CLOG.length-1],'loopTime',S.loopTime,'maxStage',S.maxStage,'t',t);CLOG[CLOG.length-1]+=(S.loopTime/3600).toFixed(1)+'時間';chalT=0;if(S.lit.length>=8&&!litDay)litDay=(t/86400).toFixed(2)+'日目';}}
