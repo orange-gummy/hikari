@@ -92,7 +92,7 @@ function tick(dt,offMul){
   else{gain=P*dt;if(S.windT>0){const w=Math.min(S.windT,dt);gain+=P*w*(WIND_X-1);S.windT-=w;}forkTick(dt);}
   if(S.nebT>0)S.nebT=Math.max(0,S.nebT-dt);   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
   S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;voyWarp();phTick(dt*(offMul||1)*uk);phAutoBuy();
-  autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&!n.lock&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
+  autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&!n.lock&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&!(S.voy&&!S.lightDone&&lightReach())&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();   // ⑤に届いたら、光になるまで自動の加速は止める（止めないと値段が逃げ続けて光になれなかった、2026-11-18）
   for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt*uk;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
   const dy=yearsPerSec()*dt*uk;S.years+=dy;
   if(S.voy)S.uTime+=dt*(offMul||1);
