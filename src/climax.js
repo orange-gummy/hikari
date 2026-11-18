@@ -54,7 +54,7 @@ document.getElementById('tBack').onclick=()=>{clearSub();if(PREVIEW){S.log.lengt
 function paintTitle(){document.getElementById('tBack').style.display=PREVIEW?'':'none';const f=document.getElementById('tFar');f.style.display=!PREVIEW&&canVoyage()?'':'none';const b=document.getElementById('tAgain');b.disabled=!!PREVIEW||!S.cleared;b.textContent=PREVIEW||!S.cleared?'もう一度、船を出す':'もう一度、船を出す　記憶 +'+fmt(lGain());}
 document.getElementById('tAgain').onclick=()=>{if(PREVIEW||!S.cleared)return;document.getElementById('tBack').onclick();rebirth();applyLoadedVisuals();for(let i=0;i<7;i++){A[i]=0.4;}curTab='drive';renderPanel(true);paintGoal();save();openGlow(()=>startRestart(true));};
 // ③ さらに遠くへ：着いたあとの故郷から、長い航海に出る
-function goFarther(){if(!canVoyage())return;if(document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();startVoyage();applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}
+function goFarther(){if(!canVoyage())return;if(climax||document.getElementById('title').classList.contains('on'))document.getElementById('tBack').onclick();startVoyage();applyLoadedVisuals();curTab='drive';renderPanel(true);paintGoal();save();startRestart();}   // 星8つで着くとタイトルの代わりに扉が出るので、タイトルが出ていなくても到着の演出を片づける（2026-11-18 まで片づけず、航海に出ても時間が止まったままだった）
 document.getElementById('tGear').onclick=()=>openSettings();
 document.getElementById('tFar').onclick=()=>{if(!PREVIEW)goFarther();};
 // 「最初から遊ぶ」はタイトルから外した（2026-11-15）。最初からやり直すのは設定から

@@ -52,7 +52,8 @@ function rollHV(){if(!HVR)return;const h=document.getElementById('hV'),el2=Date.
   const p=Math.min(1,el2/900),q=eo(p);
   if(to<=5){const v=KMS[from]+(KMS[to]-KMS[from])*q;h.textContent=Math.round(v).toLocaleString('ja-JP')+' km/s';}
   else{const v0=stageBeta(from)*100,v1=stageBeta(to)*100,v=v0+(v1-v0)*q;h.textContent=(v<1?v.toFixed(2):v<10?v.toFixed(1):Math.floor(v).toString())+'% c';}
-  h.style.fontSize=sizeFor(h.textContent);if(p>=1){paintSpeed();HVR=null;}}
+  hvSize(h,h.textContent);   // 2026-11-18 まで消した sizeFor を呼んでいて、9が12個までの加速のたびに毎コマ止まっていた
+  if(p>=1){paintSpeed();HVR=null;}}
 function renderPanelTabsOnly(){paintTabs();}
 function offline(){windMigrate();const el2=(Date.now()-(S.last||Date.now()))/1000;if(el2<30||S.cleared)return;S.st.idle+=Math.min(el2,offlineCap());if(S.flags.bat)vesAdd(Math.min(el2,offlineCap())/600);const t=Math.min(el2,offlineCap());const e0=S.Erun,y0=S.years,w0=S.windT||0;const steps=200,mul=has('cB')?2:1;for(let k=0;k<steps;k++)tick(t/steps,mul);
   if(el2>=600)S.idleBack=true;checkStory();

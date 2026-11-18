@@ -250,7 +250,7 @@ addEventListener('resize',()=>{if(sailOpen)renderSailOv();});
 function renderGlowOv(){const ov=document.getElementById('glowOv'),b=document.getElementById('glowBody');
   b.innerHTML='<div class="gTop"><div class="gLab">MEMORY</div><div class="gL"><span>記憶</span><b>'+fmt(S.L)+'</b></div><div class="gRes">'+(glowResult()||'船を出す前に、記憶で灯しておける。')+'</div></div>'+
     '<div class="gBot">'+glowDetail()+'<button class="act" id="glowGo" style="margin-top:10px">船を出す</button></div><div class="gSky"></div>';
-  const W=ov.clientWidth,H=ov.clientHeight,bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height,hz=Math.round(Math.max(top+150,H-bot-70));
+  const W=ov.clientWidth,H=ov.clientHeight;if(!W||!H)return;const bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height,hz=Math.round(Math.max(top+150,H-bot-70));
   b.querySelector('.gSky').innerHTML=glowScene(W,H,hz);
   b.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>glowPick(g.dataset.gs));
   glowBindBuy();
