@@ -25,7 +25,7 @@ const DAYS=${JSON.stringify(DAYS)},LOOPS=${LOOPS},WEEK=${WEEK},SCHED=${JSON.stri
 function stamp(){return DAYS?(t/86400).toFixed(2):(t/60).toFixed(1);}   // 日数モードは日、ふだんは分
 const LOG=[],RLOG=[];
 const PATH=['p1','e1','c1','p2','e2','c2','p3','e3','c3','pB','pA','eA','eB','cB','cA','p5','e5','c5','pS','eC','cS','cL','pI','eR','cC','cM','pW'];
-function best(){let b=null;const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;for(const i of PRODI){if(!devOpen(i)||chalBlocksDevice(i))continue;const c=devCost(i,1);if(c>S.E||c>0.12*nxt)continue;const P0=prodRate();S.dev[i]++;const P1=prodRate();S.dev[i]--;const r=(P1-P0)/c;if(!b||r>b.r)b={i,r};}return b;}
+function best(){let b=null,P0=null;const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;for(const i of PRODI){if(!devOpen(i)||chalBlocksDevice(i))continue;const c=devCost(i,1);if(c>S.E||c>0.12*nxt)continue;if(P0===null)P0=prodRate();S.dev[i]++;const P1=prodRate();S.dev[i]--;const r=(P1-P0)/c;if(!b||r>b.r)b={i,r};}return b;}
 let lastP=0;
 // 暇な時間を測る（--gaps）：触っている間の秒だけを数え、手応えのある出来事（加速・TIER・新しい装置・緊急停止とスキル・色を失う・
 // 再出発・チャレンジ・目的地・引き直し・宇宙を畳む）の間隔を記録する。装置を買い足すだけの時間は「暇」に数える
@@ -51,8 +51,8 @@ function act(){
   let g=true,gi=0;while(g&&gi++<300){g=false;
     if(S.stage<maxStage()&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
     const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;
-    for(const i of PRODI){const n=tierNext(i);if(n&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}
-    const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;onBought(b.i);if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else buyDevice(b.i,'1');g=true;}}  // 日数モードは放置で溜まった分をまとめて買う
+    for(const i of PRODI){const n=tierNext(i);if(n&&!n.lock&&S.dev[i]>=n.need&&S.E>=n.cost&&n.cost<0.2*nxt){tierUp(i);g=true;}}   // まだ開いていない TIER（n.lock）を選ぶと、上げられないまま300回空回りしていた（2026-11-18）}
+    const b=best();if(b){const k=DAYS?Math.floor(devMax(b.i)/4):0;if(k>1){const n0=S.dev[b.i];S.E-=devCost(b.i,k);S.dev[b.i]+=k;onBought(b.i);if(MILESTONES.some(x=>n0<x&&S.dev[b.i]>=x))onMilestone();}else{const n0=S.dev[b.i];buyDevice(b.i,'1');if(S.dev[b.i]===n0)break;}g=true;}}   // 買えなかったら（チャレンジの縛りなど）やめる。前は300回空回りして遅かった（2026-11-18）  // 日数モードは放置で溜まった分をまとめて買う
   if(S.fork){const o=S.fork.opts;chooseFork(['neb','cluster','wreck','calm','rough','unknown'].find(x=>o.includes(x)));}
   if(S.voy&&t%60===0)voyManage();   // 航海では遊んでいる間も、引き直しと航跡・残光の強化を判断する
   if(S.voy)return;   // ③では止まらない（歪みとスキルは economy.js voyWarp() が走りながら）
@@ -82,8 +82,8 @@ let litDay=null,voyDay=null;const FOUND=[],REDRAW=[];
 // ④：宇宙の果てに着いてから FOLD_H 時間たったら宇宙を畳み、法則を安い順に（光の上限と時の遅れを先に）使う
 const FOLD_H=+(process.env.FOLD_H||8),ULOG=[];let endAt=null,lcDay=null;
 function uniManage(){lightWatch();if(!canFold()){endAt=null;return;}if(endAt==null)endAt=t;
-  if(t-endAt>=FOLD_H*(DAYS?3600:60)){const g=fold();ULOG.push('宇宙'+(S.uni+1)+'へ '+(t/86400).toFixed(2)+'日目 +'+g);endAt=null;lastP=t;
-    let b=true;while(b){b=false;const c=LAWS.map(a=>[a.id,lawNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.U).sort((x,y)=>x[1].cost*(x[0]==='ut'?3:x[0]==='ar'?0.6:1)-y[1].cost*(y[0]==='ut'?3:y[0]==='ar'?0.6:1));if(c.length){buyLaw(c[0][0]);b=true;}}
+  if(t-endAt>=FOLD_H*(DAYS?3600:60)){const g=fold();const pk=process.env.KIND&&S.uOffer.includes(process.env.KIND)?process.env.KIND:S.uOffer[0];if(!process.env.NOKIND)chooseKind(pk);ULOG.push('宇宙'+(S.uni+1)+'へ '+(t/86400).toFixed(2)+'日目 +'+g+' '+pk);endAt=null;lastP=t;
+    let b=true;while(b){b=false;const c=LAWS.map(a=>[a.id,lawNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.U).sort((x,y)=>x[1].cost*(x[0]==='ar'?0.6:1)-y[1].cost*(y[0]==='ar'?0.6:1));if(c.length){buyLaw(c[0][0]);b=true;}}
     if(law('lc')>=10&&!lcDay)lcDay=(t/86400).toFixed(2)+'日目';}
   }
 let lightDay=null;function lightWatch(){if(!lightDay&&lightReach())lightDay=(t/86400).toFixed(2)+'日目';}
@@ -105,7 +105,8 @@ if(!DAYS){
 }else{
   let lastEnd=0,played=0;
   const DL=[];
-  for(let d=0;d<WEEK;d++){for(const [h,m] of SCHED[DAYS]){
+  const UNTIL=argv.includes('--until-light');   // ⑤に届いたらそこで止める（数値を探すとき用）
+  days:for(let d=0;d<WEEK;d++){for(const [h,m] of SCHED[DAYS]){if(UNTIL&&lightDay)break days;
     const st=d*86400+h*3600;t=st;idle(st-lastEnd);if(done)arrive();
     for(let k=0;k<m*60;k++){act();t++;played++;if(done)arrive();}
     voyManage();lastEnd=t;if(argv.includes('--verbose'))console.log('  '+(t/86400).toFixed(2)+'日 '+(S.restarts+1)+'周目 段階'+S.stage+' 年'+S.years.toFixed(1)+' 距離'+Math.round(S.dist));

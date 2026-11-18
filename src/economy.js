@@ -12,7 +12,7 @@ function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
 function lightReach(){return S.uni>0&&nines(S.maxStage)>=LIGHT_N;}   // ⑤ 宇宙を一度畳んだあと、航海で9が LIGHT_N 個に届く
 function maxStage(){return S.voy?VOY_CAP:TOP_STAGE;}   // 故郷への周回は9が22個まで。航海には天井がない（2026-11-17、VOY_CAP は数の上限を越えないための目安）
 function stageCost(s){if(s<=12)return STAGE_COST[s];const m=S.voy?vaMultAt(tg('va')):stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);const k=s-MAX_STAGE,ch=Math.min(k,FINAL_N-1);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(FINAL_MULT,ch)*Math.pow(m,k-ch);}   // 9が12個と13個への加速は、値段の上がり方を FINAL_MULT 倍に抑える（1周目の終わりまで届く目標を残す）
-function accelCost(s){let c=stageCost(s);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
+function accelCost(s){let c=stageCost(s)*ukf('cost',1);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
 function regionMult(i){const m=REGIONS[S.region].m;return (m[i]||1)*(m.all||1);}
 function milMult(n){let m=1;const b=has('eA')?3:2;for(const x of MILESTONES)if(n>=x)m*=b;return m;}
@@ -51,7 +51,7 @@ function chalP(){return CHAL[S.chal]&&CHAL[S.chal].p?CHAL[S.chal].p[(S.chalLv||1
 function sp(id){return STAR_P[id].p[Math.max(1,Math.min(3,S.chalTier[id]||1))-1];}   // 上位の星の強さ（越えた段で変わる）
 function starText(id){return STAR_P[id]?STAR_P[id].t(sp(id)):'';}
 function wMult(){return 1+0.01*S.W;}   // 使わずに持っている歪み1つにつき生産+1%
-function globalMult(){return memMult()*Math.pow(timeGamma(S.stage),1+0.1*law('td'))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+sp('pL')*S.stage:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
+function globalMult(){return ukf('prod',1)*memMult()*Math.pow(timeGamma(S.stage),1+0.1*law('td')+ukf('gam',0))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+sp('pL')*S.stage:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
 function achMult(){return 1+ACH_BONUS*S.ach.length;}
 function resonant(){const c={};for(const i of PRODI){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
@@ -86,14 +86,14 @@ function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&
 function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 
 function tick(dt,offMul){
-  const P=prodRate();let gain;
+  const uk=ukf('time',1)*(offMul?ukf('off',1):ukf('live',1)),P=prodRate()*uk;let gain;   // 宇宙の性格の時間の進み（生産・光子・年月・装置が生む分にかける。追い風の残り時間と分かれ道は実時間のまま）
   if(offMul){const g=P*offMul*dt,now=S.chal?1:OFF_NOW;gain=g*now;S.windT=(S.windT||0)+dt*offMul*(1-now)/(WIND_X-1);}   // 留守の間：一部だけすぐ入り、残りは追い風に（チャレンジ中は全部すぐ入る）
   else{gain=P*dt;if(S.windT>0){const w=Math.min(S.windT,dt);gain+=P*w*(WIND_X-1);S.windT-=w;}forkTick(dt);}
   if(S.nebT>0)S.nebT=Math.max(0,S.nebT-dt);   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
-  S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;voyWarp();phTick(dt*(offMul||1));phAutoBuy();
+  S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;voyWarp();phTick(dt*(offMul||1)*uk);phAutoBuy();
   autoBuy();if(has('aT')&&S.autoTier){for(const i of PRODI){const n=tierNext(i);if(n&&!n.lock&&S.dev[i]>=n.need&&S.E>=n.cost)tierUp(i);}}if(has('aA')&&S.autoAcc&&S.stage<maxStage()&&S.E>=accelCost(S.stage+1)&&!climax&&!BRK)accelerate();
-  for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
-  const dy=yearsPerSec()*dt;S.years+=dy;
+  for(const i of [4,5,6]){const sp=DEVICES[i].spawn;if(S.dev[i]>0){S.frac[sp.to]+=S.dev[i]*sp.rate/60*dt*uk;if(S.frac[sp.to]>=1){const w=Math.floor(S.frac[sp.to]);S.dev[sp.to]+=w;S.frac[sp.to]-=w;}}}
+  const dy=yearsPerSec()*dt*uk;S.years+=dy;
   if(S.voy)S.uTime+=dt*(offMul||1);
   if(S.voy)voyAdvance(dy*Math.max(stageBeta(S.stage),0.02)*voyMult()*sailMult());
   else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy/(S.chal==='cG'?chalP():1)*Math.max(stageBeta(S.stage),0.02));}
@@ -174,7 +174,7 @@ function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdis
 /* ③ 光子（2026-11-17 試作） */
 function phOpen(k){return S.voy&&!S.chal&&(S.found||0)>=(PH_DEV[k].find||0);}
 function sailMult(){return S.voy&&!S.chal?Math.pow(SAIL_X,S.sail||0):1;}
-function phMult(){return (SAIL_PH?sailMult():1)*Math.pow(PF_X,tg('pf'));}   // 光子の列の生産の倍率（航跡の強化「光子の灯り」）
+function phMult(){return ukf('ph',1)*(SAIL_PH?sailMult():1)*Math.pow(PF_X,tg('pf'));}   // 光子の列の生産の倍率（航跡の強化「光子の灯り」）
 function phRate(){return S.voy&&!S.chal?(S.phDev[0]||0)*PH_DEV[0].rate*phMult():0;}
 function phCost(k){return PH_DEV[k].cost*Math.pow(PH_DEV[k].g,S.phBuy[k]||0);}
 function phBuyDev(k){if(!phOpen(k)||S.ph<phCost(k))return false;S.ph-=phCost(k);S.phBuy[k]=(S.phBuy[k]||0)+1;S.phDev[k]=(S.phDev[k]||0)+1;return true;}
@@ -208,11 +208,15 @@ function psStart(prev){const l=tg('ps');return l?11+Math.floor(Math.max(0,prev-1
 function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now()};S.st.redraws++;S.T+=g;S.tTotal+=g;S.phPend=S.ph;const prevSt=S.maxStage;resetRun();S.vdist=0;S.vL=0;routeInit();phReset(true);S.stage=S.maxStage=psStart(prevSt);logLine(VOY_LINES.redraw,-1);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
 function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=DEST[DEST.length-1].ly;}   // この宇宙で宇宙の果てに着いたら
-function uGain(){if(!canFold())return 0;return 2+Math.floor(Math.log2(Math.max(1,S.ubest/DEST[DEST.length-1].ly)));}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
+function uGain(){if(!canFold())return 0;return Math.max(1,Math.floor((2+Math.floor(Math.log2(Math.max(1,S.ubest/DEST[DEST.length-1].ly))))*ukf('law',1)));}
+function ukind(){return S.voy&&!S.chal&&S.uKind?UNI_KIND.find(x=>x.id===S.uKind):null;}   // いまの宇宙の性格（チャレンジ中は効かない）
+function ukf(key,d){const k=ukind();return k&&k.fx[key]!=null?k.fx[key]:d;}
+function uOfferRoll(){const a=UNI_KIND.map(x=>x.id);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,UNI_OFFER);}
+function chooseKind(id){if(!S.uOffer||!S.uOffer.includes(id))return false;const k=UNI_KIND.find(x=>x.id===id);S.uKind=id;S.uTint=k.tint;S.uOffer=null;return true;}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
 function fold(){const g=uGain();if(g<1)return 0;
-  S.uHist.push({far:S.ubest,gain:g,time:Math.round(S.uTime),law:Object.assign({},S.law),tint:S.uTint});
+  S.uHist.push({far:S.ubest,gain:g,time:Math.round(S.uTime),law:Object.assign({},S.law),tint:S.uTint,kind:S.uKind});
   S.U+=g;S.uTotal+=g;S.uni++;resetRun();S.vdist=0;S.vL=0;routeInit();phReset();S.T=0;S.tTotal=0;S.tg={};S.ubest=0;S.uTime=0;
-  S.uTint=S.uni%UNI_TINT.length;FXQ.fold=g;return g;}
+  S.uTint=0;S.uKind=null;S.uOffer=uOfferRoll();FXQ.fold=g;return g;}   // 次の宇宙の性格は chooseKind() で選ぶまで決まらない（効果なし）
 function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}
 function autoRedrawReady(){return law('ar')>0&&S.voy&&redrawReady();}
