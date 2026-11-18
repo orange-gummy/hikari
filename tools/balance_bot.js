@@ -32,7 +32,7 @@ let lastP=0;
 let aT=0,lastEv=0,evPrev=null,evWhat='';const GAPS=[];
 function evSnap(){return {stage:S.stage,tier:S.tier.reduce((a,b)=>a+b,0),dev:PRODI.filter(i=>devOpen(i)&&!chalBlocksDevice(i)).length,stop:S.prestiges,lost:S.lost+(S.greyLost?1:0),loop:S.restarts,chal:(S.chal||'')+(S.chalLv||0),found:S.found,redraw:S.st.redraws,uni:S.uni,fork:S.st.forks||0};}
 const EV_NAME={stage:'加速',tier:'TIER',dev:'新しい装置',stop:'緊急停止',lost:'色を失う',loop:'再出発',chal:'チャレンジ',found:'目的地',redraw:'引き直し',uni:'宇宙を畳む',fork:'分かれ道'};
-function gapTick(){aT++;const s=evSnap();if(evPrev){const ch=Object.keys(s).filter(k=>s[k]!==evPrev[k]&&!(k==='stage'&&s.stop!==evPrev.stop)&&!(k==='tier'&&s.stop!==evPrev.stop));
+function gapTick(st){aT+=st||1;const s=evSnap();if(evPrev){const ch=Object.keys(s).filter(k=>s[k]!==evPrev[k]&&!(k==='stage'&&s.stop!==evPrev.stop)&&!(k==='tier'&&s.stop!==evPrev.stop));
     if(ch.length){GAPS.push({g:aT-lastEv,at:stamp(),loop:S.restarts+1,stage:evPrev.stage,voy:!!S.voy,dist:Math.round(S.voy?S.vdist:S.dist),before:evWhat,after:ch.map(k=>EV_NAME[k]).join('・')});lastEv=aT;evWhat=ch.map(k=>EV_NAME[k]).join('・');}}
   evPrev=s;}
 function gapReport(){const L=x=>x>=3600?(x/3600).toFixed(1)+'時間':Math.round(x/60)+'分';
@@ -44,10 +44,12 @@ function gapReport(){const L=x=>x>=3600?(x/3600).toFixed(1)+'時間':Math.round(
   console.log('長い待ち（上位15）：');
   GAPS.slice().sort((a,b)=>b.g-a.g).slice(0,15).forEach(g=>console.log('  '+L(g.g).padStart(6)+'  '+g.at+(DAYS?'日':'分')+'　周'+g.loop+' 段階'+g.stage+(g.voy?' 航海':'')+' 距離'+g.dist+'　'+(g.before||'はじめ')+' → '+g.after));}
 // 画面を触っている1秒
-function act(){
-  tick(1);const P=prodRate();if(S.chal!=='c7'&&(P<2000||t%10<3)){S.E+=tapGain()*2;S.Erun+=tapGain()*2;S.pulse=10;}
-  if(S.voy&&!S.chal){if(t%10<3)phGain(PH_TAP*2,PH_TAP_MIN);if(!process.env.NOPH&&!phAutoOpen())phBuyPart();}   // ③ 光子：手元の4分の1までで列を買う（残りは引き直すときの帆に）
-  checkStory();chalWatch();if(t%5===0)achCheck();gapTick();
+// st 秒をまとめて進める（航海の間は VSTEP 秒ずつ。タップは10秒に3回の割合を、まとめた分だけ足す）
+const VSTEP=+(process.env.VSTEP||5);   // 航海の前（①②）もまとめると、加速や停止の時機がずれて結果が変わり、速くもならなかった
+function act(st){st=st||1;const many=st>1;
+  tick(st);const P=prodRate();if(S.chal!=='c7'&&(many?true:(P<2000||t%10<3))){const n=many?(P<2000?st:st*0.3):1;S.E+=tapGain()*2*n;S.Erun+=tapGain()*2*n;S.pulse=10;}
+  if(S.voy&&!S.chal){if(many)phGain(PH_TAP*2*st*0.3,PH_TAP_MIN);else if(t%10<3)phGain(PH_TAP*2,PH_TAP_MIN);if(!process.env.NOPH&&!phAutoOpen())phBuyPart();}   // ③ 光子：手元の4分の1までで列を買う（残りは引き直すときの帆に）
+  checkStory();chalWatch();if(t%5===0)achCheck();gapTick(st);
   let g=true,gi=0;while(g&&gi++<300){g=false;
     if(S.stage<maxStage()&&S.E>=accelCost(S.stage+1)){accelerate();LOG.push([stamp(),'st',S.stage,Math.round(S.years)]);g=true;continue;}
     const nxt=S.stage<maxStage()?accelCost(S.stage+1):1e300;
@@ -108,7 +110,7 @@ if(!DAYS){
   const UNTIL=argv.includes('--until-light');   // ⑤に届いたらそこで止める（数値を探すとき用）
   days:for(let d=0;d<WEEK;d++){for(const [h,m] of SCHED[DAYS]){if(UNTIL&&lightDay)break days;
     const st=d*86400+h*3600;t=st;idle(st-lastEnd);if(done)arrive();
-    for(let k=0;k<m*60;k++){act();t++;played++;if(done)arrive();}
+    for(let k=0;k<m*60;){const st=S.voy&&!S.chal&&VSTEP>1&&t%VSTEP===0&&k+VSTEP<=m*60?VSTEP:1;act(st);t+=st;k+=st;played+=st;if(done)arrive();}   // 航海の間は VSTEP 秒ずつ（2026-11-18、試算を速くするため。VSTEP=1 で前と同じ）
     voyManage();lastEnd=t;if(argv.includes('--verbose'))console.log('  '+(t/86400).toFixed(2)+'日 '+(S.restarts+1)+'周目 段階'+S.stage+' 年'+S.years.toFixed(1)+' 距離'+Math.round(S.dist));
   }DL.push((d+1)+'日目の終わり：'+(S.voy?'航海 距離'+fmtN(S.vdist)+' 見つけた'+S.found+' 航跡'+S.tTotal+' ':'')+(S.restarts+1)+'周目 段階'+S.stage+' 年'+Math.round(S.years)+' 距離'+Math.round(S.dist)+' 停止'+S.prestiges+' 失った色'+(S.lost+(S.greyLost?1:0)));}
   for(const l of DL)console.log(l);

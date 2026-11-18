@@ -10,8 +10,13 @@ function freshState(){return{v:SAVE_VERSION,voyStash:null,windT:0,wRun:0,wRunE:0
 /* 統計（ETC の STATS）。2026-11-06 から数え始める */
 function freshStats(){return {since:Date.now(),play:0,idle:0,stops:0,loops:[],chal:{},dest:{},redraws:0,showers:0,caught:0,bestCombo:0};}
 let S=freshState();
+// 持っているスキルの集合を使い回す（2026-11-18、試算ツールで1秒に何百回も呼ばれて重かった）。skills と lit は入れ替えか push でしか変わらないので、配列そのものと長さで見張る
+let _hasC=null;
 function has(id){if(id[0]==='a'&&S.chal==='c7'&&S.chalLv>=3)return false;   // 「触れない」段3は自動化が効かない
-  if(S.skills.includes(id)||S.lit.includes(id))return true;const l=S.ag.am||0;if(!l||id[0]!=='a')return false;for(let k=1;k<=l;k++)if(AM_GRANT[k].includes(id))return true;return false;}
+  const c=_hasC,am=S.ag.am||0;
+  if(!c||c.S!==S||c.k!==S.skills||c.kn!==S.skills.length||c.l!==S.lit||c.ln!==S.lit.length||c.am!==am){const set=new Set(S.skills.concat(S.lit));for(let k=1;k<=am;k++)for(const x of AM_GRANT[k])set.add(x);
+    _hasC={S,k:S.skills,kn:S.skills.length,l:S.lit,ln:S.lit.length,am,set};}
+  return _hasC.set.has(id);}
 function law(id){return S.law[id]||0;}
 function glow(id){return S.ag[id]||0;}
 function upgHas(id){return S.upg.includes(id);}

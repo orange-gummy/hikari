@@ -59,7 +59,8 @@ function memHas(i){if(S.cleared||S.voy)return true;return i===6?!S.greyLost:i>=S
 function memTarget(i){return memHas(i)?1:0;}
 function onMilestone(){FXQ.milestone=true;if(has('eC'))S.crit=30;}
 function baseRateNoFusion(){let b=0;for(const i of PRODI)if(i!==2)b+=devBase(i);return b*globalMult();}
-function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult()*sailMult();   // ③ 光子の帆：船の時間が速く流れるif(routeCur()==='rough')r*=ROUTE_ROUGH_P;   // 航路図：荒れた宙域
+function prodRate(){let b=0;for(const i of PRODI)b+=devRateRaw(i);let r=b*globalMult()*sailMult();   // ③ 光子の帆：船の時間が速く流れる
+  if(routeCur()==='rough')r*=ROUTE_ROUGH_P;   // 航路図：荒れた宙域（2026-11-18 まで前の行のコメントに入っていて効いていなかった）
   if(S.chal==='eM'&&r>1)r=Math.pow(r,chalP());                                    // 「薄い光」：桁が小さくなる
   if(has('eM')&&r>1)r=Math.pow(r,sp('eM'));                                       // 濃い光
   if(has('a8')&&S.loopTime<600)r*=sp('a8');                                       // 出だしの風
