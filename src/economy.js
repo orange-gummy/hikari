@@ -74,7 +74,7 @@ function devCost(i,k){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);r
 function devMax(i){const g=growth(i),c=DEVICES[i].cost*Math.pow(g,S.dev[i]);return Math.max(0,Math.floor(Math.log(S.E*(g-1)/c+1)/Math.log(g)));}
 function batteryCap(){return batteryCapRaw(prodRate());}
 function batteryRate(){return 0.03+(has('e2')?0.02:0);}
-function windMigrate(){if(!(S.wind>0))return;const P=prodRate();S.windT=(S.windT||0)+Math.min(P>0?S.wind/(P*(WIND_X-1)):0,offlineCap()*(1-OFF_NOW)/(WIND_X-1));delete S.wind;}   // 版6の途中まで追い風はエネルギーで貯めていた。留守の上限に見合う時間までに切り詰めて移す
+function windMigrate(){if(!(S.wind>0))return;const P=prodRate();S.windT=Math.min(WIND_CAP,(S.windT||0)+Math.min(P>0?S.wind/(P*(WIND_X-1)):0,offlineCap()*(1-OFF_NOW)/(WIND_X-1)));delete S.wind;}   // 版6の途中まで追い風はエネルギーで貯めていた。留守の上限に見合う時間までに切り詰めて移す
 function offlineCap(){return (has('c7')?sp('c7'):has('c3')?24:has('c1')?8:2)*3600;}
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22));}
 function memMult(){return 1+MW_K/100*glow('mw')*Math.max(0,S.L||0);}   // 記憶の重み
@@ -89,7 +89,7 @@ function canFinal(){return S.stage===MAX_STAGE-1&&S.dist>=GOAL_LY*ARRIVE_RATIO;}
 
 function tick(dt,offMul){
   const uk=ukf('time',1)*(offMul?ukf('off',1):ukf('live',1)),P=prodRate()*uk;let gain;   // 宇宙の性格の時間の進み（生産・光子・年月・装置が生む分にかける。追い風の残り時間と分かれ道は実時間のまま）
-  if(offMul){const g=P*offMul*dt,now=S.chal?1:OFF_NOW;gain=g*now;S.windT=(S.windT||0)+dt*offMul*(1-now)/(WIND_X-1);}   // 留守の間：一部だけすぐ入り、残りは追い風に（チャレンジ中は全部すぐ入る）
+  if(offMul){const g=P*offMul*dt,now=S.chal?1:OFF_NOW;gain=g*now;S.windT=Math.min(WIND_CAP,(S.windT||0)+dt*offMul*(1-now)/(WIND_X-1));}   // 留守の間：一部だけすぐ入り、残りは追い風に（チャレンジ中は全部すぐ入る）
   else{gain=P*dt;if(S.windT>0){const w=Math.min(S.windT,dt);gain+=P*w*(WIND_X-1);S.windT-=w;}forkTick(dt);}
   if(S.nebT>0)S.nebT=Math.max(0,S.nebT-dt);   // 遊んでいる間：追い風が吹いていれば生産 ×WIND_X
   S.E+=gain;S.Erun+=gain;if(S.E>S.maxE)S.maxE=S.E;if(P>S.peakP)S.peakP=P;voyWarp();phTick(dt*(offMul||1)*uk);phAutoBuy();
@@ -194,7 +194,7 @@ function routeInit(){S.route={n:voyDoublings(S.vdist||0),cur:null,opts:routeOpts
 function routeCur(){return S.voy&&S.route?S.route.cur:null;}
 function routeAuto(){const R=S.route;return R.pick||(R.opts.includes(R.cur)?R.cur:R.opts[0]);}
 function routeEnter(n){const R=S.route,c=routeAuto();R.cur=c;R.path.push(c);R.n=n;R.pick=null;R.opts=routeOpts();
-  if(c==='wreck')R.wreck++;else if(c==='calm')S.windT=(S.windT||0)+ROUTE_CALM;else if(c==='unknown')S.shard=(S.shard||0)+1;
+  if(c==='wreck')R.wreck++;else if(c==='calm')S.windT=Math.min(WIND_CAP,(S.windT||0)+ROUTE_CALM);else if(c==='unknown')S.shard=(S.shard||0)+1;
   FXQ.route=c;S.fork={opts:R.opts.slice(),life:FORK_LIFE};FXQ.fork=true;}
 function voyAdvance(d){if(!S.route)routeInit();d*=ukf('dist',1);const rc=S.route.cur;if(rc==='neb')d*=ROUTE_NEB;else if(rc==='rough')d*=ROUTE_ROUGH;S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
   const n=voyDoublings(S.vdist);while(S.route.n<n)routeEnter(S.route.n+1);if(n>S.vL){const g=(n-S.vL)*lPer()*(S.route.cur==='cluster'?2:1)*ukf('mem',1);S.L+=g;S.lTotal+=g;S.vL=n;}
