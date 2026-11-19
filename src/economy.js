@@ -201,7 +201,7 @@ function voyAdvance(d){if(!S.route)routeInit();const rc=S.route.cur;if(rc==='neb
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function redrawReady(){return S.voy&&tGain()>=Math.max(3,Math.ceil(S.tTotal*REDRAW_R));}
 // 分かれ道：得られるもの（そのときの強さに合わせる）
-function forkText(id){return id==='cluster'?'この宙域の記憶 ×2':id==='wreck'?'引き直しの航跡 +'+Math.round(ROUTE_WRECK*100)+'%':id==='neb'?'この宙域を ×'+ROUTE_NEB+' の速さで':id==='calm'?'追い風 +'+Math.round(ROUTE_CALM/60)+'分':id==='rough'?'速さ ×'+ROUTE_ROUGH+'・生産 ×'+ROUTE_ROUGH_P:'記憶のかけら +1';}
+function forkText(id){return id==='cluster'?'この宙域の記憶 ×2':id==='wreck'?'引き直しの航跡 +'+Math.round(ROUTE_WRECK*100)+'%':id==='neb'?'この宙域を ×'+ROUTE_NEB+' の速さで':id==='calm'?'追い風 +'+Math.round(ROUTE_CALM/60)+'分':id==='rough'?'速さ ×'+ROUTE_ROUGH+'・生産 ×'+ROUTE_ROUGH_P:'記憶のかけら +1（宇宙を選ぶときに使う）';}
 function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0)S.fork=null;}}   // 窓の下の分岐図は、宙域の境目に来たときだけ出る
 function chooseFork(id){if(!S.voy||!S.route||!S.route.opts.includes(id))return false;S.route.pick=id;S.fork=null;S.st.forks=(S.st.forks||0)+1;return true;}   // 次の宙域へ向かう星系を選ぶ（境目に来たときに効く）
 function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))):0;}
@@ -213,10 +213,13 @@ function uGain(){if(!canFold())return 0;return Math.max(1,Math.floor((2+Math.flo
 function ukind(){return S.voy&&!S.chal&&S.uKind?UNI_KIND.find(x=>x.id===S.uKind):null;}   // いまの宇宙の性格（チャレンジ中は効かない）
 function ukf(key,d){const k=ukind();return k&&k.fx[key]!=null?k.fx[key]:d;}
 function uOfferRoll(){const a=UNI_KIND.map(x=>x.id);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,UNI_OFFER);}
+// 記憶のかけら（2026-11-19）：宇宙を選ぶときに候補を引き直す。値段は1から引き直すたびに倍（宇宙ごとに1へ戻る）
+function uRerollCost(){return Math.pow(2,S.uRerolls||0);}
+function uReroll(){if(!S.uOffer||(S.shard||0)<uRerollCost())return false;S.shard-=uRerollCost();S.uRerolls=(S.uRerolls||0)+1;const k=S.uOffer.slice().sort().join();let n;do{n=uOfferRoll();}while(n.slice().sort().join()===k);S.uOffer=n;return true;}
 function chooseKind(id){if(!S.uOffer||!S.uOffer.includes(id))return false;const k=UNI_KIND.find(x=>x.id===id);S.uKind=id;S.uTint=k.tint;S.uOffer=null;return true;}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
 function fold(){const g=uGain();if(g<1)return 0;
   S.uHist.push({far:S.ubest,gain:g,time:Math.round(S.uTime),law:Object.assign({},S.law),tint:S.uTint,kind:S.uKind});
-  S.U+=g;S.uTotal+=g;S.uni++;resetRun();S.vdist=0;S.vL=0;routeInit();phReset();S.T=0;S.tTotal=0;S.tg={};S.ubest=0;S.uTime=0;
+  S.U+=g;S.uTotal+=g;S.uni++;resetRun();S.vdist=0;S.vL=0;routeInit();phReset();S.T=0;S.tTotal=0;S.tg={};S.ubest=0;S.uTime=0;S.uRerolls=0;
   S.uTint=0;S.uKind=null;S.uOffer=uOfferRoll();FXQ.fold=g;return g;}   // 次の宇宙の性格は chooseKind() で選ぶまで決まらない（効果なし）
 function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}

@@ -18,7 +18,7 @@ function galaxySvg(k,r,a,tint){const key=k+'|'+r+'|'+a+'|'+tint;if(GALAXY_SVG[ke
   h+='<circle r="'+(r*0.35).toFixed(1)+'" fill="url(#ugc)" opacity="'+(0.8*a).toFixed(2)+'"/><circle r="1.2" fill="#fff" opacity="'+a+'"/>';
   return GALAXY_SVG[key]=h;}
 function renderUniverse(){
-  const key='u|'+[S.uni,uniPast===S.uni?Math.floor((S.uTime||0)/60):0,S.U,JSON.stringify(S.law),uniSel,uniPast,S.uTint,S.uKind,canFold(),uGain()].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
+  const key='u|'+[S.uni,uniPast===S.uni?Math.floor((S.uTime||0)/60):0,S.U,S.shard,JSON.stringify(S.law),uniSel,uniPast,S.uTint,S.uKind,canFold(),uGain()].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
   const W=360,H=330,cx=180,cy=168,n=S.uni+1,show=Math.min(n,6);
   // いまの宇宙と、下に沈んでいく過去の宇宙（多いときは新しい5つだけ）
   const ys=[];let y=cy;for(let age=0;age<show;age++){ys.push(y);y+=age===0?78:Math.max(24,52-age*8);}
@@ -54,7 +54,7 @@ function renderUniverse(){
       '<div class="note" style="margin:4px 0 8px">'+(nx?nx.text:'書き換えきった。')+'</div>';
     if(nx)d+='<button class="act" id="uLaw"'+(S.U<nx.cost?' disabled':'')+' style="border-color:rgba(200,210,255,.6);color:#dfe4ff">書き換える　法則 '+nx.cost+'</button>';}
   d+=canFold()?'<button class="act" id="uFold" style="margin-top:10px">宇宙を畳む　法則 +'+uGain()+'</button>':'<div class="note" style="margin-top:8px">宇宙の果てに着くと、宇宙を畳める。距離・航跡とその強化は戻り、見つけた色と装置・灯した星・記憶の強化・実績は残る。</div>';
-  pbody.innerHTML='<div class="phead"><span class="lab">UNIVERSE '+roman(S.uni+1)+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">法則 '+fmt(S.U)+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
+  pbody.innerHTML='<div class="phead"><span class="lab">UNIVERSE '+roman(S.uni+1)+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">法則 '+fmt(S.U)+((S.shard||0)>0?'　かけら '+S.shard:'')+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
   pbody.querySelectorAll('[data-law]').forEach(g=>g.onclick=()=>{uniSel=g.dataset.law;uniPast=-1;renderUniverse();});
   pbody.querySelectorAll('[data-up]').forEach(g=>g.onclick=()=>{uniPast=+g.dataset.up;renderUniverse();});
   const bk=document.getElementById('uBack');if(bk)bk.onclick=()=>{uniPast=-1;renderUniverse();};
@@ -73,8 +73,10 @@ function renderPick(){const b=document.getElementById('pickBody'),K=pickKinds(),
   b.innerHTML='<canvas id="pickCv"></canvas><div class="pTop"><div class="gLab">NEXT UNIVERSE</div><div class="pT">次の宇宙の、時の流れを選ぶ</div><div class="pS">宇宙 '+roman(S.uni+1)+'　選べるのは、この'+K.length+'つ</div></div>'+
     '<div class="pNames">'+K.map((x,i)=>'<button data-pk="'+i+'" class="'+(i===pickSel?'on':'')+'">'+x.name+'</button>').join('')+'</div>'+
     '<div class="pDet"><div class="pN">'+k.name+'</div><div class="pL">'+k.line+'</div><div class="pFx"><div class="r"><span>'+k.p[0]+'</span><span class="p">'+k.p[1]+'</span></div><div class="r m"><span>'+k.m[0]+'</span><span>'+k.m[1]+'</span></div><div class="r m"><span>この宇宙を畳むまで続く</span><span></span></div></div></div>'+
+    ((S.shard||0)>0?'<button class="pRe" id="pickRe"'+(S.shard<uRerollCost()?' disabled':'')+'>候補を引き直す　かけら '+uRerollCost()+'<i>（持っている '+S.shard+'）</i></button>':'')+
     '<button class="pGo" id="pickGo">この宇宙を始める</button>';
   b.querySelectorAll('[data-pk]').forEach(x=>x.onclick=()=>{pickSel=+x.dataset.pk;SND.play('tab');renderPick();});
+  const re=document.getElementById('pickRe');if(re)re.onclick=()=>{if(uReroll()){SND.play('light');pickSel=0;save();renderPick();}};
   document.getElementById('pickGo').onclick=()=>{if(chooseKind(k.id)){SND.play('light');fla=Math.max(fla,0.14);closePick();applyLoadedVisuals();save();pbody.dataset.k='';renderPanel(true);}};
   const cv=document.getElementById('pickCv');cv.onclick=e=>{const r=cv.getBoundingClientRect(),x=e.clientX-r.left,i=Math.max(0,Math.min(K.length-1,Math.floor(x/(r.width/K.length))));if(e.clientY-r.top>r.height*0.3&&e.clientY-r.top<r.height*0.62&&i!==pickSel){pickSel=i;SND.play('tab');renderPick();}};
   pickPaint(0);}
