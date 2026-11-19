@@ -462,6 +462,19 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscro
 @keyframes sNew{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
 #wakeOv.sIntro .wLine{stroke-dasharray:1;animation:wDraw 2s .2s cubic-bezier(.4,0,.2,1) both}
 #wakeOv.sIntro .wNode{animation:gFade .5s both;animation-delay:calc(var(--i)*.07s + .4s)}
+#mWelcome{background:rgba(4,5,12,.95);padding:calc(env(safe-area-inset-top,0px) + 16px) 24px calc(env(safe-area-inset-bottom,0px) + 16px)}
+#mWelcome .mbox{background:none;border:0;border-radius:0;padding:0;width:min(300px,100%);text-align:center}
+#wTrail{display:block;width:min(220px,30vh);height:min(220px,30vh);margin:0 auto 14px}
+#wTrail .wTr{stroke-dasharray:1;animation:wDraw 2.2s cubic-bezier(.3,0,.2,1) both}#wTrail .wSt{animation:gFade .6s 1.8s both}
+#mWelcome h2{font-size:24px;letter-spacing:.24em;margin:0;padding-left:.24em;font-weight:400}
+#wLine{font-family:var(--log);font-size:13px;color:var(--ink-dim);margin-top:10px;letter-spacing:.06em}
+#wBody{margin-top:22px}#mWelcome .wR{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;font-size:12px;color:var(--ink-dim)}
+#mWelcome .wR b{font-family:var(--num);font-weight:300;font-size:19px;color:var(--ink-strong)}#mWelcome .wR small{font-size:11px;margin-left:1px}
+#wNote{font-size:10px;color:rgba(236,238,242,.38);margin-top:6px;min-height:1em}
+#wOk{position:relative;margin-top:26px;background:none;border:0;padding:12px 16px 12px calc(16px + .3em);font-size:15px;letter-spacing:.3em;color:#f6f7fb;cursor:pointer}
+#wOk:before,#wOk:after{content:'';position:absolute;top:50%;width:52px;height:1px}#wOk:before{right:100%;background:linear-gradient(90deg,transparent,rgba(255,240,215,.7))}#wOk:after{left:100%;background:linear-gradient(270deg,transparent,rgba(255,240,215,.7))}
+#mWelcome.on .mbox>*:not(#wTrail){animation:gFade .8s both}#mWelcome.on h2{animation-delay:.6s!important}#mWelcome.on #wLine{animation-delay:.9s!important}#mWelcome.on #wBody{animation-delay:1.2s!important}#mWelcome.on #wNote,#mWelcome.on #wOk{animation-delay:1.6s!important}
+@media (prefers-reduced-motion:reduce){#mWelcome *{animation:none!important}}
 @keyframes wDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
 .sScene .rNow{animation:gTip 2.4s ease-in-out infinite}
 #wakeOv .gDet .dv{margin:0}
