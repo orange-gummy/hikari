@@ -6,7 +6,7 @@
 let curTab='drive',buyMode='1';
 /* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
 const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['photon','sail','voy']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
-const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',photon:'PHOTON',sail:'SAIL',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
+const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',photon:'PHOTON',sail:'SAIL',wake:'WAKE',uni:'MAP',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
 const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
 function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||S.voyStash||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(S.lightDone||(S.uni>0&&nines(S.maxStage)>=LIGHT_N-10)));}
 function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}

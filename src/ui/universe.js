@@ -18,7 +18,7 @@ function galaxySvg(k,r,a,tint){const key=k+'|'+r+'|'+a+'|'+tint;if(GALAXY_SVG[ke
   h+='<circle r="'+(r*0.35).toFixed(1)+'" fill="url(#ugc)" opacity="'+(0.8*a).toFixed(2)+'"/><circle r="1.2" fill="#fff" opacity="'+a+'"/>';
   return GALAXY_SVG[key]=h;}
 function renderUniverse(){
-  const key='u|'+[S.uni,S.U,JSON.stringify(S.law),uniSel,uniPast,S.uTint,S.uKind,canFold(),uGain()].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
+  const key='u|'+[S.uni,uniPast===S.uni?Math.floor((S.uTime||0)/60):0,S.U,JSON.stringify(S.law),uniSel,uniPast,S.uTint,S.uKind,canFold(),uGain()].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
   const W=360,H=330,cx=180,cy=168,n=S.uni+1,show=Math.min(n,6);
   // いまの宇宙と、下に沈んでいく過去の宇宙（多いときは新しい5つだけ）
   const ys=[];let y=cy;for(let age=0;age<show;age++){ys.push(y);y+=age===0?78:Math.max(24,52-age*8);}
@@ -28,7 +28,7 @@ function renderUniverse(){
   v+='<path d="'+path+'" fill="none" stroke="rgba(236,238,242,.18)" stroke-width=".6"/>';
   for(let age=show-1;age>=0;age--){const k=n-1-age,yy=ys[age],gx=cx+Math.sin(yy/23)*3,r=age===0?24:Math.max(6,15-age*2.5),a=age===0?1:Math.max(0.35,0.8-age*0.13);
     const tint=age===0?S.uTint:(S.uHist[k]?S.uHist[k].tint:k),sel=uniPast===k;
-    v+='<g transform="translate('+gx.toFixed(1)+' '+yy+')"'+(age>0?' data-up="'+k+'" style="cursor:pointer"':'')+'>'+(age>0?'<circle r="'+(r+10)+'" fill="transparent"/>':'')+galaxySvg(k,r,a,tint)+
+    v+='<g transform="translate('+gx.toFixed(1)+' '+yy+')"'+' data-up="'+k+'" style="cursor:pointer"><circle r="'+(r+10)+'" fill="transparent"/>'+galaxySvg(k,r,a,tint)+
       (sel?'<circle r="'+(r+6)+'" fill="none" stroke="'+rgb(UNI_TINT[tint%UNI_TINT.length].a,0.6)+'" stroke-width=".7"/>':'')+
       '<text x="'+(r+14)+'" y="4" font-size="'+(age===0?11:9.5)+'" fill="rgba(236,238,242,'+(age===0||sel?0.85:0.4)+')">宇宙 '+roman(k+1)+'</text></g>';}
   // 法則の筋
@@ -44,7 +44,9 @@ function renderUniverse(){
       '<text x="'+tx.toFixed(1)+'" y="'+(ty+15).toFixed(1)+'" text-anchor="'+anc+'" font-size="9" class="num" fill="rgba(236,238,242,'+(on?0.6:0.3)+')">'+l+'/'+m+'</text></g>';});
   v+='</svg>';
   let d='';
-  if(uniPast>=0&&S.uHist[uniPast]){const h=S.uHist[uniPast],lw=LAWS.filter(L=>h.law[L.id]).map(L=>L.name+' '+h.law[L.id]).join('・')||'まだ書き換えていない';
+  if(uniPast===S.uni){const K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind),lw=LAWS.filter(L=>law(L.id)).map(L=>L.name+' '+law(L.id)).join('・')||'まだ書き換えていない';   // いまの宇宙の記録
+    d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(S.uni+1)+'（いま）</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+(S.ubest?lyText(S.ubest)+' 光年':'—')+'<br>この宇宙にいる時間　'+durText(S.uTime||0)+'<br>いまの法則　'+lw+(K?'<br>時の流れ　'+K.name:'')+(canFold()?'<br>畳むと得る法則　'+uGain():'')+'</div><button class="act" id="uBack">法則に戻る</button>';}
+  else if(uniPast>=0&&S.uHist[uniPast]){const h=S.uHist[uniPast],lw=LAWS.filter(L=>h.law[L.id]).map(L=>L.name+' '+h.law[L.id]).join('・')||'まだ書き換えていない';
     d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(uniPast+1)+'</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+lyText(h.far)+' 光年<br>得た法則　'+h.gain+'<br>この宇宙にいた時間　'+durText(h.time)+'<br>そのときの法則　'+lw+(h.kind?'<br>時の流れ　'+UNI_KIND.find(x=>x.id===h.kind).name:'')+'</div><button class="act" id="uBack">いまの宇宙に戻る</button>';}
   else{const L=LAWS.find(x=>x.id===uniSel)||LAWS[0],l=law(L.id),nx=lawNext(L.id),K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind);
     if(K)d+='<div class="note" style="margin:0 0 10px">この宇宙の時の流れ　<span style="color:'+rgb(UNI_TINT[K.tint].a,1)+'">'+K.name+'</span>　'+K.p[0]+' '+K.p[1]+'・'+K.m[0]+' '+K.m[1]+'</div>';
