@@ -113,7 +113,8 @@ if(!DAYS){
     const st=d*86400+h*3600;t=st;idle(st-lastEnd);if(done)arrive();
     for(let k=0;k<m*60;){const st=S.voy&&!S.chal&&VSTEP>1&&t%VSTEP===0&&k+VSTEP<=m*60?VSTEP:1;act(st);t+=st;k+=st;played+=st;if(done)arrive();}   // 航海の間は VSTEP 秒ずつ（2026-11-18、試算を速くするため。VSTEP=1 で前と同じ）
     voyManage();lastEnd=t;if(argv.includes('--verbose'))console.log('  '+(t/86400).toFixed(2)+'日 '+(S.restarts+1)+'周目 段階'+S.stage+' 年'+S.years.toFixed(1)+' 距離'+Math.round(S.dist));
-  }DL.push((d+1)+'日目の終わり：'+(S.voy?'航海 距離'+fmtN(S.vdist)+' 見つけた'+S.found+' 航跡'+S.tTotal+' ':'')+(S.restarts+1)+'周目 段階'+S.stage+' 年'+Math.round(S.years)+' 距離'+Math.round(S.dist)+' 停止'+S.prestiges+' 失った色'+(S.lost+(S.greyLost?1:0)));}
+  }if(process.env.SNAP&&process.env.SNAP.split(',').includes(String(d+1)))require('fs').writeFileSync((process.env.SNAPDIR||'.')+'/day'+(d+1)+'.json',JSON.stringify(S));   // その日の終わりのセーブを書き出す（留守の確認用、2026-11-19）
+  DL.push((d+1)+'日目の終わり：'+(S.voy?'航海 距離'+fmtN(S.vdist)+' 見つけた'+S.found+' 航跡'+S.tTotal+' ':'')+(S.restarts+1)+'周目 段階'+S.stage+' 年'+Math.round(S.years)+' 距離'+Math.round(S.dist)+' 停止'+S.prestiges+' 失った色'+(S.lost+(S.greyLost?1:0)));}
   for(const l of DL)console.log(l);
   console.log('遊び方 '+DAYS+'：'+WEEK+'日で画面を触った時間 '+(played/3600).toFixed(1)+'時間');
   for(const r of RLOG)console.log(r);
