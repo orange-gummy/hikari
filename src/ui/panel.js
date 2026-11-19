@@ -165,7 +165,7 @@ function glowScene(W,H,hz){const n=AFTERGLOW.length,span=Math.min(W-48,Math.max(
   v+='<line x1="0" y1="'+hz+'" x2="'+W+'" y2="'+hz+'" stroke="url(#gLine)" stroke-width=".8"/>';
   // 2026-11-18 記憶の家並み：強化1つが家1軒、段の数だけ窓が灯る（上限なしの強化は段が増えると階が増える）。光の点と線で描き、着いたあとのタイトルの家並みとそろえる。
   // 動き：開くと家が地平線から立ち上がり（gRise）、窓が下から順に灯る（gWinOn）。ふだんは灯った窓がかすかにゆらぎ（gWin）、次に灯せる窓は点線が明滅（gTip）。灯すとその窓がふっと明るくなり、光の粒が空へ昇る
-  const fh=Math.max(7,Math.min(13,(hz-60)/14)),fw=fh*1.2,maxF=Math.max(3,Math.min(10,Math.floor((hz*0.3)/fh))),HX=[];
+  const hk=Math.max(1,Math.min(1.9,sp/120)),fh=Math.max(7,Math.min(13*hk,(hz-60)/14)),fw=fh*1.2,maxF=Math.max(3,Math.min(10,Math.floor((hz*0.3)/fh))),HX=[];
   {const wy=hz-Math.min(70,hz*0.32),cs=[];for(let i=0;i<=n;i++){const x=i===0?0:i===n?W:(xs[i-1]+xs[i])/2;cs.push(x);}   // 電柱と電線（家の間）
     let p='M0 '+(wy+4);for(let i=1;i<=n;i++){const x=cs[i],mx=(cs[i-1]+x)/2;p+=' Q'+mx.toFixed(1)+' '+(wy+10)+' '+x.toFixed(1)+' '+(wy+(i<n?0:4));}
     v+='<path d="'+p+'" fill="none" stroke="rgba(236,238,242,.16)" stroke-width=".5"/>';
@@ -256,7 +256,7 @@ function glowBindBuy(){const gb=document.getElementById('gBuy');if(gb)gb.onclick
 addEventListener('resize',()=>{if(glowOpen){glowIntroOff();renderGlowOv();}});
 function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[fmt(S.L),fmt(S.lTotal),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
   if(part==='restart'){
-    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">集めた記憶 '+fmt(S.lTotal)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。記憶は進んだ距離が2倍になるたびに入り（1回 '+fmt(lPer())+'）、自動で灯される。</div>'+glowScene(360,210,150)+glowDetail();   // 航海中は家並みをタブにそのまま出す（2026-11-19）
+    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">集めた記憶 '+fmt(S.lTotal)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。記憶は進んだ距離が2倍になるたびに入り（1回 '+fmt(lPer())+'）、自動で灯される。</div>'+(()=>{const w=Math.max(360,Math.min(560,(pbody.clientWidth||400)-40));return glowScene(w,230,166).replace('<svg class="gScene" width="'+w+'" height="230"','<svg class="gScene" style="width:100%;height:auto;display:block"');})()+glowDetail();   // 航海中は家並みをタブにそのまま出す（2026-11-19）
     else h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">記憶 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる記憶</span><span class="big">'+fmt(lg)+'</span></div>'+
     '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、記憶は残る。</div>'+
