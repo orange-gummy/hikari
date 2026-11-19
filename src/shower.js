@@ -43,5 +43,5 @@ function drawShower(){const s=SHOWER;if(!s)return;const k=FRK;s.t+=k;
 frameEl.addEventListener('pointerdown',ev=>{if(!SHOWER)return;const x=ev.clientX,y=ev.clientY;SHOWER.stroke={x,y,k:0,id:ev.pointerId};shTry(x,y,x,y,30);try{frameEl.setPointerCapture(ev.pointerId);}catch(e){}},true);
 frameEl.addEventListener('pointermove',ev=>{const s=SHOWER;if(!s||!s.stroke||s.stroke.id!==ev.pointerId)return;const x=ev.clientX,y=ev.clientY,st=s.stroke;if(Math.hypot(x-st.x,y-st.y)<3)return;
   shTry(st.x,st.y,x,y,22);s.trail.push({ax:st.x,ay:st.y,bx:x,by:y,l:1});if(st.k>=3&&!st.shown){st.shown=1;}st.x=x;st.y=y;ev.preventDefault();});
-const shUp=ev=>{const s=SHOWER;if(!s||!s.stroke)return;if(s.stroke.k>=3)POPS.push({x:s.stroke.x,y:s.stroke.y-30,t:0,s:'一筆 '+s.stroke.k});s.stroke=null;};
+const shUp=ev=>{const s=SHOWER;if(!s||!s.stroke)return;if(s.stroke.k>=3)POPS.push({x:s.stroke.x,y:s.stroke.y-30,t:0,s:'STROKE ×'+s.stroke.k});s.stroke=null;};
 frameEl.addEventListener('pointerup',shUp);frameEl.addEventListener('pointercancel',shUp);
