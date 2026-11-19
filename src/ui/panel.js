@@ -256,7 +256,7 @@ function glowBindBuy(){const gb=document.getElementById('gBuy');if(gb)gb.onclick
 addEventListener('resize',()=>{if(glowOpen){glowIntroOff();renderGlowOv();}});
 function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[fmt(S.L),fmt(S.lTotal),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
   if(part==='restart'){
-    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">集めた記憶 '+fmt(S.lTotal)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。記憶は進んだ距離が2倍になるたびに入り（1回 '+fmt(lPer())+'）、自動で灯される。</div><button class="act" id="glowSee">記憶を見る</button>';
+    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">集めた記憶 '+fmt(S.lTotal)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。記憶は進んだ距離が2倍になるたびに入り（1回 '+fmt(lPer())+'）、自動で灯される。</div>'+glowScene(360,210,150)+glowDetail();   // 航海中は家並みをタブにそのまま出す（2026-11-19）
     else h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">記憶 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる記憶</span><span class="big">'+fmt(lg)+'</span></div>'+
     '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、記憶は残る。</div>'+
@@ -265,7 +265,6 @@ function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';
   else h+='<div class="phead"><span class="lab">MEMORY</span><span class="num" style="font-size:12px;color:var(--ink-dim)">記憶 '+fmt(S.L)+'</span></div>'+glowScene(360,210,150)+glowDetail();
   pbody.dataset.k=key;pbody.innerHTML=h;
   pbody.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;pbody.dataset.k='';renderGlow();});
-  const gs=document.getElementById('glowSee');if(gs)gs.onclick=()=>{SND.play('tab');openGlow(()=>{},true);};
   const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){fla=Math.max(fla,0.1);GLOWFX={id:glowSel,t:Date.now()};pbody.dataset.k='';renderGlow();}};
   const rd=document.getElementById('rsDoor');if(rd)rd.onclick=()=>showDoor();
   const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','記憶を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、記憶は残る。',()=>{startBrake(0);BRK.rs=true;});}
