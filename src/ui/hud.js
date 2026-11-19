@@ -110,9 +110,16 @@ function paintHUD(){const vt=document.getElementById('viewT'),on=S.voy&&!S.chal;
 /* 上の速さの表示：9は省略せずに並べ、長くなったら小さくして折り返す（2026-11-17） */
 function hvSize(h,t){const n=t.length,long=n>16;let f=n<=7?26:n<=10?21:n<=13?17:long?12:14;h.style.wordBreak=long?'break-all':'';h.style.lineHeight=long?'1.2':'';h.style.fontSize=f+'px';
   if(long&&h.clientWidth>0){const key=t+'|'+h.clientWidth;if(h.dataset.fit===key){h.style.fontSize=h.dataset.fs+'px';return;}while(f>6&&h.scrollHeight>f*1.2*2+2){f-=0.5;h.style.fontSize=f+'px';}h.dataset.fit=key;h.dataset.fs=f;}}   // 長いときは2行に収まる大きさまで小さくする（上の表示の高さを変えない）
+/* 9が20個から、9を光の点で12個ずつ並べる（2026-11-19、案B）。最後に増えた点だけ明るい。6行（72個）までは文字の高さに収まり、その先は点を詰める */
+const DOT9=20;
+function nineDots(n){const rows=Math.ceil(n/12),pt=rows<=6?3.4:Math.max(1.8,20/rows),r=pt<3.4?pt*0.25:0.8;let v='<svg class="hv9" width="'+(12*pt)+'" height="'+(rows*pt)+'" viewBox="0 0 '+(12*pt)+' '+(rows*pt)+'" aria-label="9が'+n+'個">';
+  for(let i=0;i<n;i++){const last=i===n-1;v+='<circle'+(last?' class="hv9n"':'')+' cx="'+((i%12)*pt+pt/2).toFixed(2)+'" cy="'+(Math.floor(i/12)*pt+pt/2).toFixed(2)+'" r="'+(last?r*1.7:r).toFixed(2)+'" fill="'+(last?'#fff6e6':'rgba(236,238,242,.75)')+'"/>';}return v+'</svg>';}
+function dpsText(){const d=distPerSec();return d<=0?'0':d<0.01?d.toExponential(1).replace('+',''):d<10?d.toPrecision(2):lyText(d);}
+function paintHG(){const s=S.stage,g=fmtG(timeGamma(s)),dil=s>=DILATION_STAGE;   // 2行目：9が3個からはプレイの1秒で進む距離（2026-11-19。前は「船の1秒＝外の○秒」で、リングの中の時間の進みと同じだった）
+  document.getElementById('hG').textContent=s>=13?'9 × '+nines(s)+'　'+dpsText()+' 光年/秒':dil?'船の1秒＝外の'+g+'秒':s<=5?'光速の'+stagePct(s)+'%':'秒速'+kmsOf(s).toLocaleString('ja-JP')+'km';}
 function paintSpeed(){const s=S.stage,g=fmtG(timeGamma(s)),h=document.getElementById('hV'),dil=s>=DILATION_STAGE;
-  document.getElementById('hLab').textContent='VELOCITY';h.textContent=s<=5?KMS[s].toLocaleString('ja-JP')+' km/s':stagePct(s)+'%\u00a0c';hvSize(h,h.textContent);
-  document.getElementById('hG').textContent=(s>=13?'9 × '+nines(s)+'　':'')+(dil?'船の1秒＝外の'+g+'秒':s<=5?'光速の'+stagePct(s)+'%':'秒速'+kmsOf(s).toLocaleString('ja-JP')+'km');
+  document.getElementById('hLab').textContent='VELOCITY';if(s>=13&&nines(s)>=DOT9){h.innerHTML='99.'+nineDots(nines(s))+'<span class="hvC">%\u00a0c</span>';hvSize(h,'99.% c');}else{h.textContent=s<=5?KMS[s].toLocaleString('ja-JP')+' km/s':stagePct(s)+'%\u00a0c';hvSize(h,h.textContent);}
+  paintHG();
   document.getElementById('spdG').textContent=dil?'時間の進み /'+g:speedText(s);}
 /* 字幕 */
 let subT=[];

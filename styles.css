@@ -25,6 +25,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #rate{font-family:var(--num);font-size:12px;color:var(--ink-dim);margin-top:3px;white-space:nowrap}
 #rate .wind{display:block;margin-top:2px}
 #hG{font-size:11px;color:var(--ink-dim);margin-top:4px}
+#hV .hv9{vertical-align:middle;margin:0 3px 0 2px;display:inline-block}#hV:has(.hv9),#hG{white-space:nowrap}#hV .hvC{font-size:.6em}
+#hV .hv9in{animation:hv9in 1.2s ease-out both}@keyframes hv9in{0%{opacity:0;r:4}100%{opacity:1}}
 #eU{font-family:var(--ui);font-weight:200;font-size:13px;margin-left:3px}
 #hudR{text-align:right}
 #hudR .num{font-size:15px;margin-top:3px}

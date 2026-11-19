@@ -101,6 +101,10 @@ function tick(dt,offMul){
   else if(!S.cleared){S.dist=Math.min(GOAL_LY,S.dist+dy/(S.chal==='cG'?chalP():1)*Math.max(stageBeta(S.stage),0.02));}
   S.runTime+=dt;if(!S.cleared)S.loopTime+=dt;S.coast+=dt;if(S.over>0)S.over=Math.max(0,S.over-dt);if(S.sling>0)S.sling=Math.max(0,S.sling-dt);if(S.crit>0)S.crit=Math.max(0,S.crit-dt);if(has('aR')&&S.autoRel&&S.vessel>=VES[VES.length-1].need&&canShower())FXQ.autoShower=true;if(S.pulse>0)S.pulse=Math.max(0,S.pulse-dt);if(S.burst>0)S.burst=Math.max(0,S.burst-dt);if(S.sig>0)S.sig=Math.max(0,S.sig-dt);autoLearn();
 }
+// プレイの1秒で進む距離（光年、2026-11-19：速さの表示の2行目）。tick() の進み方と同じ掛け方
+function distPerSec(){const y=yearsPerSec()*ukf('time',1)*ukf('live',1),b=Math.max(stageBeta(S.stage),0.02);
+  if(S.voy){let d=y*b*voyMult()*sailMult()*ukf('dist',1);const rc=S.route&&S.route.cur;if(rc==='neb')d*=ROUTE_NEB;else if(rc==='rough')d*=ROUTE_ROUGH;return d;}
+  return S.cleared?0:y*b/(S.chal==='cG'?chalP():1);}
 function devOpen(i){if(i===ANCHOR)return false;   // 時間の錨はやめた（2026-11-11）。番号は航海の装置のために残す
   const d=DEVICES[i];if(d.find&&S.found<d.find)return false;return S.dev[i]>0||S.maxStage>=d.unlock;}
 function chalBlocksDevice(i){return S.chal==='pL'&&i!==0;}
