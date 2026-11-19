@@ -4,7 +4,6 @@
   --bg:#04050c;--panel:rgba(5,6,14,.93);--ink:#eceef2;--ink-strong:#f6f7fb;--ink-dim:rgba(236,238,242,.55);
   --line:rgba(255,255,255,.14);--line-soft:rgba(255,255,255,.08);
   --num:'Jura',system-ui,sans-serif;--label:'Michroma','Jura',system-ui,sans-serif;--ui:'Murecho','Hiragino Sans','Yu Gothic',system-ui,sans-serif;--log:'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho',serif;
-  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#04050c}}
 :root[data-theme="dark"]{--bg:#04050c}
@@ -15,7 +14,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-weight:300
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
 button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);outline-offset:2px;border-radius:6px}
 #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
-#app{position:relative;height:100%;display:grid;grid-template-rows:auto auto minmax(200px,1fr) 42%;grid-template-columns:100%}
+#app{position:relative;height:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);display:grid;grid-template-rows:auto auto minmax(200px,1fr) 42%;grid-template-columns:100%}
 .lab{font-family:var(--label);font-size:11px;letter-spacing:.14em;color:var(--ink-dim)}
 .num{font-family:var(--num);font-weight:300}
 /* HUD */
