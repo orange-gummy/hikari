@@ -5,7 +5,7 @@
 /* タブ */
 let curTab='drive',buyMode='1';
 /* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
-const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['photon','sail','voy','wake']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
+const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['photon','sail','voy']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
 const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',photon:'PHOTON',sail:'SAIL',wake:'WAKE',uni:'LAW',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
 const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
 function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||S.voyStash||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(S.lightDone||(S.uni>0&&nines(S.maxStage)>=LIGHT_N-10)));}
@@ -207,45 +207,37 @@ let glowIntroT=null;
 function glowIntroOff(){clearTimeout(glowIntroT);document.getElementById('glowOv').classList.remove('gIntro');}
 function openGlow(after){if(!glowAffordable()){after();return;}glowOpen=true;glowAfter=after;glowFlow=true;const ov=document.getElementById('glowOv');ov.classList.add('on','gIntro');renderGlowOv();clearTimeout(glowIntroT);glowIntroT=setTimeout(glowIntroOff,3200);}   // 開くときの動き（gIntro）は約3秒
 function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.remove('on');const f=glowAfter;glowAfter=null;if(f)f();}
-/* 光子の帆（2026-11-17 試作）：航路を引き直すときに開く。ためた光子で帆を張り、「船を出す」で閉じる。帆は引き直しても残る */
-let sailOpen=false,sailAfter=null,sailFX=0;
-function openSail(after){if((S.phPend||0)<sailCost()){S.phPend=0;after();return;}sailOpen=true;sailAfter=after;const ov=document.getElementById('sailOv');ov.classList.add('on','sIntro');renderSailOv();setTimeout(()=>ov.classList.remove('sIntro'),2600);}
-function closeSail(){sailOpen=false;S.phPend=0;document.getElementById('sailOv').classList.remove('on');const f=sailAfter;sailAfter=null;if(f)f();}
-// 帆の絵（2026-11-17 作り直し）：宇宙で光を受ける光子の帆。SAIL_STYLE 'petal'＝船を中心に12枚の花びらの帆が開いていく／'square'＝ひし形の膜を4本の桁で張り、段ごとに大きく細かくなる
-let SAIL_STYLE='petal';
-function sailScene(W,H){const n=S.sail||0,cxp=W/2,cyp=H*0.43,R0=Math.min(W*0.36,H*0.27,230),ink=a=>'rgba(255,236,210,'+a+')',f2=x=>x.toFixed(1);
-  let v='<svg class="sScene" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs><radialGradient id="sGlow"><stop offset="0" stop-color="rgb(255,236,210)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,236,210)" stop-opacity="0"/></radialGradient><linearGradient id="sMem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="rgb(255,240,220)" stop-opacity=".22"/><stop offset=".5" stop-color="rgb(200,215,255)" stop-opacity=".07"/><stop offset="1" stop-color="rgb(255,240,220)" stop-opacity=".16"/></linearGradient></defs>';
-  {let sd=3;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};for(let k=0;k<Math.round(W*H/2600);k++){const tw=rnd()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(rnd()*5).toFixed(1)+'s"':'')+' cx="'+f2(rnd()*W)+'" cy="'+f2(rnd()*H)+'" r="'+(0.3+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+(0.15+rnd()*0.5).toFixed(2)+'"/>';}}
-  // 遠くの光源から、細い光の筋が帆へ降りそそぐ
-  for(let k=0;k<9;k++){const x=cxp-R0*1.6+k*R0*0.4,d=(k*0.37).toFixed(2);v+='<line class="sRay" x1="'+f2(x-R0*0.9)+'" y1="'+f2(cyp-R0*1.6)+'" x2="'+f2(x+R0*0.3)+'" y2="'+f2(cyp+R0*0.2)+'" stroke="'+ink(.18)+'" stroke-width=".6" style="animation-delay:-'+d+'s"/>';}
-  v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+f2(R0*1.25)+'" fill="url(#sGlow)" opacity="'+(0.35+Math.min(n,12)*0.05).toFixed(2)+'"/>';
-  v+='<g class="sTurn" style="transform-origin:'+cxp+'px '+cyp+'px">';
-  if(SAIL_STYLE==='petal'){const m=12,lit=Math.min(n,m),outer=Math.max(0,n-m);
-    for(let k=0;k<m;k++){const a0=-Math.PI/2+k*2*Math.PI/m,a1=a0+2*Math.PI/m,am=(a0+a1)/2,on=k<lit,r=R0*(on?1:0.62),bow=r*0.14,isNew=sailFX&&k===lit-1&&!outer;
-      const p0=[cxp+Math.cos(a0)*R0*0.12,cyp+Math.sin(a0)*R0*0.12],p1=[cxp+Math.cos(a0)*r,cyp+Math.sin(a0)*r],p2=[cxp+Math.cos(a1)*r,cyp+Math.sin(a1)*r],p3=[cxp+Math.cos(a1)*R0*0.12,cyp+Math.sin(a1)*R0*0.12],cm=[cxp+Math.cos(am)*(r+bow),cyp+Math.sin(am)*(r+bow)];
-      const d='M'+f2(p0[0])+' '+f2(p0[1])+'L'+f2(p1[0])+' '+f2(p1[1])+'Q'+f2(cm[0])+' '+f2(cm[1])+' '+f2(p2[0])+' '+f2(p2[1])+'L'+f2(p3[0])+' '+f2(p3[1])+'Z';
-      v+='<g'+(isNew?' class="sNew" style="transform-origin:'+cxp+'px '+cyp+'px"':'')+'><path d="'+d+'" fill="'+(on?'url(#sMem)':'none')+'" stroke="'+ink(on?.55:.14)+'" stroke-width="'+(on?.8:.6)+'"'+(on?'':' stroke-dasharray="2 4"')+'/>';
-      if(on)for(let j=1;j<=6;j++){const t=j/7,rr=R0*0.12+(r-R0*0.12)*t;v+='<circle cx="'+f2(cxp+Math.cos(a0)*rr)+'" cy="'+f2(cyp+Math.sin(a0)*rr)+'" r=".9" fill="'+ink(.8)+'"/>';}
-      v+='</g>';}
-    for(let o=0;o<Math.min(outer,6);o++){const rr=R0*(1.12+o*0.07);v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="'+f2(rr)+'" fill="none" stroke="'+ink(.35-o*0.04)+'" stroke-width=".7" stroke-dasharray="1 5"/>';}}
-  else{const k=Math.min(n,14),s=R0*(0.45+0.04*k),g=Math.max(1,Math.min(6,Math.ceil(k/2)));
-    const P=[[cxp,cyp-s],[cxp+s,cyp],[cxp,cyp+s],[cxp-s,cyp]],bow=s*0.08;
-    const d='M'+f2(P[0][0])+' '+f2(P[0][1])+P.map((q,i)=>{const nq=P[(i+1)%4],mx=(q[0]+nq[0])/2,my=(q[1]+nq[1])/2,dx=mx-cxp,dy=my-cyp,dl=Math.hypot(dx,dy);return 'Q'+f2(mx-dx/dl*bow)+' '+f2(my-dy/dl*bow)+' '+f2(nq[0])+' '+f2(nq[1]);}).join('')+'Z';
-    v+='<g'+(sailFX?' class="sNew" style="transform-origin:'+cxp+'px '+cyp+'px"':'')+'><path d="'+d+'" fill="url(#sMem)" stroke="'+ink(.6)+'" stroke-width=".9"/>';
-    for(let i=1;i<g;i++){const t=i/g;v+='<line x1="'+f2(P[0][0]+(P[1][0]-P[0][0])*t)+'" y1="'+f2(P[0][1]+(P[1][1]-P[0][1])*t)+'" x2="'+f2(P[3][0]+(P[2][0]-P[3][0])*t)+'" y2="'+f2(P[3][1]+(P[2][1]-P[3][1])*t)+'" stroke="'+ink(.16)+'" stroke-width=".5"/><line x1="'+f2(P[0][0]+(P[3][0]-P[0][0])*t)+'" y1="'+f2(P[0][1]+(P[3][1]-P[0][1])*t)+'" x2="'+f2(P[1][0]+(P[2][0]-P[1][0])*t)+'" y2="'+f2(P[1][1]+(P[2][1]-P[1][1])*t)+'" stroke="'+ink(.16)+'" stroke-width=".5"/>';}
-    v+='<line x1="'+f2(P[0][0])+'" y1="'+f2(P[0][1])+'" x2="'+f2(P[2][0])+'" y2="'+f2(P[2][1])+'" stroke="'+ink(.5)+'" stroke-width=".8"/><line x1="'+f2(P[1][0])+'" y1="'+f2(P[1][1])+'" x2="'+f2(P[3][0])+'" y2="'+f2(P[3][1])+'" stroke="'+ink(.5)+'" stroke-width=".8"/>';
-    P.forEach(q=>v+='<circle cx="'+f2(q[0])+'" cy="'+f2(q[1])+'" r="1.6" fill="#fff4e6"/>');v+='</g>';}
-  v+='</g><circle cx="'+cxp+'" cy="'+cyp+'" r="3" fill="#fff4e6"/><circle cx="'+cxp+'" cy="'+cyp+'" r="9" fill="none" stroke="'+ink(.5)+'" stroke-width=".6"/>';
-  if(sailFX){for(let k=0;k<22;k++){const a=Math.random()*6.283,dd=R0*(0.6+Math.random()*0.7);v+='<circle cx="'+cxp+'" cy="'+cyp+'" r="1.2" fill="#fff4e6" opacity="0"><animate attributeName="cx" from="'+cxp+'" to="'+f2(cxp+Math.cos(a)*dd)+'" dur="1.3s" begin=".15s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="cy" from="'+cyp+'" to="'+f2(cyp+Math.sin(a)*dd)+'" dur="1.3s" begin=".15s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="opacity" values="0;1;0" dur="1.3s" begin=".15s" fill="freeze"/></circle>';}sailFX=0;}
+/* 航跡の強化（2026-11-19）：WAKE タブをなくし、航路を引き直すときに開く小窓で買う。背景はいま終えた航海の航路（故郷から、通った宙域の記号を光の線でつなぐ）。「船を出す」で閉じる */
+let wakeOpen=false,wakeAfter=null,wakeFX=null;
+function openWake(after){if(!trailAffordable()){after();return;}wakeOpen=true;wakeAfter=after;const ov=document.getElementById('wakeOv');ov.classList.add('on','sIntro');renderWakeOv();setTimeout(()=>ov.classList.remove('sIntro'),3000);}
+function closeWake(){wakeOpen=false;document.getElementById('wakeOv').classList.remove('on');const f=wakeAfter;wakeAfter=null;if(f)f();}
+function wakeScene(W,H,yt,yb){const r=S.lastRun&&S.lastRun.k==='voy'?S.lastRun:null,path=r&&r.path?r.path:[],far=r?r.far:0,N=Math.max(1,voyDoublings(far||1e4)),f2=x=>x.toFixed(1),ink=a=>'rgba(255,226,190,'+a+')',
+    col=id=>{const o=FORKS.find(x=>x.id===id);return o?'rgb('+o.col.join(',')+')':ink(.6);},amp=Math.min(W*0.2,150);
+  const X=k=>W/2+Math.sin(k*0.9+0.4)*amp*(0.35+0.65*k/N),Y=k=>yb-(yb-yt)*k/N;
+  let v='<svg class="sScene" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs><radialGradient id="wGlow"><stop offset="0" stop-color="rgb(255,226,190)" stop-opacity=".3"/><stop offset="1" stop-color="rgb(255,226,190)" stop-opacity="0"/></radialGradient></defs>';
+  {let sd=5;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};for(let k=0;k<Math.round(W*H/2600);k++){const tw=rnd()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(rnd()*5).toFixed(1)+'s"':'')+' cx="'+f2(rnd()*W)+'" cy="'+f2(rnd()*H)+'" r="'+(0.3+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+(0.15+rnd()*0.5).toFixed(2)+'"/>';}}
+  // 目的地：着いたものは横に名前
+  DEST.forEach((g,i)=>{const k=voyDoublings(g.ly);if(k>N)return;const x=X(k),y=Y(k),rt=x<W/2;v+='<circle cx="'+f2(x)+'" cy="'+f2(y)+'" r="7" fill="none" stroke="rgba(255,214,170,.6)" stroke-width=".7"/><line x1="'+f2(x+(rt?10:-10))+'" y1="'+f2(y)+'" x2="'+f2(x+(rt?34:-34))+'" y2="'+f2(y)+'" stroke="'+ink(.25)+'" stroke-width=".5"/><text x="'+f2(x+(rt?38:-38))+'" y="'+f2(y+3)+'" text-anchor="'+(rt?'start':'end')+'" font-size="10" fill="rgba(255,214,170,.75)">'+g.name+'</text>';});
+  // 航跡：故郷から、通った宙域を光の線で（先ほど明るく）
+  let d='M'+f2(X(0))+' '+f2(Y(0));for(let k=1;k<=N;k++){const ym=(Y(k-1)+Y(k))/2;d+='C'+f2(X(k-1))+' '+f2(ym)+' '+f2(X(k))+' '+f2(ym)+' '+f2(X(k))+' '+f2(Y(k));}
+  v+='<path d="'+d+'" fill="none" stroke="'+ink(.12)+'" stroke-width="5" stroke-linecap="round"/><path class="wLine" d="'+d+'" fill="none" stroke="'+ink(.7)+'" stroke-width="1" pathLength="1"/>';
+  for(let k=1;k<N;k++){const t=path[k-1];v+='<g class="wNode" style="--i:'+k+'" transform="translate('+f2(X(k))+' '+f2(Y(k))+')">'+(t?routeSym(t,col(t),0.7):'<circle r="1.6" fill="'+ink(.6)+'"/>')+'</g>';}
+  v+='<circle cx="'+f2(X(0))+'" cy="'+f2(Y(0))+'" r="2.2" fill="rgba(255,214,170,.9)"/><text x="'+f2(X(0))+'" y="'+f2(Y(0)+16)+'" text-anchor="middle" font-size="10" fill="rgba(236,238,242,.5)">故郷</text>';
+  const ex=X(N),ey=Y(N);v+='<circle cx="'+f2(ex)+'" cy="'+f2(ey)+'" r="46" fill="url(#wGlow)"/><circle class="rNow" cx="'+f2(ex)+'" cy="'+f2(ey)+'" r="10" fill="none" stroke="'+ink(.8)+'" stroke-width=".8"/><circle cx="'+f2(ex)+'" cy="'+f2(ey)+'" r="2.8" fill="#fff4e6"/>';
+  if(far)v+='<text x="'+f2(ex)+'" y="'+f2(ey-18)+'" text-anchor="middle" font-size="10" fill="'+ink(.7)+'">'+lyText(far)+' 光年</text>';
+  if(wakeFX){for(let k=0;k<18;k++){const a=Math.random()*6.283,dd=30+Math.random()*50;v+='<circle cx="'+f2(ex)+'" cy="'+f2(ey)+'" r="1.2" fill="#fff4e6" opacity="0"><animate attributeName="cx" to="'+f2(ex+Math.cos(a)*dd)+'" dur="1.2s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="cy" to="'+f2(ey+Math.sin(a)*dd)+'" dur="1.2s" fill="freeze" calcMode="spline" keySplines=".1 .8 .3 1"/><animate attributeName="opacity" values="0;1;0" dur="1.2s" fill="freeze"/></circle>';}wakeFX=null;}
   return v+'</svg>';}
-function renderSailOv(){const ov=document.getElementById('sailOv'),b=document.getElementById('sailBody'),can=(S.phPend||0)>=sailCost();
-  b.innerHTML='<div class="gTop"><div class="gLab">PHOTON SAIL</div><div class="gL"><span>光子</span><b>'+fmt(S.phPend||0)+'</b></div><div class="gRes">航路を引き直す前に、ためた光子で帆を張れる。光子は持ち越せない。</div></div>'+
-    '<div class="gBot"><div class="gDet"><div class="row" style="padding:0"><span style="font-size:14px">光子の帆</span><span class="num" style="font-size:12px;color:var(--ink-dim)">'+(S.sail||0)+' 段</span></div><div class="note" style="margin:4px 0 0">船の時間（生産・光子・進む距離）</div><div class="gVal">×'+fmtG(sailMult())+'<span class="gArr">→</span><b>×'+fmtG(sailMult()*SAIL_X)+'</b></div>'+
-    '<button class="act" id="sRaise"'+(can?'':' disabled')+' style="border-color:rgba(255,236,200,.6);color:#fff1dc">帆を張る　光子 '+fmt(sailCost())+'</button></div><button class="act" id="sailGoBtn" style="margin-top:10px">船を出す</button></div><div class="gSky"></div>';
-  const W=ov.clientWidth,H=ov.clientHeight;b.querySelector('.gSky').innerHTML=sailScene(W,H);
-  document.getElementById('sRaise').onclick=()=>{if(raiseSail()){SND.play('light');sailFX=1;ov.classList.remove('sIntro');renderSailOv();}};
-  document.getElementById('sailGoBtn').onclick=closeSail;}
-addEventListener('resize',()=>{if(sailOpen)renderSailOv();});
+function renderWakeOv(){const ov=document.getElementById('wakeOv'),b=document.getElementById('wakeBody');
+  let rows='';TRAIL.forEach(a=>{const l=tg(a.id),n2=trailNext(a.id),pips=a.max?Array.from({length:a.max},(_,k)=>k<l?'●':'○').join(''):l+' 段';
+    rows+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+a.name+'　<span class="num" style="font-size:11px;letter-spacing:.1em;color:var(--ink-dim)">'+pips+'</span></div>'+
+    '<div class="dvTrait">'+(n2?'次：'+n2.text:a.text(l))+'</div></div>'+(n2?'<button class="buy" data-t="'+a.id+'"'+(S.T<n2.cost?' disabled':'')+'>航跡 '+fmt(n2.cost)+'</button>':'')+'</div></div>';});
+  b.innerHTML='<div class="gTop"><div class="gLab">WAKE</div><div class="gL"><span>航跡</span><b>'+fmt(S.T)+'</b></div><div class="gRes">'+(glowResult()||'航跡で、次の航海を強くできる。')+'</div></div>'+
+    '<div class="gBot"><div class="gDet">'+rows+'</div><button class="act" id="wakeGo" style="margin-top:10px">船を出す</button></div><div class="gSky"></div>';
+  const W=ov.clientWidth,H=ov.clientHeight;if(!W||!H)return;const bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height;
+  b.querySelector('.gSky').innerHTML=wakeScene(W,H,top+60,Math.max(top+160,H-bot-56));
+  b.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>{if(buyTrail(x.dataset.t)){SND.play('light');wakeFX=1;ov.classList.remove('sIntro');renderWakeOv();}});
+  document.getElementById('wakeGo').onclick=closeWake;}
+addEventListener('resize',()=>{if(wakeOpen)renderWakeOv();});
 // 景色は小窓いっぱい。下の説明の高さを測ってから、その上に地平線を引く
 function renderGlowOv(){const ov=document.getElementById('glowOv'),b=document.getElementById('glowBody');
   b.innerHTML='<div class="gTop"><div class="gLab">MEMORY</div><div class="gL"><span>記憶</span><b>'+fmt(S.L)+'</b></div><div class="gRes">'+(glowResult()||'船を出す前に、記憶で灯しておける。')+'</div></div>'+
@@ -325,40 +317,34 @@ function routeMap(W){const R=S.route;if(!R)return '';const H=140,n=R.n,TOT=voyDo
 function renderPhoton(){const open=PH_DEV.map((_,k)=>phOpen(k)?1:0).join(''),sailT=curTab==='sail';pbody.dataset.k='ph|'+open+'|'+curTab+'|'+S.phAuto+'|'+phAutoOpen();   // PHOTON は装置だけ、SAIL は光子の帆だけ（HOME の DRIVE と BOOST と同じ分け方）
   let h='<div class="phead"><span class="lab">'+(sailT?'SAIL':'PHOTON')+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">光子 <b id="phN">0</b></span></div>';
   if(sailT)h+='<div class="sail"><div class="row" style="padding:0"><span>光子の帆</span><span class="num" id="sailLv"></span></div><div class="note" style="margin:2px 0 6px" id="sailFx"></div>'+
-    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の段</span><span class="num" id="sailNx"></span></div></div><div class="note" style="margin-top:10px">帆は、航路を引き直すときに、それまでにためた光子で張る。帆は引き直しても残り、1段ごとに船の時間が ×'+SAIL_X+' 速く流れる（生産・光子・進む距離がまとめて速くなる）。光子は引き直すとなくなる。</div>';
-  else if(phAutoOpen())h+='<div class="row"><span class="note" style="margin:0">自動で買う（光子の4分の1まで。残りは帆に）</span><button class="auto" id="phAuto"'+(S.phAuto!==0?' data-on':'')+'>'+(S.phAuto!==0?'自動':'手動')+'</button></div>';
+    '<button class="act" id="sailGo" style="margin-top:8px"></button></div><div class="note" style="margin-top:10px">帆は光子で張る。帆は引き直しても残り、1段ごとに生産と進む距離が ×'+SAIL_X+'。光子は引き直すとなくなる。</div>';
+  else if(phAutoOpen())h+='<div class="row"><span class="note" style="margin:0">自動で買う（光子の4分の1までで、装置と帆を安い順に）</span><button class="auto" id="phAuto"'+(S.phAuto!==0?' data-on':'')+'>'+(S.phAuto!==0?'自動':'手動')+'</button></div>';
   if(!sailT)PH_DEV.forEach((d,k)=>{if(!phOpen(k)){if(k===PH_DEV.findIndex((_,j)=>!phOpen(j)))h+='<div class="dv"><div class="dvRow"><div style="flex:1"><div class="dvName" style="color:var(--ink-dim)">？？？</div><div class="dvTrait">'+DEST[(d.find||1)-1].name+'に着くと現れる</div></div></div></div>';return;}
     h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+d.name+'　<span class="num" id="phc'+k+'" style="font-size:12px;color:var(--ink-dim)"></span></div><div class="dvTrait" id="pht'+k+'"></div></div><button class="buy" id="phb'+k+'"></button></div></div>';});
   pbody.innerHTML=h;const sgo=document.getElementById('sailGo');if(sgo)sgo.onclick=()=>{if(raiseSail()){SND.play('light');fla=Math.max(fla,0.1);paintPhoton();}};
   const pa=document.getElementById('phAuto');if(pa)pa.onclick=()=>{S.phAuto=S.phAuto!==0?0:1;renderPhoton();};
   PH_DEV.forEach((_,k)=>{const b=document.getElementById('phb'+k);if(b)b.onclick=()=>{if(phBuyDev(k)){SND.play('buy',4);paintPhoton();}};});paintPhoton();}
 function paintPhoton(){const n=document.getElementById('phN');if(!n)return;n.textContent=fmt(S.ph);
-  if(document.getElementById('sailLv')){document.getElementById('sailLv').textContent=(S.sail||0)+' 段';document.getElementById('sailFx').textContent='船の時間 ×'+fmtG(sailMult())+'　→　次の段で ×'+fmtG(sailMult()*SAIL_X);
-  const nx=document.getElementById('sailNx');nx.textContent='光子 '+fmt(sailCost())+(S.ph>=sailCost()?'　（引き直せば張れる）':'');}
+  if(document.getElementById('sailLv')){document.getElementById('sailLv').textContent=(S.sail||0)+' 段';document.getElementById('sailFx').textContent='生産と進む距離 ×'+fmtG(sailMult())+'　→　次の段で ×'+fmtG(sailMult()*SAIL_X);
+  const g=document.getElementById('sailGo');g.textContent='帆を張る　光子 '+fmt(sailCost());g.disabled=S.ph<sailCost();}
   PH_DEV.forEach((d,k)=>{const b=document.getElementById('phb'+k);if(!b)return;document.getElementById('phc'+k).textContent=fmt(Math.floor(S.phDev[k]||0))+'（買った '+(S.phBuy[k]||0)+'）';
     document.getElementById('pht'+k).textContent=k===0?'光子 +'+fmt(phRate())+' / 秒':PH_DEV[k-1].name+' +'+fmt((S.phDev[k]||0)*d.rate*phMult())+' / 秒';
     b.textContent='光子 '+fmt(phCost(k));b.disabled=S.ph<phCost(k);});}
 /* ③ さらに遠くへ（GALAXY タブ） */
-function renderVoy(){let h='';const part=curTab==='wake'?'wake':'voy';
+function renderVoy(){let h='';const part='voy';   // WAKE タブは 2026-11-19 になくした（航跡の強化は引き直すときの小窓で買う）
   if(part==='voy'&&!S.voy&&canVoyage())h+='<div class="phead"><span class="lab">FARTHER</span></div><div class="note">上位の星がすべて灯った。故郷を出発点に、もっと遠くへ航海に出られる。故郷への周回は終わり、航海では船は止まらない。歪みは走りながらたまり、スキルは自動で覚える。記憶とその強化、灯した星、実績は残る。</div><button class="act" id="farGo">さらに遠くへ</button>';
-  if(part==='wake')h+='<div class="phead"><span class="lab">WAKE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+(S.voy?'':'<div class="note">航海に出ると、航跡で航海を強くできる。</div>');
   if(part==='voy'&&S.voy){const tgn=tGain(),n=nextDest();
     if(!S.route)routeInit();
     h+='<div class="phead"><span class="lab">VOYAGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+routeMap(Math.max(300,Math.min(520,(pbody.clientWidth||340))))+
     '<div class="row"><span>引き直すと得る航跡</span><span class="big">'+fmt(tgn)+'</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">この航海で進んだ距離</span><span class="num">'+lyText(S.vdist)+' 光年</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の目的地</span><span class="num">'+(n?n.name+'（'+lyText(n.ly)+' 光年）':'もう、ない')+'</span></div>'+
-    '<div class="note">航路を引き直すと、故郷から航海をやり直す。距離とエネルギー、装置、歪みとスキルはなくなる。航跡、見つけた色と装置の種類、記憶とその強化は残る。航海では船は止まらず、歪みは走りながらたまり、スキルは自動で覚える。進んだ距離が2倍になるたびに（1万・2万・4万光年…）記憶が入る（1回 '+fmt(lPer())+'）。</div>'+
+    '<div class="note" style="margin:6px 0 0">航跡の強化　'+TRAIL.map(a=>a.name+' '+tg(a.id)).join('　·　')+'</div>'+
+    '<div class="note">航路を引き直すと、故郷から航海をやり直す。航跡の強化は、引き直すときに買える。距離とエネルギー、装置、歪みとスキルはなくなる。航跡、見つけた色と装置の種類、記憶とその強化は残る。航海では船は止まらず、歪みは走りながらたまり、スキルは自動で覚える。進んだ距離が2倍になるたびに（1万・2万・4万光年…）記憶が入る（1回 '+fmt(lPer())+'）。</div>'+
     '<button class="act" id="vrGo"'+(tgn<1?' disabled':'')+'>航路を引き直す</button>';}
-  if(part==='wake'&&S.voy){
-    TRAIL.forEach(a=>{const l=tg(a.id),n2=trailNext(a.id),pips=a.max?Array.from({length:a.max},(_,k)=>k<l?'●':'○').join(''):'Lv '+l;
-      h+='<div class="dv"><div class="dvRow"><div style="flex:1;min-width:0"><div class="dvName">'+a.name+'　<span class="num" style="font-size:11px;letter-spacing:.2em;color:var(--ink-dim)">'+pips+'</span></div>'+
-      '<div class="dvTrait">'+(l?'いま：'+a.text(l)+(n2?'<br>':''):'')+(n2?'次：'+n2.text:'')+'</div></div>'+
-      (n2?'<button class="buy" data-t="'+a.id+'"'+(S.T<n2.cost?' disabled':'')+'>航跡 '+fmt(n2.cost)+'</button>':'')+'</div></div>';});}
   pbody.dataset.k='';pbody.innerHTML=h;
-  pbody.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(buyTrail(b.dataset.t)){fla=Math.max(fla,0.1);renderPanel(true);}});
   pbody.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>pickFork(b.dataset.rt));
-  const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、記憶は残る。',()=>{startBrake(0);BRK.vr=true;});
+  const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、記憶は残る。光子は持ち越せない。',()=>{startBrake(0);BRK.vr=true;});
   const fg=document.getElementById('farGo');if(fg)fg.onclick=()=>showDoor();}   // どこから押しても、章の扉を通って航海へ
 function renderLog(){pbody.dataset.k='';const logMode=curTab==='ach'?'ach':'log';let h='<div class="phead"><span class="lab">'+(logMode==='log'?'LOG':'RECORD')+'</span>'+(logMode==='ach'?'<span class="num" style="font-size:12px;color:var(--ink-dim)">実績 '+S.ach.length+' / '+ACHIEVEMENTS.length+'</span>':'')+'</div>';
   if(logMode==='log'){S.log.slice().reverse().forEach((e,j)=>{const col=e.c>=0?rgb(COLORS[e.c].rgb,1):'var(--ink-dim)';h+='<div class="le"><span class="y" style="color:'+col+'">故郷 '+e.y.toLocaleString('ja-JP')+'年</span><span class="t" style="opacity:'+(j===0?1:0.75)+'">'+e.t+'</span></div>';});}

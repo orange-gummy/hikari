@@ -445,10 +445,10 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscro
 #pickBody .pGo:before,#pickBody .pGo:after{content:'';display:inline-block;width:56px;height:1px;vertical-align:middle;margin:0 16px;background:linear-gradient(90deg,transparent,rgba(255,240,215,.7));animation:sRay 4s ease-in-out infinite}
 #pickBody .pGo:after{background:linear-gradient(270deg,transparent,rgba(255,240,215,.7))}
 @media (max-height:620px){#pickBody .pTop{top:3%}#pickBody .pDet{top:63%}#pickBody .pFx{margin-top:8px;line-height:1.7}}
-#sailOv{position:fixed;inset:0;z-index:11;background:#04050C;display:none;overflow:hidden}
-#sailOv.on{display:block}
-#sailBody{position:absolute;inset:0}
-#sailBody .gSky{position:absolute;inset:0;z-index:0}
+#wakeOv{position:fixed;inset:0;z-index:11;background:#04050C;display:none;overflow:hidden}
+#wakeOv.on{display:block}
+#wakeBody{position:absolute;inset:0}
+#wakeBody .gSky{position:absolute;inset:0;z-index:0}
 .sScene .gTw{animation:gTw 4.5s ease-in-out infinite}
 .sScene .sTurn{transform-box:view-box;animation:sTurn 90s linear infinite}
 @keyframes sTurn{to{transform:rotate(360deg)}}
@@ -456,6 +456,11 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscro
 @keyframes sRay{0%,100%{opacity:.3}50%{opacity:1}}
 .sScene .sNew{transform-box:view-box;animation:sNew 1.2s cubic-bezier(.2,.8,.3,1) both}
 @keyframes sNew{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
-#sailOv.sIntro .sTurn{animation:gFade 1.2s both,sTurn 90s linear infinite}
-#sailOv.sIntro .gTop{animation:gFade .9s .2s both}
-#sailOv.sIntro .gBot{animation:gUp .9s .8s both}
+#wakeOv.sIntro .wLine{stroke-dasharray:1;animation:wDraw 2s .2s cubic-bezier(.4,0,.2,1) both}
+#wakeOv.sIntro .wNode{animation:gFade .5s both;animation-delay:calc(var(--i)*.07s + .4s)}
+@keyframes wDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.sScene .rNow{animation:gTip 2.4s ease-in-out infinite}
+#wakeOv .gDet .dv{margin:0}
+@media (prefers-reduced-motion:reduce){#wakeOv *{animation:none!important}}
+#wakeOv.sIntro .gTop{animation:gFade .9s .2s both}
+#wakeOv.sIntro .gBot{animation:gUp .9s .8s both}

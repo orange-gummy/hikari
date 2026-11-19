@@ -5,7 +5,7 @@ const OUT=process.env.OUT||require('os').tmpdir()+'/hikari_e2e/';require('fs').m
 const ctx=await b.newContext({viewport:{width:W,height:H}});const p=await ctx.newPage();
 const errs=[],log=[];p.on('pageerror',e=>errs.push('[pageerror] '+e.message+' @'+cur));p.on('console',m=>{if(m.type()==='error')errs.push('[console] '+m.text()+' @'+cur);});
 let cur='';const step=async(name,fn)=>{cur=name;try{await fn();}catch(e){errs.push('[step] '+name+': '+e.message.split('\n')[0]);}log.push(name+' → '+JSON.stringify(await st()));await p.screenshot({path:OUT+name+'.png'});};
-const st=()=>p.evaluate(()=>({stage:S.stage,E:+S.E.toExponential(2),voy:S.voy,uni:S.uni,cleared:S.cleared,restarts:S.restarts,ov:['glowOv','sailOv','pickOv','mConfirm','door','title','skill'].filter(id=>{const e=document.getElementById(id);return e&&(e.classList.contains('on'))}),climax,BRK:!!BRK,RST:!!RST,FOLD:!!FOLD,sk:skillOpen,skp:skillPick,glow:glowOpen,sail:sailOpen,pick:pickOpen,paused,bootOn,dist:Math.round(S.dist),light:S.lightDone}));
+const st=()=>p.evaluate(()=>({stage:S.stage,E:+S.E.toExponential(2),voy:S.voy,uni:S.uni,cleared:S.cleared,restarts:S.restarts,ov:['glowOv','wakeOv','pickOv','mConfirm','door','title','skill'].filter(id=>{const e=document.getElementById(id);return e&&(e.classList.contains('on'))}),climax,BRK:!!BRK,RST:!!RST,FOLD:!!FOLD,sk:skillOpen,skp:skillPick,glow:glowOpen,wake:wakeOpen,pick:pickOpen,paused,bootOn,dist:Math.round(S.dist),light:S.lightDone}));
 const wait=ms=>p.waitForTimeout(ms);const ev=(f,a)=>p.evaluate(f,a);
 const clickIf=async sel=>{const r=await ev(q=>{const e=document.querySelector(q);if(e&&!e.disabled&&e.getClientRects().length){e.click();const m=document.getElementById('mConfirm');if(q!=='#cYes'&&m.classList.contains('on'))document.getElementById('cYes').click();return true;}return false;},sel);if(!r)log.push('  (押せなかった '+sel+')');return r;};
 const until=async(f,ms,what)=>{try{await p.waitForFunction(f,null,{timeout:ms,polling:250});}catch(e){errs.push('[timeout] '+what+' @'+cur);}};
@@ -25,13 +25,13 @@ await step('12_voyage',async()=>{await clickIf('#tFar');await wait(1500);await c
 await step('12b_voy_runs',async()=>{await ev(()=>{timeMult=1;});for(let k=0;k<10;k++){await p.mouse.click(W/2,H*0.3);await wait(100);}await ev(()=>{S.E+=1e4;});await wait(300);await clickIf('#pbody .buy:not([disabled])');await wait(3000);log.push('  航海で時間が進むか E='+await ev(()=>S.E)+' 装置='+await ev(()=>S.dev.join(',')));await ev(()=>{timeMult=1000;});});
 await step('13_photon',async()=>{await ev(()=>{if(!S.voy){startVoyage();}curLayer='galaxy';curTab='photon';renderPanel(true);});await wait(5000);await clickIf('#phb0');await wait(300);});
 await step('14_fork',async()=>{await ev(()=>{S.vdist=2.6e6;S.found=Math.max(S.found,1);});await wait(4000);await ev(()=>{curTab='voy';renderPanel(true);});await wait(800);});
-await step('15_redraw',async()=>{await ev(()=>{S.vdist=5e8;S.ph=1e6;S.L+=500;curTab='voy';renderPanel(true);});await wait(500);await clickIf('#vrGo');await wait(300);await wait(6000);});
-await step('16_glow_then_sail',async()=>{await clickIf('#gBuy');await wait(500);await clickIf('#glowGo');await wait(1500);});
-await step('17_sail',async()=>{await clickIf('#sRaise');await wait(800);await clickIf('#sailGoBtn');await wait(3500);});
+await step('15_redraw',async()=>{await ev(()=>{S.vdist=5e8;S.ph=1e6;S.L+=500;S.T+=200;curTab='voy';renderPanel(true);});await wait(500);await clickIf('#vrGo');await wait(300);await wait(6000);});
+await step('16_wake',async()=>{await until(()=>wakeOpen,15000,'航跡の小窓が開く');await wait(3200);await clickIf('#wakeBody [data-t]:not([disabled])');await wait(1500);});
+await step('17_sail',async()=>{await clickIf('#wakeGo');await wait(3500);await ev(()=>{S.ph=1e6;curLayer='galaxy';curTab='sail';renderPanel(true);});await wait(500);await clickIf('#sailGo');await wait(800);});
 await step('18_fold',async()=>{await ev(()=>{S.found=DEST.length;S.ubest=DEST[DEST.length-1].ly*3;S.vdist=S.ubest;curLayer='universe';curTab='uni';renderPanel(true);});await wait(600);await clickIf('#uFold');await wait(300);await wait(12000);});
 await step('19_pick',async()=>{await clickIf('[data-pk="1"]');await wait(500);await clickIf('#pickGo');await wait(1500);});
 await step('20_redraw_auto',async()=>{await ev(()=>{S.law.ar=1;S.vdist=5e9;S.T=1;S.tTotal=1;});await wait(8000);});
-await step('21_light',async()=>{await until(()=>!RST&&!BRK&&!glowOpen&&!sailOpen,30000,'自動の引き直しが終わる');await ev(()=>{S.law.ar=0;S.stage=S.maxStage=10+LIGHT_N;S.E=lightCost()*2;curLayer='light';curTab='light';renderPanel(true);});await wait(800);await clickIf('#ltGo');await wait(300);await wait(25000);});
+await step('21_light',async()=>{await until(()=>!RST&&!BRK&&!glowOpen&&!wakeOpen,30000,'自動の引き直しが終わる');await ev(()=>{S.law.ar=0;S.stage=S.maxStage=10+LIGHT_N;S.E=lightCost()*2;curLayer='light';curTab='light';renderPanel(true);});await wait(800);await clickIf('#ltGo');await wait(300);await wait(25000);});
 await step('22_light_end',async()=>{await p.mouse.click(W/2,H/2);await wait(3000);});
 await step('23_reload',async()=>{await ev(()=>save());await p.reload();await wait(1500);await clickIf('#bGo');await wait(3000);});
 await step('24_run',async()=>{await ev(()=>{timeMult=1000;});await wait(10000);});

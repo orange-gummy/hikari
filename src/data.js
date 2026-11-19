@@ -152,7 +152,7 @@ const TRAIL=[  // 航跡の強化
   {id:'pf',name:'光子の灯り',max:0,cost:l=>4*Math.pow(2,l),text:l=>'光子の列の生産 ×'+fmtN(Math.pow(PF_X,l))},   // 2026-11-17：帆が毎回同じ段で止まらないように、航海ごとに光子が育つ
   {id:'ps',name:'先回り',max:4,cost:l=>10*Math.pow(3,l),text:l=>'引き直したあと、前の航海の9の数の'+(20*l)+'%から始まる'}   // 2026-11-17：「段階2l から」は光速の90%までで意味がなかった
 ];
-function fmtN(n){return n<1e4?String(Math.round(n)):n.toExponential(1).replace('+','');}
+function fmtN(n){return n<100?String(Math.round(n*100)/100):n<1e4?String(Math.round(n)):n.toExponential(1).replace('+','');}
 function colRGB(c){return c<7?COLORS[c].rgb:NEW_COLORS[c-7].rgb;}   // 装置の色（7〜は航海で見つけた色）
 const RESTART_BASE=30;   // 1回着くごとの残光。再出発の回数1回につき+10%
 const RM_K=+((typeof process!=='undefined'&&process.env.RM_K)||0.85),RM_MIN=+((typeof process!=='undefined'&&process.env.RM_MIN)||100);
