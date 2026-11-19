@@ -197,7 +197,7 @@ function glowDetail(){const a=AFTERGLOW.find(x=>x.id===glowSel)||AFTERGLOW[0],l=
     '<div class="note" style="margin:0 0 2px">'+(nx?a.hint+'。':'これ以上は灯せない。')+'</div>'+
     (nx?'<button class="act" id="gBuy"'+(S.L<nx.cost?' disabled':'')+' style="border-color:rgba(255,200,140,.6);color:#ffd6aa">灯す　記憶 '+fmt(nx.cost)+'</button>':'')+'</div>';}
 /* 残光の強化は合間に開く（2026-11-09）：故郷に着いて再出発するときと、航路を引き直すときに「残照の地平」が開き、閉じると船を出す */
-let glowOpen=false,glowAfter=null,glowFlow=false;
+let glowOpen=false,glowAfter=null,glowFlow=false,glowView=false;   // glowView：航海中に RESTART タブから見るだけで開いたとき（2026-11-19）
 function glowAffordable(){return AFTERGLOW.some(a=>{const n=glowNext(a.id);return n&&S.L>=n.cost;});}
 function glowAutoSpend(){let b=true;while(b){b=false;const c=AFTERGLOW.map(a=>[a.id,glowNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.L).sort((x,y)=>x[1].cost-y[1].cost)[0];if(c){buyGlow(c[0]);b=true;}}}
 // 合間に開いたとき、いま終えた周の結果を一行で出す
@@ -205,7 +205,7 @@ function glowResult(){const r=S.lastRun;if(!r||Date.now()-r.at>10*60*1000)return
   return r.k==='home'?r.n+' 周目<i>·</i>故郷まで '+durLong(r.sec)+'<i>·</i><em>+'+fmt(r.g)+'</em>':'航路を引き直した<i>·</i>いちばん遠く '+lyText(r.far)+' 光年<i>·</i><em>航跡 +'+fmt(r.g)+'</em>';}
 let glowIntroT=null;
 function glowIntroOff(){clearTimeout(glowIntroT);document.getElementById('glowOv').classList.remove('gIntro');}
-function openGlow(after){if(!glowAffordable()){after();return;}glowOpen=true;glowAfter=after;glowFlow=true;const ov=document.getElementById('glowOv');ov.classList.add('on','gIntro');renderGlowOv();clearTimeout(glowIntroT);glowIntroT=setTimeout(glowIntroOff,3200);}   // 開くときの動き（gIntro）は約3秒
+function openGlow(after,view){if(!view&&!glowAffordable()){after();return;}glowView=!!view;glowOpen=true;glowAfter=after;glowFlow=true;const ov=document.getElementById('glowOv');ov.classList.add('on','gIntro');renderGlowOv();clearTimeout(glowIntroT);glowIntroT=setTimeout(glowIntroOff,3200);}   // 開くときの動き（gIntro）は約3秒
 function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.remove('on');const f=glowAfter;glowAfter=null;if(f)f();}
 /* 航跡の強化（2026-11-19）：WAKE タブをなくし、航路を引き直すときに開く小窓で買う。背景はいま終えた航海の航路（故郷から、通った宙域の記号を光の線でつなぐ）。「船を出す」で閉じる */
 let wakeOpen=false,wakeAfter=null,wakeFX=null;
@@ -240,8 +240,8 @@ function renderWakeOv(){const ov=document.getElementById('wakeOv'),b=document.ge
 addEventListener('resize',()=>{if(wakeOpen)renderWakeOv();});
 // 景色は小窓いっぱい。下の説明の高さを測ってから、その上に地平線を引く
 function renderGlowOv(){const ov=document.getElementById('glowOv'),b=document.getElementById('glowBody');
-  b.innerHTML='<div class="gTop"><div class="gLab">MEMORY</div><div class="gL"><span>記憶</span><b>'+fmt(S.L)+'</b></div><div class="gRes">'+(glowResult()||'船を出す前に、記憶で灯しておける。')+'</div></div>'+
-    '<div class="gBot">'+glowDetail()+'<button class="act" id="glowGo" style="margin-top:10px">船を出す</button></div><div class="gSky"></div>';
+  b.innerHTML='<div class="gTop"><div class="gLab">MEMORY</div><div class="gL"><span>記憶</span><b>'+fmt(S.L)+'</b></div><div class="gRes">'+(glowView?'これまでに集めた記憶<i>·</i><em>'+fmt(S.lTotal)+'</em><i>·</i>航海中は自動で灯す':glowResult()||'船を出す前に、記憶で灯しておける。')+'</div></div>'+
+    '<div class="gBot">'+glowDetail()+'<button class="act" id="glowGo" style="margin-top:10px">'+(glowView?'閉じる':'船を出す')+'</button></div><div class="gSky"></div>';
   const W=ov.clientWidth,H=ov.clientHeight;if(!W||!H)return;const bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height,hz=Math.round(Math.max(top+150,H-bot-70));
   b.querySelector('.gSky').innerHTML=glowScene(W,H,hz);
   b.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>glowPick(g.dataset.gs));
@@ -254,9 +254,9 @@ function glowPick(id){if(id===glowSel)return;glowSel=id;const b=document.getElem
 function glowBindBuy(){const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{const L0=S.L;if(buyGlow(glowSel)){SND.play('light');GLOWFX={id:glowSel,t:Date.now()};glowIntroOff();renderGlowOv();
   const v=document.querySelector('#glowBody .gVal');if(v)v.classList.add('gRoll');const lb=document.querySelector('#glowBody .gL b'),L1=S.L,t0=performance.now();if(lb){const st=()=>{const p=Math.min(1,(performance.now()-t0)/700),e=1-Math.pow(1-p,3);lb.textContent=fmt(Math.round(L0+(L1-L0)*e));if(p<1&&glowOpen)requestAnimationFrame(st);};st();}}};}
 addEventListener('resize',()=>{if(glowOpen){glowIntroOff();renderGlowOv();}});
-function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[fmt(S.L),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
+function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[fmt(S.L),fmt(S.lTotal),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
   if(part==='restart'){
-    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">記憶 '+fmt(S.L)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。記憶は、進んだ距離が2倍になるたびに入ってくる。</div>';
+    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">集めた記憶 '+fmt(S.lTotal)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。記憶は進んだ距離が2倍になるたびに入り（1回 '+fmt(lPer())+'）、自動で灯される。</div><button class="act" id="glowSee">記憶を見る</button>';
     else h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">記憶 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる記憶</span><span class="big">'+fmt(lg)+'</span></div>'+
     '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、記憶は残る。</div>'+
@@ -265,6 +265,7 @@ function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';
   else h+='<div class="phead"><span class="lab">MEMORY</span><span class="num" style="font-size:12px;color:var(--ink-dim)">記憶 '+fmt(S.L)+'</span></div>'+glowScene(360,210,150)+glowDetail();
   pbody.dataset.k=key;pbody.innerHTML=h;
   pbody.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;pbody.dataset.k='';renderGlow();});
+  const gs=document.getElementById('glowSee');if(gs)gs.onclick=()=>{SND.play('tab');openGlow(()=>{},true);};
   const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){fla=Math.max(fla,0.1);GLOWFX={id:glowSel,t:Date.now()};pbody.dataset.k='';renderGlow();}};
   const rd=document.getElementById('rsDoor');if(rd)rd.onclick=()=>showDoor();
   const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','記憶を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、記憶は残る。',()=>{startBrake(0);BRK.rs=true;});}
