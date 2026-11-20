@@ -137,18 +137,18 @@ function drawRst(){const r=RST;r.t++;const t=r.t;
 function autoBrake(){const g=wGain();SND.play('milestone');prestige(false);FXQ.prestige=false;fla=Math.max(fla,0.03);TRIP.push({x:RC.x,y:RC.y,t:0,c:[200,210,235]});paintSpeed();renderPanel(true);toast('自動で止まった　歪み +'+fmt(g));}
 function startBrake(g,auto){NEWSK=[];BRK={t:0,g,lit:nines(S.stage),auto:!!auto};SND.play(auto?'milestone':'brake');document.getElementById('block').style.display='block';}
 function drawBrk(){const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B1=180,S1=215,S2=335;
-  if(b.t===1){b.st=S.stage;b.bv0=BVC;b.sp0=3+b.lit*0.25;}
+  if(b.t===1){b.st=S.stage;b.bv0=BVC;b.sp0=Math.max(0,SPDF);b.sk0=stk;b.rv0=ROTV;}   // 2026-11-20：止め始めは今の流れの速さのまま（前は3〜6倍に跳ね上がり、加速したように見えた）
   const red=t<B1?(t<B0?0.5+0.5*Math.sin(t*0.5):1-(t-B0)/(B1-B0)):0;
   if(red>0){const g=cx.createRadialGradient(RC.x,RC.y,Math.min(CW,CH)*0.2,RC.x,RC.y,Math.max(CW,CH)*0.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(230,40,30,'+(0.42*red*amp)+')');cx.fillStyle=g;cx.fillRect(0,0,CW,CH);}
   if(t<B1)for(let i=0;i<12;i++){let op='';if(i<b.lit){if(t<B0)op=(Math.floor(t/4)%2?'0.2':'1');else op=(i<b.lit*Math.pow(1-(t-B0)/(B1-B0),1.5)?'1':'0.12');}SEG[i].style.opacity=op;}
   if(t===1&&!low)frameEl.classList.add('shakeL');
-  if(t>=B0&&t<B1){const p=(t-B0)/(B1-B0),k=Math.pow(1-p,3);BVC=b.bv0*k;SPDF=b.sp0*k*(0.5+0.5*amp);stk=Math.round(46*Math.pow(1-p,2)*amp);ROTV=6*k;
+  if(t>=B0&&t<B1){const p=(t-B0)/(B1-B0),k=Math.pow(1-p,3);BVC=b.bv0*k;SPDF=b.sp0*k;stk=Math.round(b.sk0*Math.pow(1-p,2));ROTV=b.rv0*k;
     if(t===B0){frameEl.classList.remove('shakeL');fla=low?0.03:0.08;if(!low){frameEl.style.setProperty('--sh','7px');frameEl.classList.remove('shake');void frameEl.offsetWidth;frameEl.classList.add('shake');const ap=document.getElementById('app');ap.classList.remove('lurch');void ap.offsetWidth;ap.classList.add('lurch');}}
     if(!low&&t%40===10&&p<0.7){frameEl.style.setProperty('--sh',(5*(1-p)).toFixed(1)+'px');frameEl.classList.remove('shake');void frameEl.offsetWidth;frameEl.classList.add('shake');}
     const fr=stageBeta(b.st)*Math.pow(1-p,2.2),h=document.getElementById('hV');h.textContent=fr>=0.01?(fr*100).toFixed(fr>0.9?2:1)+'% c':Math.round(fr*C_KMS).toLocaleString('ja-JP')+' km/s';}
   if(t===B1){stk=0;BVC=0;for(const sg of SEG)sg.style.opacity='';if(b.rs)rebirth();else if(b.vr)redraw();else prestige(false);paintSpeed();renderPanel(true);fla=low?0.06:0.14;
     if(!low){frameEl.style.setProperty('--sh','3px');frameEl.classList.remove('shake');void frameEl.offsetWidth;frameEl.classList.add('shake');}}
-  if(t>=B1&&t<S1){const q=(t-B1)/(S1-B1);SPDF=-0.5*Math.sin(Math.PI*q)*Math.exp(-2*q)*amp;ROTV=-1.2*Math.sin(Math.PI*q)*Math.exp(-2*q);}
+  if(t>=B1&&t<S1){SPDF=0;ROTV=0;}   // 止まる直前の逆向きの反動はやめた（後ろへ進むように見えた、2026-11-20）
   if(t===S1){SPDF=0;ROTV=0;STILL=true;if(!b.auto)document.getElementById('app').classList.add('rstDim');}
   if(t>S1)SPDF=0;
   if(t<S1){ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');}
