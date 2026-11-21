@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='2026.11.20.1';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
+const VERSION='2026.11.21.1';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
 /* =====================================================================
    DATA  ― 数値・台本・色の定義（将来 data/*.js に切り出す）
    ===================================================================== */
@@ -71,7 +71,7 @@ const MAX_STAGE=22;
 const TOP_STAGE=MAX_STAGE+10;
 const VOY_CAP=TOP_STAGE+250;   // 2026-11-17：航海には天井がない（9の数を伸ばし続ける）。数の上限（1e308）を越えないための目安
 const LIGHT_N=+((typeof process!=='undefined'&&process.env.LIGHT_N)||66);   // ⑤ 光になれる9の数（宇宙を一度畳んだあと）   // 故郷への周回は、はじめから9が22個まで加速できる（2026-11-11）。9が12個より先は1段ごとに STAGE_MULT 倍で、強くなった周ほど先へ届く
-const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.8),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||5),WIND_CAP=+((typeof process!=='undefined'&&process.env.WIND_CAP)||86400);   // 追い風の残りの上限（秒、2026-11-19：静かな空域を何度も通ると20日目に130時間たまっていた）
+const OFF_NOW=+((typeof process!=='undefined'&&process.env.OFF_NOW)||0.8),WIND_X=+((typeof process!=='undefined'&&process.env.WIND_X)||10),WIND_CAP=+((typeof process!=='undefined'&&process.env.WIND_CAP)||86400);   // 追い風の残りの上限（秒、2026-11-19：静かな空域を何度も通ると20日目に130時間たまっていた）
    // 追い風（2026-11-16）：留守の間のエネルギーは OFF_NOW（8割）だけすぐ入り、残りは追い風の時間（S.windT 秒）になって、遊んでいる間に生産 ×WIND_X で吹く（2026-11-16 にエネルギーから時間に変えた）
 // 航路の分かれ道（2026-11-16）：航海で遊んでいる間、FORK_INT 秒ごとに分かれ道が出る。選ばなければ FORK_LIFE 秒でまっすぐ進む
 const FORK_INT=+((typeof process!=='undefined'&&process.env.FORK_INT)||600),FORK_LIFE=180,NEB_T=600;
