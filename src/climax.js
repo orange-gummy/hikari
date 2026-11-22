@@ -41,9 +41,33 @@ function paintDoorText(){const ks=SKILLS.filter(k=>k.glow),W=230,H=70,P=ks.map((
   const n=S.restarts+(S.cleared?1:0);document.getElementById('dSum').innerHTML='上位の星 <b>'+S.lit.length+' / '+ks.length+'</b> が灯った<i>·</i>故郷に着いた <b>'+n+'</b> 回';
   document.getElementById('dOpen').innerHTML='<span class="dOL">ひらくもの</span>隣の銀河への航海<i>·</i>新しい色と装置<i>·</i>航路の分かれ道';}
 function showDoor(){S.flags.door=true;save();doorScene();paintDoorText();document.getElementById('door').classList.add('on');}
+/* 2026-11-22 章の扉 IV：はじめて宇宙の果てに着くと一度だけ（S.flags.door4）。たどった4つの色の航路が、赤くかすむ宇宙の果てまで続き、その向こうに次の宇宙の一点 */
+const DOOR3_HTML=document.getElementById('dBody').innerHTML;
+function door4Scene(){const W=innerWidth,H=innerHeight,f=n=>n.toFixed(1);document.getElementById('dSky').innerHTML='';
+  let sd=9;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+  let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs><linearGradient id="d4Edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgb(255,120,110)" stop-opacity="0"/><stop offset=".55" stop-color="rgb(255,120,110)" stop-opacity=".16"/><stop offset="1" stop-color="rgb(255,120,110)" stop-opacity="0"/></linearGradient><radialGradient id="d4Pt"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>';
+  for(let k=0;k<Math.round(W*H/2400);k++){const tw=rnd()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(rnd()*5).toFixed(1)+'s"':'')+' cx="'+f(rnd()*W)+'" cy="'+f(rnd()*H)+'" r="'+(0.3+rnd()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+(0.12+rnd()*0.45).toFixed(2)+'"/>';}
+  // 宇宙の果て：上のほうに、赤くかすむ大きな弧（はじまりの赤）
+  const ey=H*0.13,R=W*1.6;v+='<path d="M'+f(-W*0.1)+' '+f(ey+H*0.08)+'Q'+f(W/2)+' '+f(ey-H*0.06)+' '+f(W*1.1)+' '+f(ey+H*0.08)+'" fill="none" stroke="url(#d4Edge)" stroke-width="'+f(H*0.07)+'"/>';
+  v+='<path d="M'+f(-W*0.1)+' '+f(ey+H*0.08)+'Q'+f(W/2)+' '+f(ey-H*0.06)+' '+f(W*1.1)+' '+f(ey+H*0.08)+'" fill="none" stroke="rgba(255,150,140,.45)" stroke-width=".7" stroke-dasharray="1 4"/>';
+  // その向こうの一点（次の宇宙）：細く巻く光
+  const px=W/2,py=ey-H*0.05;for(let k=0;k<3;k++){v+='<ellipse cx="'+f(px)+'" cy="'+f(py)+'" rx="'+(10+k*7)+'" ry="'+(3+k*2.2)+'" fill="none" stroke="rgba(236,238,242,'+(0.3-k*0.08).toFixed(2)+')" stroke-width=".5"/>';}
+  v+='<circle cx="'+f(px)+'" cy="'+f(py)+'" r="7" fill="url(#d4Pt)"/><circle cx="'+f(px)+'" cy="'+f(py)+'" r="1.6" fill="#fff"/>';
+  // たどった航路：下の船から、紫・藍・銀・赤の4つの点を通って果てへ
+  const pts=[[W*0.5,H*0.97],[W*0.3,H*0.86],[W*0.72,H*0.74],[W*0.26,H*0.62],[W*0.6,ey+H*0.07]];
+  let d='M'+f(pts[0][0])+' '+f(pts[0][1]);for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],my=(a[1]+b[1])/2;d+='C'+f(a[0])+' '+f(my)+' '+f(b[0])+' '+f(my)+' '+f(b[0])+' '+f(b[1]);}
+  v+='<path d="'+d+'" fill="none" stroke="rgba(236,238,242,.22)" stroke-width=".8" stroke-dasharray="2 5"/>';
+  NEW_COLORS.forEach((c,i)=>{const [x,y]=pts[i+1],col=c.rgb.join(',');v+='<circle cx="'+f(x)+'" cy="'+f(y)+'" r="16" fill="rgba('+col+',.12)"/><circle class="bStar" style="animation-delay:-'+(i*0.7)+'s" cx="'+f(x)+'" cy="'+f(y)+'" r="6" fill="rgba('+col+',.3)"/><circle cx="'+f(x)+'" cy="'+f(y)+'" r="2.2" fill="rgb('+col+')"/>';});
+  v+='<circle r="2.2" fill="#fff"><animateMotion dur="11s" repeatCount="indefinite" path="'+d+'" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".5 0 .5 1"/></circle>';
+  document.getElementById('dFar').innerHTML=v+'</svg>';}
+function showDoor4(){S.flags.door4=true;save();const b=document.getElementById('dBody');
+  const cs=NEW_COLORS.map((c,i)=>'<circle cx="'+(30+i*56)+'" cy="18" r="7" fill="rgba('+c.rgb.join(',')+',.25)"/><circle cx="'+(30+i*56)+'" cy="18" r="2.4" fill="rgb('+c.rgb.join(',')+')"/>'+(i?'<line x1="'+(30+(i-1)*56+8)+'" y1="18" x2="'+(30+i*56-8)+'" y2="18" stroke="rgba(236,238,242,.3)" stroke-width=".7" stroke-dasharray="2 4"/>':'')).join('');
+  b.innerHTML='<div class="dDone"><div class="dCh">CHAPTER III　さらに遠くへ</div><div id="dStars"><svg width="228" height="36" viewBox="0 0 228 36" aria-label="見つけた4つの色">'+cs+'</svg></div><div class="dSum">見つけた色 <b>'+NEW_COLORS.length+'</b><i>·</i>航路を引き直した <b>'+(S.st.redraws||0)+'</b> 回<i>·</i>9 × <b>'+nines(S.maxStage)+'</b></div></div><div class="dRule"></div><div class="dCh">CHAPTER IV</div><h1>新しい宇宙</h1><div class="dLine">果ての向こうに、もうひとつの宇宙がある。</div><div class="dOpen"><span class="dOL">ひらくもの</span>宇宙を畳む<i>·</i>次の宇宙の時の流れを選ぶ<i>·</i>法則</div><button class="act" id="dGo">先へ</button>';
+  door4Scene();document.getElementById('door').classList.add('on');
+  document.getElementById('dGo').onclick=()=>{closeDoor();b.innerHTML=DOOR3_HTML;bindDoorGo();curLayer='universe';curTab='uni';renderPanel(true);};}
 function closeDoor(){document.getElementById('door').classList.remove('on');}
-document.getElementById('dGo').onclick=()=>{closeDoor();goFarther();};
-addEventListener('resize',()=>{if(document.getElementById('door').classList.contains('on'))doorScene();});
+function bindDoorGo(){document.getElementById('dGo').onclick=()=>{closeDoor();goFarther();};}bindDoorGo();
+addEventListener('resize',()=>{if(document.getElementById('door').classList.contains('on'))(S.flags.door4&&S.voy?door4Scene:doorScene)();});
 function showTitle(){END.forEach(clearTimeout);END=[];endShown=0;document.getElementById('skipC').style.display='none';if(!PREVIEW&&canVoyage()){showDoor();return;}paintTitle();titleScene();document.getElementById('title').classList.add('on');}
 // 「空は、こんな色だった。」はタップで飛ばせる（文字が出てから）
 // iPhone では div の click が届かないことがあるので pointerup で受ける。文字が見えてから（出始めて1.5秒後から）飛ばせる
