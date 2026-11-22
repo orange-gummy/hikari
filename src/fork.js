@@ -36,7 +36,7 @@ function forkGauge(f){const W=FR.w,H=FR.h,n=f.opts.length,gw=Math.min(W-28,340),
 function paintFork(){const f=S.fork,show=f&&S.voy&&!BRK&&!RST&&!climax&&!FOLD&&!LIGHTFX&&!skillOpen&&!glowOpen;
   if(!show){if(forkKey){forkKey='';forkEl.innerHTML='';forkEl.classList.remove('on');document.body.classList.remove('forkOn');}return;}
   const key=f.opts.join(',')+'|'+Math.round(FR.w)+'x'+Math.round(FR.h);
-  if(key!==forkKey){forkKey=key;forkEl.innerHTML=forkGauge(f);forkEl.classList.add('on');document.body.classList.add('forkOn');
+  if(key!==forkKey){forkKey=key;forkEl.innerHTML=forkGauge(f);forkEl.classList.add('on');document.body.classList.add('forkOn');setTimeout(()=>firstHint('fork','押すと、次の宙域の道を選べる',()=>{const g=forkEl.querySelector('[data-fk]');if(!g)return null;const r=g.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top};},'up'),400);
     forkEl.querySelectorAll('[data-fk]').forEach(g=>{const go=e=>{e.stopPropagation();e.preventDefault();if(g.dataset.fk==='__map'){curTab='voy';renderPanel(true);return;}pickFork(g.dataset.fk);};g.addEventListener('pointerdown',e=>e.stopPropagation());g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e);});});}
   // 残り時間：中心の小さな輪が欠けていく
   const lf=forkEl.querySelector('.fkLife');if(lf){const k=Math.max(0,f.life/FORK_LIFE);const L=+lf.getAttribute('r')*6.283;lf.setAttribute('stroke-dasharray',(L*k).toFixed(1)+' '+L.toFixed(1));}

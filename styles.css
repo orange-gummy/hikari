@@ -23,6 +23,14 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #hudL .unit{font-family:var(--ui);font-weight:200;font-size:14px;margin-left:4px}
 #rate{font-family:var(--num);font-size:12px;color:var(--ink-dim);margin-top:3px;white-space:nowrap}
 #rate .wind{display:block;margin-top:2px}
+.hintTip{position:fixed;z-index:30;pointer-events:none;width:0;height:0;opacity:0;transition:opacity .5s}.hintTip.on{opacity:1}
+.hintTip .hDot{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:#fff6e6;box-shadow:0 0 10px rgba(255,236,210,.8);animation:hPulse 1.6s ease-in-out infinite}
+.hintTip .hLine{position:absolute;left:0;top:4px;width:1px;background:linear-gradient(180deg,rgba(255,236,210,.7),rgba(255,236,210,0))}
+.hintTip.up .hLine{top:auto;bottom:4px;background:linear-gradient(0deg,rgba(255,236,210,.7),rgba(255,236,210,0))}
+.hintTip .hTx{position:absolute;left:0;top:42px;transform:translateX(-50%);white-space:nowrap;font-size:12px;letter-spacing:.06em;color:#f3f4f8;text-shadow:0 0 8px #04050c,0 0 3px #04050c}
+.hintTip.up .hTx{top:auto;bottom:42px}
+@keyframes hPulse{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.6);opacity:1}}
+@media (prefers-reduced-motion:reduce){.hintTip .hDot{animation:none}}
 #hG{font-size:11px;color:var(--ink-dim);margin-top:4px}
 #hV .hv9{vertical-align:middle;margin:0 3px 0 2px;display:inline-block}#hV:has(.hv9),#hG{white-space:nowrap}#hV .hvC{font-size:.6em}
 #hV .hv9in{animation:hv9in 1.2s ease-out both}@keyframes hv9in{0%{opacity:0;r:4}100%{opacity:1}}
