@@ -57,7 +57,7 @@ function door4Scene(){const W=innerWidth,H=innerHeight,f=n=>n.toFixed(1);documen
   const pts=[[W*0.5,H*0.97],[W*0.3,H*0.86],[W*0.72,H*0.74],[W*0.26,H*0.62],[W*0.6,ey+H*0.07]];
   let d='M'+f(pts[0][0])+' '+f(pts[0][1]);for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],my=(a[1]+b[1])/2;d+='C'+f(a[0])+' '+f(my)+' '+f(b[0])+' '+f(my)+' '+f(b[0])+' '+f(b[1]);}
   v+='<path d="'+d+'" fill="none" stroke="rgba(236,238,242,.22)" stroke-width=".8" stroke-dasharray="2 5"/>';
-  NEW_COLORS.forEach((c,i)=>{const [x,y]=pts[i+1],col=c.rgb.join(',');v+='<circle cx="'+f(x)+'" cy="'+f(y)+'" r="16" fill="rgba('+col+',.12)"/><circle class="bStar" style="animation-delay:-'+(i*0.7)+'s" cx="'+f(x)+'" cy="'+f(y)+'" r="6" fill="rgba('+col+',.3)"/><circle cx="'+f(x)+'" cy="'+f(y)+'" r="2.2" fill="rgb('+col+')"/>';});
+  for(let i=1;i<pts.length;i++){const [x,y]=pts[i];v+='<circle cx="'+f(x)+'" cy="'+f(y)+'" r="1.6" fill="rgba(236,238,242,.6)"/>';}   // 目的地は小さな白い点だけ（色の点と光の輪はやめた、2026-11-22）
   v+='<circle r="2.2" fill="#fff"><animateMotion dur="11s" repeatCount="indefinite" path="'+d+'" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".5 0 .5 1"/></circle>';
   document.getElementById('dFar').innerHTML=v+'</svg>';}
 function showDoor4(){S.flags.door4=true;save();const b=document.getElementById('dBody');
