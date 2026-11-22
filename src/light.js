@@ -20,12 +20,12 @@ function renderLight(){const done=S.lightDone,ready=canLight(),c=lightCost(),key
   v+='<circle cx="'+sx.toFixed(1)+'" cy="'+y+'" r="9" fill="'+(done?'rgba(255,255,255,.5)':'rgba(255,236,210,.35)')+'"/><circle cx="'+sx.toFixed(1)+'" cy="'+y+'" r="2" fill="#fff"/>'+
     '<text x="'+sx.toFixed(1)+'" y="'+(y+24)+'" text-anchor="'+(sx>250?'end':'middle')+'" font-size="10" fill="rgba(236,238,242,.45)">'+(done?'光になった':'いまの船')+'</text></svg>';
   let d;
-  if(done){const dt=new Date(S.lightAt||Date.now());d='<div class="row" style="padding:0"><span style="font-size:14px">光になった</span></div><div class="note" style="margin:4px 0 10px">'+dt.getFullYear()+'年'+(dt.getMonth()+1)+'月'+dt.getDate()+'日、宇宙 '+roman(S.lightUni||S.uni+1)+'で。<br>旅は、まだ続けられる。窓の中心の光は、そのとき追いついた光。</div><button class="act" id="ltAgain">もう一度見る</button>';}
+  if(done){const dt=new Date(S.lightAt||Date.now());d='<div class="row" style="padding:0"><span style="font-size:14px">光になった</span></div><div class="note" style="margin:4px 0 10px">'+dt.getFullYear()+'年'+(dt.getMonth()+1)+'月'+dt.getDate()+'日、宇宙 '+roman(S.lightUni||S.uni+1)+'で。<br>旅は、まだ続けられる。窓の中心の光は、そのとき追いついた光。</div><button class="act" id="ltAgain">もう一度見る</button><button class="act" id="ltRec" style="margin-top:8px">旅の記録を見る</button>';}
   else{d='<div class="row" style="padding:0"><span style="font-size:14px">光になる</span></div><div class="note" style="margin:4px 0 10px">最後の加速。光の速さに届くと、船の時間は止まる。一度きり。そのあとも、宇宙を畳む旅は続けられる。'+
       (ready?'':'<br>9を'+LIGHT_N+'個並べると、最後の加速ができる。')+'</div><button class="act" id="ltGo"'+(ready&&S.E>=c?'':' disabled')+' style="border-color:rgba(255,255,255,.7);color:#fff;letter-spacing:.2em;box-shadow:0 0 18px rgba(255,255,255,.12)">光になる'+(ready&&S.E<c?'　あと'+fmt(c-S.E):'')+'</button>';}
   pbody.innerHTML='<div class="phead"><span class="lab">LIGHT</span><span class="num" style="font-size:12px;color:var(--ink-dim)">9 × '+nines(S.stage)+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
   const go=document.getElementById('ltGo');if(go)go.onclick=()=>confirmBox('光になる','最後の加速。一度きり。終わったあとも、宇宙を畳む旅は続けられる。',()=>{if(becomeLight())startLightEnd(false);});
-  const ag=document.getElementById('ltAgain');if(ag)ag.onclick=()=>startLightEnd(true);}
+  const ag=document.getElementById('ltAgain');if(ag)ag.onclick=()=>startLightEnd(true);const rb=document.getElementById('ltRec');if(rb)rb.onclick=()=>showRecord(null);}
 /* 終わりの場面 */
 let LIGHTFX=null;
 const LFX_CV=document.createElement('canvas');LFX_CV.id='lightFx';LFX_CV.setAttribute('aria-hidden','true');document.body.appendChild(LFX_CV);const lfx=LFX_CV.getContext('2d');
@@ -56,6 +56,19 @@ function drawLightEnd(){const f=LIGHTFX;if(!f)return;f.t++;const t=f.t,X=RC.x||f
   if(t>600){const k=cl((t-600)/150);lfx.save();lfx.font='400 16px "Shippori Mincho B1",serif';lfx.textAlign='center';lfx.fillStyle='rgba(236,238,242,'+(0.85*k).toFixed(3)+')';if(lfx.letterSpacing!==undefined)lfx.letterSpacing='0.16em';lfx.fillText(LINES.light,X,Y+70);lfx.restore();}
   if(t===600&&!f.replay)S.log.push({y:Math.floor(S.years),t:LINES.light,c:-1});
   if(t===840){f.canTap=true;LFX_CV.style.pointerEvents='auto';}}
-LFX_CV.addEventListener('pointerup',()=>{if(LIGHTFX&&LIGHTFX.canTap&&!LIGHTFX.closing){LIGHTFX.closing=1;LFX_CV.style.pointerEvents='none';}});
+LFX_CV.addEventListener('pointerup',()=>{if(LIGHTFX&&LIGHTFX.canTap&&!LIGHTFX.closing&&!recOpen){LIGHTFX.canTap=false;LFX_CV.style.pointerEvents='none';showRecord(()=>{LIGHTFX.closing=1;});}});
+/* 旅の記録（2026-11-22）：「やっと、追いついた。」のあと、暗闇のまま旅をふりかえる。11色の点が昇っていき、最後に白い光。「旅を続ける」で戻る。LIGHT タブからも見られる */
+let recOpen=false;
+function recordHTML(){const st=S.st||{},days=Math.max(1,Math.ceil((Date.now()-(st.since||Date.now()))/86400000)),cols=COLORS.map(c=>c.rgb).concat(NEW_COLORS.map(c=>c.rgb)),W=300,H=130,n=cols.length;
+  const P=cols.map((_,i)=>{const t=i/(n);return [18+t*(W-60),H-16-Math.pow(t,1.6)*(H-40)+Math.sin(i*1.9)*6];}),L=[W-26,22];
+  let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-label="たどった色">';
+  P.concat([L]).forEach((p,i,a)=>{if(i)v+='<line x1="'+a[i-1][0].toFixed(1)+'" y1="'+a[i-1][1].toFixed(1)+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" stroke="rgba(236,238,242,.22)" stroke-width=".7" class="rcL" style="--i:'+i+'"/>';});
+  P.forEach((p,i)=>{v+='<circle class="rcP" style="--i:'+i+'" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.3" fill="rgb('+cols[i].join(',')+')"/>';});
+  v+='<circle class="rcP" style="--i:'+n+'" cx="'+L[0]+'" cy="'+L[1]+'" r="14" fill="url(#rcG)"/><circle class="rcP" style="--i:'+n+'" cx="'+L[0]+'" cy="'+L[1]+'" r="2.4" fill="#fff"/><defs><radialGradient id="rcG"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs></svg>';
+  const row=(a,b)=>'<div class="rcR"><span>'+a+'</span><b>'+b+'</b></div>';
+  return '<div class="rcLab">THE JOURNEY</div><div class="rcT">旅の記録</div>'+v+'<div class="rcRows">'+row('旅をした日々',days+'<small>日</small>')+row('故郷に着いた',arrivals()+'<small>回</small>')+row('緊急停止',(st.stops||0)+'<small>回</small>')+row('航路を引き直した',(st.redraws||0)+'<small>回</small>')+row('畳んだ宇宙',S.uni+'<small>つ</small>')+row('いちばん多く並べた9',nines(S.maxStage)+'<small>個</small>')+row('窓を開いていた時間',((st.play||0)>=3600?Math.round((st.play||0)/3600)+'<small>時間</small>':Math.max(1,Math.round((st.play||0)/60))+'<small>分</small>'))+'</div><div class="rcEnd">故郷の空は、まだあの色をしている。</div><button id="rcGo">旅を続ける</button>';}
+function showRecord(after){recOpen=true;let el=document.getElementById('recOv');if(!el){el=document.createElement('div');el.id='recOv';el.setAttribute('role','dialog');el.setAttribute('aria-label','旅の記録');document.body.appendChild(el);}
+  el.innerHTML='<div class="rcBody">'+recordHTML()+'</div>';el.classList.remove('out');void el.offsetWidth;el.classList.add('on');
+  document.getElementById('rcGo').onclick=()=>{el.classList.add('out');setTimeout(()=>{el.classList.remove('on','out');recOpen=false;if(after)after();},900);};}
 /* 光になったあと：窓の中心に、小さな白い光が残る */
 function drawLightMark(){if(!S.lightDone||LANDED||HOMEA||LIGHTFX)return;const X=RC.x,Y=RC.y;if(!X)return;blob(X,Y,30*(RCS||1),[255,252,245],0.5+0.08*Math.sin(T*0.03));cx.beginPath();cx.arc(X,Y,2,0,6.283);cx.fillStyle='rgba(255,255,255,.95)';cx.fill();}
