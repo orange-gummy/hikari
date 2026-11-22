@@ -61,11 +61,25 @@ function drawFold(){const f=FOLD;if(!f)return;if(pickOpen&&f.t>=340)return;f.t++
   if(t>=380){const a=Math.sin(Math.PI*cl((t-380)/180));cx.save();cx.font='400 17px "Shippori Mincho B1",serif';cx.textAlign='center';cx.fillStyle='rgba(236,238,242,'+(0.85*a).toFixed(3)+')';cx.fillText('宇宙 '+roman(S.uni+1),X,Y+125*RCS);cx.restore();}}
 /* 新しい宇宙の色合い：窓の中心に、その宇宙の色をうっすら重ねる（宇宙 I の白は重ねない） */
 function drawTint(){if(!S.uTint||LANDED||HOMEA||FR.w<=0)return;const c=UNI_TINT[S.uTint%UNI_TINT.length],X=FR.x+FR.w/2,Y=FR.y+FR.h*0.45,r=Math.max(FR.w,FR.h)*0.75;const g=cx.createRadialGradient(X,Y,0,X,Y,r);g.addColorStop(0,rgb(c.a,0.13));g.addColorStop(0.55,rgb(c.b,0.05));g.addColorStop(1,rgb(c.a,0));cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);}
+/* 背景の奥行き（2026-11-22、案 B）：故郷への周回の間は、窓を斜めに横切る淡い星の帯と暗い塵の筋（いちばん奥の層で、加速してもほとんど動かない）。窓の中心をわずかに明るく、四隅を暗く。航海中は光の帯と銀河がもうあるので、帯は出さず濃淡だけ */
+let NEB=null;
+function nebCanvas(W,H){const c=document.createElement('canvas'),k=Math.min(2,devicePixelRatio||1);c.width=Math.round(W*k);c.height=Math.round(H*k);const g=c.getContext('2d');g.scale(k,k);let sd=5;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},s=Math.max(W,H)/360;
+  const cloud=(x,y,rx,ry,col,a)=>{const R=Math.max(rx,ry),gr=g.createRadialGradient(0,0,0,0,0,R);gr.addColorStop(0,'rgba('+col+','+a+')');gr.addColorStop(.55,'rgba('+col+','+(a*0.4)+')');gr.addColorStop(1,'rgba('+col+',0)');g.save();g.translate(x,y);g.scale(rx/R,ry/R);g.fillStyle=gr;g.beginPath();g.arc(0,0,R,0,6.283);g.fill();g.restore();};
+  const at=t=>[t*W*1.3-W*0.15,H*0.85-t*H*0.75];
+  for(let i=0;i<26;i++){const t=r(),[x,y]=at(t);cloud(x,y+(r()-.5)*H*0.18,(60+r()*90)*s,(30+r()*50)*s,['70,80,140','90,70,130','60,90,130'][i%3],0.05+r()*0.05);}
+  for(let i=0;i<10;i++){const t=r(),[x,y]=at(t);cloud(x,y+(r()-.5)*H*0.06,(40+r()*50)*s,(10+r()*14)*s,'4,5,12',0.35);}
+  const n=Math.round(600*W*H/(358*340));for(let i=0;i<n;i++){const t=r(),[x,y]=at(t);g.fillStyle='rgba(236,238,242,'+(0.05+r()*0.2).toFixed(2)+')';g.fillRect(x,y+(r()+r()+r()-1.5)*H*0.12,0.7,0.7);}
+  return c;}
+function drawDepth(){if(LANDED||HOMEA||FR.w<=0)return;cx.save();cx.beginPath();cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);cx.clip();
+  if(!S.voy){const W=Math.round(FR.w),H=Math.round(FR.h);if(!NEB||NEB.w!==W||NEB.h!==H)NEB={w:W,h:H,c:nebCanvas(W,H)};cx.globalAlpha=1-CONV;cx.drawImage(NEB.c,FR.x+Math.sin(T*0.0006)*6,FR.y+Math.cos(T*0.0005)*4,W,H);cx.globalAlpha=1;}
+  const X=RC.x||FR.x+FR.w/2,Y=RC.y||FR.y+FR.h*0.45,m=Math.min(FR.w,FR.h),M=Math.max(FR.w,FR.h);
+  let g=cx.createRadialGradient(X,Y,0,X,Y,m*0.6);g.addColorStop(0,'rgba(40,50,90,.16)');g.addColorStop(1,'rgba(40,50,90,0)');cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);
+  g=cx.createRadialGradient(X,Y,m*0.25,X,Y,M*0.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(0.5,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.5)');cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);cx.restore();}
 let HAZE_A=0.034,HAZE_WIN=true;   // HAZE_WIN：もやを窓（#frame）の四隅に置く
 function frameInner(){
   if(!STILL)T++;for(let i=0;i<7;i++){A[i]+=(TG[i]-A[i])*(TG[i]?0.03:0.022);if(TG[i])RV[i]=Math.min(1,RV[i]+0.012);POP[i]*=0.93;}BB*=0.993;
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
-  cx.clearRect(0,0,CW,CH);drawTint();drawBand();
+  cx.clearRect(0,0,CW,CH);drawDepth();drawTint();drawBand();
   // 四隅の記憶の色のもや（2026-11-16 にやめ、11-17 に弱く戻した。HAZE_A＝濃さ、もとは 0.045）
   if(!LANDED&&HAZE_A>0){const win=HAZE_WIN&&FR.w>0,hx=win?FR.x:0,hy=win?FR.y:0,hw=win?FR.w:CW,hh=win?FR.h:CH,hs=win?Math.max(hw,hh)/600:sc;
     if(win){cx.save();cx.beginPath();cx.roundRect(hx,hy,hw,hh,18);cx.clip();}
@@ -76,10 +90,10 @@ function frameInner(){
   const tw=0.25*aw,CXs=RC.x||CW/2,CYs=RC.y||CH/2,rs=420*sc*(1-CONV*0.92)*ZOOM;
   if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const s of STARS){s.t+=s.v*0.75*SPDF*(1+CONV*4);if(s.t>3.1){s.t=0.02+Math.random()*0.2;s.p=Math.random()*6.283;}else if(s.t<0.02&&SPDF<0){s.t=2.95+Math.random()*0.14;s.p=Math.random()*6.283;}
     const c=Math.cos(s.t),ca=(c+bv)/(1+bv*c),ta=Math.acos(Math.max(-1,Math.min(1,ca))),r=0.5*rs*Math.tan(Math.min(ta,3.0)/2),x=CXs+r*Math.cos(s.p),y=CYs+r*Math.sin(s.p);if(x<-8||x>CW+8||y<-8||y>CH+8)continue;
-    const col=mix(COLORS[s.k].rgb,G,1-A[s.k]),f=1-2*ta/Math.PI;let al=cl((0.35+0.5*s.w+f*0.3)*(0.55+0.45*aw)+Math.sin(T*0.05+s.ph)*tw+CONV*0.4);if(al<0.06)al=0.06;
+    const col=mix(COLORS[s.k].rgb,G,1-A[s.k]),f=1-2*ta/Math.PI;const ly=s.s<0.8?0.62:s.s<1.2?0.9:1.15;let al=cl((0.35+0.5*s.w+f*0.3)*(0.55+0.45*aw)*ly+Math.sin(T*0.05+s.ph)*tw+CONV*0.4);if(al<0.05)al=0.05;   // 遠い層ほど暗く（2026-11-22、奥行き）
     if(stk>0&&(s.big||s.q<0.5)){const k=Math.min(1,stk/46),SL=Math.min(0.6,0.28+0.015*(ACC?ACC.lvl:0)),rr=r*(1-SL*k),sc2=f>0?mix(col,[150,190,255],0.55*A[4]):mix(col,[255,140,120],0.55*A[0]);cx.beginPath();cx.moveTo(CXs+rr*Math.cos(s.p),CYs+rr*Math.sin(s.p));cx.lineTo(x,y);cx.strokeStyle=rgb(sc2,Math.min(1,al*k*1.3));cx.lineWidth=s.s*(0.45+0.3*k);cx.stroke();}
     if(s.big&&al>0.4)blob(x,y,7*(0.6+0.4*aw),col,al*0.32);
-    cx.beginPath();cx.arc(x,y,s.s*(0.7+0.3*aw),0,6.283);cx.fillStyle=rgb(col,al);cx.fill();}
+    cx.beginPath();cx.arc(x,y,s.s*(0.7+0.3*aw)*(s.s<0.8?0.85:s.s>1.2?1.12:1),0,6.283);cx.fillStyle=rgb(col,al);cx.fill();}
   if(stk>0)stk--;
   if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const m of FLY){const a=A[m.k];if(!STILL){m.x+=(m.vx+Math.sin(T*0.01+m.ph)*0.2)*0.4/CW;m.y+=m.vy*0.4/CH;}if(SPDF>1){const f2=(SPDF-1)*0.012;m.x+=(m.x*CW-CXs)*f2/CW;m.y+=(m.y*CH-CYs)*f2/CH;}if(m.y>1.04||m.y<-0.02||m.x<-0.02||m.x>1.02){if(SPDF>1.05){const an=Math.random()*6.283,rr=R(0.03,0.2)*Math.min(CW,CH);m.x=(CXs+Math.cos(an)*rr)/CW;m.y=(CYs+Math.sin(an)*rr)/CH;}else if(m.y<-0.02){m.y=1.02;m.x=Math.random();}else{m.x=Math.random();m.y=Math.random();}}
     const px=m.x*CW,py=m.y*CH;if(Math.abs(px-CXs)<52&&Math.abs(py-CYs)<34)continue;const pu=0.5+0.5*Math.sin(T*0.04+m.ph),cc=mix(COLORS[m.k].rgb,G,1-a),al=(0.25+0.6*pu)*(0.4+0.6*a);blob(px,py,m.r*6,cc,al*0.3);cx.beginPath();cx.arc(px,py,m.r,0,6.283);cx.fillStyle=rgb(cc,al);cx.fill();}
