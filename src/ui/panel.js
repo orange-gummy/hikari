@@ -57,6 +57,9 @@ function renderDrive(force){
   if(force||pbody.dataset.k!==key){pbody.dataset.k=key;pbody.innerHTML='';devUI=[];
     const h=document.createElement('div');h.className='phead';h.innerHTML='<span class="lab">DEVICES</span><span class="seg"><button data-m="1">×1</button><button data-m="10">×10</button><button data-m="max">MAX</button></span>';pbody.appendChild(h);
     h.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.m===buyMode);b.addEventListener('click',()=>{buyMode=b.dataset.m;renderPanel(true);});});
+    {const ai=visible.filter(i=>has('a'+i));if(ai.length>=2){const on=ai.filter(i=>S.auto[i]).length,st=on===ai.length?'自動':on===0?'手動':'一部';   // 購入の自動化を一括で（2026-11-23）
+      const w=document.createElement('div');w.className='ws';w.innerHTML='<div class="row" style="padding:0"><span>購入の自動化</span><button class="auto" id="aBuyAll"'+(on===ai.length?' data-on':'')+'>'+st+'</button></div>';pbody.appendChild(w);
+      w.querySelector('#aBuyAll').onclick=()=>{const v=on===ai.length?0:1;ai.forEach(i=>S.auto[i]=v);renderPanel(true);};}}
     if(has('aT')){const w=document.createElement('div');w.className='ws';w.innerHTML='<div class="row" style="padding:0"><span>TIERの自動化</span><button class="auto" id="aTier"'+(S.autoTier?' data-on':'')+'>'+(S.autoTier?'自動':'手動')+'</button></div>';pbody.appendChild(w);w.querySelector('#aTier').onclick=()=>{S.autoTier=!S.autoTier;renderPanel(true);};}
     visible.forEach(i=>{const d=DEVICES[i],w=document.createElement('div');w.className='dv';
       let trait=d.trait;if(d.spawn)trait+='<br>'+d.spawn.why+'：'+DEVICES[d.spawn.to].name+' 毎分+<span class="spn"></span>台';
