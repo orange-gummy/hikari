@@ -10,7 +10,11 @@ const G=[196,198,204];
 const A=COLORS.map(()=>1).concat(NEW_COLORS.map(()=>1)),TG=COLORS.map(()=>1),RV=COLORS.map(()=>1),POP=COLORS.map(()=>0);   // A[7〜] は見つけた色。いつも1
 let T=0,fla=0,stk=0,BB=0,CONV=0,FREEZE=false,CRACK=null,HOMEA=null,ACC=null,RCS=1,ZOOM=1,SPDF=1,ROT=0,ROTV=0,BVC=-1,BRK=null,RST=null,NEWSK=[],STILL=false,TRIP=[],MET=null,BLOOM=null,LANDED=false,HEARD=null;
 const P=[],SP=[],STARS=[],FLY=[],FX=[],RIP=[],POPS=[],GLOWB=[];
-function resize(){DPR=Math.min(2,window.devicePixelRatio||1);CW=innerWidth;CH=innerHeight;cv.width=CW*DPR;cv.height=CH*DPR;cx.setTransform(DPR,0,0,DPR,0,0);measure();}
+// 画面の高さ（2026-11-23）：iPhone のホーム画面から開くと、戻ってきたときなどに CSS の 100% が実際の画面より短くなり、下に空きができて窓の絵も縦につぶれていた。
+// 高さを1か所で決めて、CSS（--appH）とキャンバスの両方に使う。ホーム画面から縦で開いているときは画面いっぱい（screen.height）。
+function vpH(){let h=innerHeight;try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone){if(innerWidth<innerHeight&&Math.abs(innerWidth-Math.min(screen.width,screen.height))<2)h=Math.max(h,Math.max(screen.width,screen.height));}}catch(e){}return h;}
+function fitVP(){document.documentElement.style.setProperty('--appH',vpH()+'px');}
+function resize(){fitVP();DPR=Math.min(2,window.devicePixelRatio||1);CW=innerWidth;CH=vpH();cv.width=CW*DPR;cv.height=CH*DPR;cx.setTransform(DPR,0,0,DPR,0,0);measure();}
 let MEAS_N=0;
 // リングが隠れている間に測ると中心が画面の左上（0,0）になり、加速の光が左上の端に4分の1の円で見えていた（2026-11-16）。大きさが0のときは前の値を残す
 function measure(){const r=frameEl.getBoundingClientRect();if(r.width>0)FR={x:r.left,y:r.top,w:r.width,h:r.height};const q=ringEl.getBoundingClientRect();if(q.width>0){RC={x:q.left+q.width/2,y:q.top+q.height/2};RCS=q.width/176||1;}}

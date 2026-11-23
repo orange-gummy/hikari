@@ -76,7 +76,7 @@ let bootOn=false;
 function bootStatus(){const loop='<i>·</i>'+(S.restarts+1)+' 周目';if(S.voy){const d=nextDest();return (d?d.name+'まで あと '+lyText(Math.max(0,d.ly-S.vdist))+' 光年':'宇宙の果ての先へ '+lyText(S.vdist)+' 光年')+'<i>·</i>宇宙 '+roman(S.uni+1);}
   if(S.cleared)return '故郷に着いている。'+loop;let lost=0;for(let i=0;i<7;i++)if(!memHas(i))lost++;
   return REGIONS[regionIndex(S.dist)].name+'<i>·</i>故郷まで '+Math.max(0,Math.ceil(GOAL_LY-S.dist)).toLocaleString('ja-JP')+' 光年'+(lost?'<i>·</i>失った色 '+lost:'')+loop;}
-function paintBoot(){const W=innerWidth,H=innerHeight,ch=H<560?0:Math.round(Math.max(120,H*0.19)),cy0=H-ch,cxp=W/2,BODY=230,TOP=60,r=Math.round(Math.max(60,Math.min(W*0.3,H*0.17,170,((cy0||H)-24-BODY-TOP-50)/2))),cyp=Math.round(Math.max(TOP+r+20,Math.min(H*(ch?0.30:0.36),(cy0||H)-24-BODY-r-30)));   // 題名とボタンが計器盤にかからないよう、輪の大きさと位置を決める
+function paintBoot(){const W=innerWidth,H=vpH(),ch=H<560?0:Math.round(Math.max(120,H*0.19)),cy0=H-ch,cxp=W/2,BODY=230,TOP=60,r=Math.round(Math.max(60,Math.min(W*0.3,H*0.17,170,((cy0||H)-24-BODY-TOP-50)/2))),cyp=Math.round(Math.max(TOP+r+20,Math.min(H*(ch?0.30:0.36),(cy0||H)-24-BODY-r-30)));   // 題名とボタンが計器盤にかからないよう、輪の大きさと位置を決める
   let sd=23;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},f=n=>n.toFixed(1),on=COLORS.map((_,i)=>memHas(i)),ink=a=>'rgba(236,238,242,'+a+')';
   let v='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><defs>'+
     '<linearGradient id="bTail" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient>'+
@@ -177,7 +177,7 @@ document.getElementById('bGo').onclick=()=>bootGo();document.getElementById('bGe
 addEventListener('resize',()=>{if(bootOn)paintBoot();});
 function boot(){for(const id of ['bVer','sVer']){const e=document.getElementById(id);if(e)e.textContent='ver '+VERSION;}const had=load();initScene();resize();applyLoadedVisuals();S.region=regionIndex(S.dist);renderPanel(true);paintGoal();
   showBoot();
-  addEventListener('resize',resize);new ResizeObserver(measure).observe(frameEl);
+  addEventListener('resize',resize);const reFit=()=>{const h=vpH();if(h!==CH||innerWidth!==CW)dispatchEvent(new Event('resize'));};addEventListener('pageshow',reFit);addEventListener('orientationchange',()=>setTimeout(reFit,300));document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(reFit,200);});if(window.visualViewport)visualViewport.addEventListener('resize',reFit);new ResizeObserver(measure).observe(frameEl);
   // タイトルが出ている間は保存しない（保存すると「最後に遊んだ時刻」が進み、留守の分を受け取れなくなる）
   document.addEventListener('visibilitychange',()=>{if(bootOn)return;if(document.hidden){paused=true;save();}else{offline();lastT=performance.now();paused=false;}});
   addEventListener('pagehide',()=>{if(!bootOn)save();});
