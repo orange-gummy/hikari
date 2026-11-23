@@ -347,7 +347,7 @@ function renderVoy(){let h='';const part='voy';   // WAKE タブは 2026-11-19 �
     '<button class="act" id="vrGo"'+(tgn<1?' disabled':'')+'>航路を引き直す</button>';}
   pbody.dataset.k='';pbody.innerHTML=h;
   pbody.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>pickFork(b.dataset.rt));
-  const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、記憶は残る。光子は持ち越せない。',()=>{startBrake(0);BRK.vr=true;});
+  const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、記憶は残る。光子は持ち越せない。',()=>startRedraw());
   const fg=document.getElementById('farGo');if(fg)fg.onclick=()=>showDoor();}   // どこから押しても、章の扉を通って航海へ
 function renderLog(){pbody.dataset.k='';const logMode=curTab==='ach'?'ach':'log';let h='<div class="phead"><span class="lab">'+(logMode==='log'?'LOG':'RECORD')+'</span>'+(logMode==='ach'?'<span class="num" style="font-size:12px;color:var(--ink-dim)">実績 '+S.ach.length+' / '+ACHIEVEMENTS.length+'</span>':'')+'</div>';
   if(logMode==='log'){S.log.slice().reverse().forEach((e,j)=>{const col=e.c>=0?rgb(COLORS[e.c].rgb,1):'var(--ink-dim)';h+='<div class="le"><span class="y" style="color:'+col+'">故郷 '+e.y.toLocaleString('ja-JP')+'年</span><span class="t" style="opacity:'+(j===0?1:0.75)+'">'+e.t+'</span></div>';});}

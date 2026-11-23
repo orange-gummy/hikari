@@ -124,6 +124,7 @@ function frameInner(){
   drawMeteor();
   if(BRK)drawBrk();
   if(RST)drawRst();
+  if(VMINI)drawVMini();if(VRP.length)drawVrP();
   if(CRACK)drawCrack();
   const dk=(1-ag)*0.5;if(dk>0.005){const vg=cx.createRadialGradient(CW/2,CH/2,Math.min(CW,CH)*0.2,CW/2,CH/2,Math.max(CW,CH)*0.7);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+(dk*0.9)+')');cx.fillStyle=vg;cx.fillRect(0,0,CW,CH);}
   if(S.over>0){const k=Math.min(1,S.over/6)*(0.6+0.4*Math.sin(T*0.15)),g=cx.createRadialGradient(CW/2,CH/2,Math.min(CW,CH)*0.25,CW/2,CH/2,Math.max(CW,CH)*0.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,rgb(mix([255,180,90],G,1-A[3]),0.2*k));cx.fillStyle=g;cx.fillRect(0,0,CW,CH);}
@@ -137,8 +138,8 @@ function drawMeteor(){if(LANDED||HOMEA||SHOWER){MET=null;return;}if(!MET){const 
   const m=MET;m.t+=FRK;m.x+=m.vx*FRK;m.y+=m.vy*FRK;if(m.t>m.d){MET=null;return;}const tl=Math.hypot(m.vx,m.vy)*14,ux=m.vx/Math.hypot(m.vx,m.vy),uy=m.vy/Math.hypot(m.vx,m.vy),c=mix([255,236,200],G,1-A[3]*0.6);
   const g=cx.createLinearGradient(m.x,m.y,m.x-ux*tl,m.y-uy*tl);g.addColorStop(0,rgb(c,0.95));g.addColorStop(1,rgb(c,0));cx.strokeStyle=g;cx.lineWidth=2;cx.beginPath();cx.moveTo(m.x,m.y);cx.lineTo(m.x-ux*tl,m.y-uy*tl);cx.stroke();blob(m.x,m.y,18,c,0.55);cx.beginPath();cx.arc(m.x,m.y,2.2,0,6.283);cx.fillStyle='#fffaf0';cx.fill();}
 function catchMeteor(){const m=MET;MET=null;const g=prodRate()*(has('cS')?300:60);S.E+=g;S.Erun+=g;let s='ENERGY +'+fmt(g);const pg=phGain(PH_MET,PH_MET_MIN);if(pg)s+='　PHOTON +'+fmt(pg);if(S.flags.bat){vesAdd(1);S.deposited=true;s='METEOR +1　'+s;if(curTab==='battery')renderPanel(true);}SND.play('catch',4);POPS.push({x:m.x,y:m.y-14,t:0,s});for(let k=0;k<50;k++){const a=Math.random()*6.283,v=R(0.8,4);P.push({x:m.x,y:m.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:k%3?[255,236,200]:mix(COLORS[k%6].rgb,G,1-A[k%6]),r:R(0.8,2.2),dr:0.016});}}
-function startRestart(rs,quiet){RST={t:0,rs:!!rs,quiet:!!quiet};if(!quiet)SND.play('resail');if(!quiet){curTab='drive';document.getElementById('app').classList.add('rstDim');}renderPanel(true);document.getElementById('block').style.display='block';}   // quiet＝航海中の自動の停止：見ているタブはそのまま、画面も暗くしない
-function drawRst(){const r=RST;r.t++;const t=r.t;
+function startRestart(rs,quiet,vr){if(vr){RST={t:0,vr:true};SND.play('resail');document.getElementById('block').style.display='block';return;}RST={t:0,rs:!!rs,quiet:!!quiet};if(!quiet)SND.play('resail');if(!quiet){curTab='drive';document.getElementById('app').classList.add('rstDim');}renderPanel(true);document.getElementById('block').style.display='block';}   // quiet＝航海中の自動の停止：見ているタブはそのまま、画面も暗くしない
+function drawRst(){if(RST.vr)return drawLaunch();const r=RST;r.t++;const t=r.t;
   if(t<30){SPDF=0;}
   if(t>=30&&t<90){ROTV=2*(t-30)/60;}   /* 中心が白く光る演出はなくした（2026-11-06） */
   if(t===60){const ln=r.rs&&RESTART_LINES[S.restarts];if(ln)story('rs'+S.restarts,ln);else subtitle('もう一度、船を出す。');}
@@ -150,7 +151,7 @@ function drawRst(){const r=RST;r.t++;const t=r.t;
 /* 航海の自動の緊急停止（2026-11-16 に軽くした）：大きな演出・画面の覆い・時間の停止をやめ、鈴の音と小さな光、上の短い知らせだけ */
 function autoBrake(){const g=wGain();SND.play('milestone');prestige(false);FXQ.prestige=false;fla=Math.max(fla,0.03);TRIP.push({x:RC.x,y:RC.y,t:0,c:[200,210,235]});paintSpeed();renderPanel(true);toast('自動で止まった　歪み +'+fmt(g));}
 function startBrake(g,auto){NEWSK=[];BRK={t:0,g,lit:nines(S.stage),auto:!!auto};SND.play(auto?'milestone':'brake');document.getElementById('block').style.display='block';}
-function drawBrk(){const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B1=180,S1=215,S2=335;
+function drawBrk(){if(BRK.man)return drawVr();const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B1=180,S1=215,S2=335;
   if(b.t===1){b.st=S.stage;b.bv0=BVC;b.sp0=Math.max(0,SPDF);b.sk0=stk;b.rv0=ROTV;}   // 2026-11-20：止め始めは今の流れの速さのまま（前は3〜6倍に跳ね上がり、加速したように見えた）
   const red=t<B1?(t<B0?0.5+0.5*Math.sin(t*0.5):1-(t-B0)/(B1-B0)):0;
   if(red>0){const g=cx.createRadialGradient(RC.x,RC.y,Math.min(CW,CH)*0.2,RC.x,RC.y,Math.max(CW,CH)*0.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(230,40,30,'+(0.42*red*amp)+')');cx.fillStyle=g;cx.fillRect(0,0,CW,CH);}
@@ -167,6 +168,47 @@ function drawBrk(){const b=BRK;b.t++;const t=b.t,low=fxLow,amp=low?0.4:1,B0=30,B
   if(t>S1)SPDF=0;
   if(t<S1){ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');}
   if(t>=S2){SPDF=0;STILL=false;frameEl.classList.remove('shakeL');document.getElementById('block').style.display='none';BRK=null;if(b.rs)openGlow(()=>startRestart(true));else if(b.vr&&b.auto){glowAutoSpend();trailAutoSpend();startRestart();}else if(b.vr){glowAutoSpend();openWake(()=>startRestart());}else if(b.auto)startRestart(false,true);else openSkill(true,b.g);}}
+/* 航路の引き直し（2026-11-23、試作 A「航跡を巻き取る」）：前は緊急停止の赤い演出を流用していた。
+   手で引き直す：星の流れが緩む → 故郷からここまでの航路が窓に浮かぶ → 先から故郷へ巻き戻り、ほどけた光が昇って「航跡 +○」を数える → 航跡の小窓 →
+   「船を出す」で故郷から新しい線が引かれ（古い航路は薄い影）、「新しい航路へ。」、星がまた流れる。タブは動かさない。
+   自動（法則「引き直しの記憶」）：操作を止めず、窓の中で小さな航路が1秒半で巻き戻るだけ（autoRedraw）。 */
+let VRP=[],VRT={x:0,y:0},VROLD=null,VMINI=null;
+function vrGeom(n,seed,bx){bx=bx||{x0:FR.x+FR.w/2,yb:FR.y+FR.h-46,yt:FR.y+100,amp:Math.min(FR.w*0.2,120)};let sd=Math.max(1,Math.floor(seed*7919)%2147483646);const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},ph=r()*6.283,P=[];
+  for(let k=0;k<=n;k++){const t=k/n;P.push({x:bx.x0+Math.sin(k*0.9+ph)*bx.amp*(0.35+0.65*t)+(r()-.5)*bx.amp*0.06,y:bx.yb-(bx.yb-bx.yt)*t});}
+  const o=[];for(let k=0;k<n;k++){const a=P[k],b=P[k+1],ym=(a.y+b.y)/2;for(let i=0;i<12;i++){const t=i/12,u=1-t;o.push({x:u*u*u*a.x+3*u*u*t*a.x+3*u*t*t*b.x+t*t*t*b.x,y:u*u*u*a.y+3*u*u*t*ym+3*u*t*t*ym+t*t*t*b.y});}}o.push(P[n]);return {P,pts:o};}
+function vrLine(pts,i1,a,w){if(i1<1||a<=0.002)return;w=w||1;cx.lineCap='round';cx.beginPath();cx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<=i1;i++)cx.lineTo(pts[i].x,pts[i].y);cx.strokeStyle='rgba(255,226,190,'+(a*0.13).toFixed(3)+')';cx.lineWidth=5*w;cx.stroke();cx.strokeStyle='rgba(255,226,190,'+a.toFixed(3)+')';cx.lineWidth=w;cx.stroke();}
+function vrTip(x,y,a,big){if(a<=0.01)return;blob(x,y,big?34:16,[255,226,190],0.28*a);cx.fillStyle='rgba(255,244,230,'+a.toFixed(3)+')';cx.beginPath();cx.arc(x,y,big?2.6:1.6,0,6.283);cx.fill();}
+function vrHome(h,a,label){cx.fillStyle='rgba(255,214,170,'+(0.9*a).toFixed(3)+')';cx.beginPath();cx.arc(h.x,h.y,2.2,0,6.283);cx.fill();if(label){cx.font='300 10px Murecho, sans-serif';cx.textAlign='center';cx.fillStyle='rgba(236,238,242,'+(0.5*a).toFixed(3)+')';cx.fillText('故郷',h.x,h.y+16);}}
+function vrSyms(b,gm,tip,a,glowAt){const P=gm.P;for(let k=1;k<b.n;k++){if(k*12>tip)continue;const s=b.path[k-1],o=FORKS.find(f=>f.id===s),c=o?o.col:[255,226,190];cx.strokeStyle=rgb(c,0.7*a);cx.lineWidth=0.9;cx.beginPath();cx.arc(P[k].x,P[k].y,3.4,0,6.283);cx.stroke();if(glowAt!=null&&Math.abs(k*12-glowAt)<6)blob(P[k].x,P[k].y,16,c,0.45*a);}}
+function vrEmit(gm,from,to,n){for(let i=to;i<from&&i<gm.pts.length-1;i++){const p=gm.pts[i];for(let m=0;m<n;m++)VRP.push({x:p.x+R(-2,2),y:p.y,vx:R(-.3,.3),vy:R(-.8,-.3),l:1});}}
+function drawVrP(){const tx=VRT.x,ty=VRT.y;for(let i=VRP.length-1;i>=0;i--){const p=VRP[i];p.l-=0.012;const k=1-p.l;p.x+=p.vx+(tx-p.x)*0.02*k;p.y+=p.vy+(ty-p.y)*0.025*k;if(p.l<=0||(Math.abs(p.y-ty)<5&&Math.abs(p.x-tx)<30)){VRP.splice(i,1);continue;}cx.fillStyle='rgba(255,240,215,'+(p.l*0.9).toFixed(3)+')';cx.fillRect(p.x,p.y,1.3,1.3);}}
+function startRedraw(){const g=tGain();if(g<1)return;BRK={t:0,vr:true,man:true,g,path:S.route?S.route.path.slice():[],n:Math.max(2,voyDoublings(S.vdist||1e4)),sp0:Math.max(0,SPDF),rv0:ROTV};document.getElementById('block').style.display='block';SND.play('brake');}
+function drawVr(){const b=BRK;b.t++;const t=b.t,low=fxLow;
+  if(t===1){document.getElementById('app').classList.add('rstDim','vrOn');b.geo=vrGeom(b.n,(S.st.redraws||0)+3);}
+  if(t<=120){const k=1-ei(t/120);SPDF=b.sp0*k;ROTV=b.rv0*k;ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');}else{SPDF=0;ROTV=0;}
+  if(t===110)STILL=true;
+  const gm=b.geo,N=gm.pts.length-1;VRT={x:FR.x+FR.w/2,y:FR.y+50};
+  if(t>=110){const a=cl((t-110)/50);let tip=t<230?Math.round(N*ei(cl((t-110)/110))):t<250?N:Math.round(N*(1-ei(cl((t-250)/280))));
+    vrLine(gm.pts,tip,0.75*a,1);vrSyms(b,gm,tip,a,t>=250?tip:null);const q=gm.pts[tip];vrTip(q.x,q.y,a,true);vrHome(gm.P[0],a,true);
+    if(t>=250){vrEmit(gm,b.prev==null?N:b.prev,tip,low?1:2);b.prev=tip;}}
+  if(t>=240){const a=cl((t-240)/40)*(t>520?1-cl((t-520)/24):1),ty=FR.y+58;cx.textAlign='center';cx.font='400 9px Michroma, sans-serif';cx.fillStyle='rgba(236,238,242,'+(0.5*a).toFixed(3)+')';cx.fillText('W A K E',FR.x+FR.w/2,ty-22);cx.font='300 22px Jura, sans-serif';cx.fillStyle='rgba(255,241,220,'+a.toFixed(3)+')';cx.fillText('航跡 +'+fmt(Math.round(b.g*ei(cl((t-250)/290)))),FR.x+FR.w/2,ty+4);}
+  if(t===250)SND.play('learn');
+  if(t>=545){VROLD=gm;redraw();BRK=null;STILL=false;SPDF=0;document.getElementById('block').style.display='none';paintSpeed();renderPanel(true);glowAutoSpend();openWake(()=>startRestart(false,false,true));}}
+function drawLaunch(){const r=RST;r.t++;const t=r.t;
+  if(t===1){r.geo=vrGeom(22,(S.st.redraws||0)*7+11);STILL=false;}
+  const gm=r.geo,N=gm.pts.length-1,fade=1-cl((t-200)/70);
+  if(VROLD&&fade>0)vrLine(VROLD.pts,VROLD.pts.length-1,0.08*fade,1);
+  const tip=Math.round(N*eo(cl(t/170)));vrLine(gm.pts,tip,0.8*fade,1);const q=gm.pts[tip];vrTip(q.x,q.y,fade,true);vrHome(gm.P[0],fade,false);
+  if(t===110)subtitle('新しい航路へ。');
+  if(t===150){['hud','route','panel'].forEach((id,i)=>{document.getElementById(id).style.transitionDelay=(i*0.25)+'s';});document.getElementById('app').classList.remove('rstDim','vrOn');setTimeout(()=>{['hud','route','panel'].forEach(id=>document.getElementById(id).style.transitionDelay='');},1600);}
+  SPDF=t<150?0:ei(cl((t-150)/90));
+  if(t>=270){SPDF=1;ROTV=0;RST=null;VROLD=null;document.getElementById('block').style.display='none';}}
+/* 自動の引き直し：操作は止めない。窓の中で小さな航路が巻き戻り、粒がリングへ昇る */
+function autoRedraw(){const path=S.route?S.route.path.slice():[],n=Math.max(2,voyDoublings(S.vdist||1e4)),g=redraw();if(!g)return;glowAutoSpend();trailAutoSpend();
+  const h=Math.min(FR.h*0.42,220);VMINI={t:0,n,path,g,geo:vrGeom(n,(S.st.redraws||0)+5,{x0:RC.x,yb:RC.y+h/2,yt:RC.y-h/2,amp:Math.min(FR.w*0.12,60)})};SND.play('learn');toast('航路を引き直した　航跡 +'+fmt(g));paintSpeed();renderPanel(true);}
+function drawVMini(){const m=VMINI;m.t++;const t=m.t,gm=m.geo,N=gm.pts.length-1,a=0.55*cl(t/20)*(1-cl((t-95)/15));VRT={x:RC.x,y:RC.y};
+  const tip=t<20?N:Math.round(N*(1-ei(cl((t-20)/75))));vrLine(gm.pts,tip,a,0.8);vrTip(gm.pts[tip].x,gm.pts[tip].y,a,false);vrHome(gm.P[0],a,false);if(t>20){vrEmit(gm,m.prev==null?N:m.prev,tip,1);m.prev=tip;}
+  if(t>=110)VMINI=null;}
 const CH_T=65;
 function drawAcc(){const a=ACC;a.t++;const low=fxLow,lv=a.lvl,n=nines(lv),t=a.t,dur=162,amp=low?0.45:1;
   if(n>0){const i=(n-1)%12,an=-1.5708+(i+0.5)/12*6.283,ax=RC.x+Math.cos(an)*74*RCS,ay=RC.y+Math.sin(an)*74*RCS,c=mix(COLORS[i%6].rgb,G,1-A[i%6]),g=t<CH_T?t/CH_T:Math.max(0,1-(t-CH_T)/70);blob(ax,ay,(9+lv*0.35)*(0.5+g)*RCS,c,0.5*g);SEG[i].setAttribute('stroke-width',(2.2+3*g).toFixed(2));}

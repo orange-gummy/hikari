@@ -28,7 +28,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(!S.flags.bat&&S.years>=1&&S.flags.why&&!VQ.length&&!vqTimer&&!BRK&&!RST&&!climax){if(!batAt)batAt=Date.now()+4000;else if(Date.now()>batAt){S.flags.bat=1;logLine(LINES.bat,-1);SND.play('light');renderPanel(true);paintGoal();}}
   if(FXQ.autoShower){FXQ.autoShower=false;if(!document.querySelector('.modal.on,#title.on')&&!skillOpen)startShower();}
   // ④ 引き直しの記憶：航路の引き直しも自動で
-  if(autoRedrawReady()&&!LIGHTFX&&!BRK&&!RST&&!climax&&!ACC&&!FOLD&&!skillOpen&&!document.querySelector('.modal.on,#title.on')){startBrake(0,true);BRK.vr=true;}
+  if(autoRedrawReady()&&!LIGHTFX&&!BRK&&!RST&&!climax&&!ACC&&!FOLD&&!skillOpen&&!document.querySelector('.modal.on,#title.on'))autoRedraw();
   // 航海の自動の緊急停止は 2026-11-17 になくした（歪みは走りながら入る、economy.js voyWarp()）
   if(FXQ.found){const ks=FXQ.found;FXQ.found=null;SND.play('light');fla=Math.max(fla,0.22);if(ks.includes(DEST.length-1)&&!S.flags.door4&&S.uni===0&&!S.chal)setTimeout(()=>{if(!S.flags.door4)showDoor4();},2600);ks.forEach(k=>toast('新しい色　<b style="color:'+rgb(NEW_COLORS[k].rgb,1)+'">'+NEW_COLORS[k].name+'</b>　'+DEVICES[ANCHOR+1+k].name+'が使えるようになった'));if(curTab==='drive')renderDrive(true);}
   if(FXQ.chalDone){const {id,lv}=FXQ.chalDone;FXQ.chalDone=null;SND.play('light');fla=Math.max(fla,0.22);toast(lv===1?'チャレンジを越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が灯った':'「'+CHAL[id].name+'」段'+lv+'を越えた　<b>'+SKILLS.find(k=>k.id===id).name+'</b> が強くなった');renderPanel(true);}
