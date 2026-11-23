@@ -236,8 +236,8 @@ function renderWakeOv(){const ov=document.getElementById('wakeOv'),b=document.ge
     '<div class="dvTrait">'+(n2?'次：'+n2.text:a.text(l))+'</div></div>'+(n2?'<button class="buy" data-t="'+a.id+'"'+(S.T<n2.cost?' disabled':'')+'>航跡 '+fmt(n2.cost)+'</button>':'')+'</div></div>';});
   b.innerHTML='<div class="gTop"><div class="gLab">WAKE</div><div class="gL"><span>航跡</span><b>'+fmt(S.T)+'</b></div><div class="gRes">'+(glowResult()||'航跡で、次の航海を強くできる。')+'</div></div>'+
     '<div class="gBot"><div class="gDet">'+rows+'</div><button class="act" id="wakeGo" style="margin-top:10px">船を出す</button></div><div class="gSky"></div>';
-  const W=ov.clientWidth,H=ov.clientHeight;if(!W||!H)return;const bot=b.querySelector('.gBot').getBoundingClientRect().height,top=b.querySelector('.gTop').getBoundingClientRect().height;
-  b.querySelector('.gSky').innerHTML=wakeScene(W,H,top+60,Math.max(top+160,H-bot-56));
+  const W=ov.clientWidth,H=ov.clientHeight;if(!W||!H)return;const o0=ov.getBoundingClientRect().top,bot=H-(b.querySelector('.gBot').getBoundingClientRect().top-o0),top=b.querySelector('.gTop').getBoundingClientRect().bottom-o0;   // 上の文字の下端から測る（高さだけだと上の余白の分、航路の先が文字に重なっていた、2026-11-23）
+  b.querySelector('.gSky').innerHTML=wakeScene(W,H,top+48,Math.max(top+160,H-bot-40));
   b.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>{if(buyTrail(x.dataset.t)){SND.play('light');wakeFX=1;ov.classList.remove('sIntro');renderWakeOv();}});
   document.getElementById('wakeGo').onclick=closeWake;}
 addEventListener('resize',()=>{if(wakeOpen)renderWakeOv();});
