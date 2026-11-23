@@ -16,6 +16,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
 #app{position:relative;height:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);display:grid;grid-template-rows:auto auto minmax(200px,1fr) 42%;grid-template-columns:100%}
 .lab{font-family:var(--label);font-size:11px;letter-spacing:.14em;color:var(--ink-dim)}
+#hLab,#hrLab{color:rgb(132,133,139)}   /* 半透明の色だと iPhone で上半分だけ薄く描かれていた。同じ濃さの不透明色にする（2026-11-23、実機で確かめる） */
 .num{font-family:var(--num);font-weight:300}
 /* HUD */
 #hud{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:start;padding:14px 18px 2px;min-height:82px}
