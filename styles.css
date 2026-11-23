@@ -391,7 +391,7 @@ html,body,#app,#cv{height:var(--appH,100%)}   /* 高さは JS（scene.js fitVP�
 .gBot{bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:min(460px,calc(100% - 32px))}
 
 /* 版の表記（2026-11-16） */
-#bVer{position:absolute;z-index:2;right:max(16px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));font-family:var(--ui);font-size:10px;letter-spacing:.08em;color:rgba(200,205,225,.32);pointer-events:none}
+#bVer{position:absolute;z-index:2;right:max(16px,env(safe-area-inset-right));top:calc(max(14px,env(safe-area-inset-top)) + 38px);text-align:right;font-family:var(--ui);font-size:10px;letter-spacing:.08em;color:rgba(200,205,225,.32);pointer-events:none}
 #sVer{margin-top:16px;font-family:var(--ui);font-size:10px;letter-spacing:.08em;color:rgba(200,205,225,.38);text-align:center}
 
 /* 残照の地平の動き（2026-11-17）：開くと地平線が明るみ、筋が左から順に伸び上がり、上と下の文字が遅れて出る。ふだんは筋がかすかに揺れる。選ぶと明るさだけ切り替え、説明が下から入る。灯すと新しい値が下から入る */
