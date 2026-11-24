@@ -222,7 +222,7 @@ function ukf(key,d){const k=ukind();return k&&k.fx[key]!=null?k.fx[key]:d;}
 function uOfferRoll(){const a=UNI_KIND.map(x=>x.id);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,S.beyond&&S.beyond.qu?a.length:UNI_OFFER+law('dx'));}
 // 記憶のかけら（2026-11-19）：宇宙を選ぶときに候補を引き直す。値段は1から引き直すたびに倍（宇宙ごとに1へ戻る）
 function uRerollCost(){return Math.pow(2,(S.uRerolls||0)+law('dx'));}
-function uReroll(){if(!S.uOffer||(S.shard||0)<uRerollCost())return false;S.shard-=uRerollCost();S.uRerolls=(S.uRerolls||0)+1;const k=S.uOffer.slice().sort().join();let n;do{n=uOfferRoll();}while(n.slice().sort().join()===k);S.uOffer=n;return true;}
+function uReroll(){if(!S.uOffer||(S.shard||0)<uRerollCost())return false;S.shard-=uRerollCost();S.uRerolls=(S.uRerolls||0)+1;S.flags.rr=1;const k=S.uOffer.slice().sort().join();let n;do{n=uOfferRoll();}while(n.slice().sort().join()===k);S.uOffer=n;return true;}
 function chooseKind(id){if(!S.uOffer||!S.uOffer.includes(id))return false;const k=UNI_KIND.find(x=>x.id===id);S.uKind=id;S.uTint=k.tint;S.uOffer=null;return true;}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
 function fold(){const g=uGain();if(g<1)return 0;
   S.uHist.push({far:S.ubest,gain:g,time:Math.round(S.uTime),law:Object.assign({},S.law),tint:S.uTint,kind:S.uKind});
