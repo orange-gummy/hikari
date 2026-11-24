@@ -73,6 +73,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #ring{position:absolute;inset:0}
 #spd{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center}   /* 行の数（追い風・softcap）に合わせて上下の真ん中にそろえる（2026-11-24） */
 #spdG .sc{display:block;font-family:var(--label);font-size:8px;letter-spacing:.2em;padding-left:.2em;color:var(--ink-dim);margin-top:3px;line-height:1}
+#spdG .sc i{font-style:normal;font-family:var(--num);font-size:9px;letter-spacing:0;margin-left:6px;opacity:.75}   /* softcap でどれだけ減っているか（2026-11-24） */
 #spdL{font-family:var(--label);font-size:10px;color:var(--ink-dim);letter-spacing:.14em}
 #spdV{font-family:var(--num);font-weight:400;font-size:26px;letter-spacing:.02em;color:var(--ink-strong);transition:transform .4s,color .4s;display:inline-block;margin-top:2px}
 #spdG{margin-top:5px;font-size:11px;color:rgba(236,238,242,.75)}
@@ -323,6 +324,8 @@ body.forkOn #sub{opacity:0!important;transition:opacity .4s}
 .gL b{font-family:var(--num);font-weight:400;font-size:30px;line-height:1;letter-spacing:.04em;color:#ffe2be}
 .gRes{font-size:12px;color:var(--ink-dim);letter-spacing:.04em}
 .gRes i{font-style:normal;margin:0 .7em;opacity:.5}.gRes em{font-style:normal;color:#ffd6aa}
+.vGuide{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:12px 0 6px;padding:2px 0 2px 12px;border-left:1px solid rgba(255,236,210,.28);font-size:11.5px;line-height:1.5}   /* VOYAGE の説明（2026-11-24）：ほかの行と分けて、左に光の線一本 */
+.vGuide span{color:rgba(236,238,242,.42);letter-spacing:.08em;white-space:nowrap}.vGuide b{font-weight:300;color:rgba(236,238,242,.78)}
 .uniSky{display:block;width:100%;max-width:420px;margin:4px auto 0;font-family:var(--ui)}
 .uTint{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 10px}
 .uTint button{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--ink-dim);font:inherit;font-size:12px;padding:4px 0}

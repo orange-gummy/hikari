@@ -134,7 +134,7 @@ function paintHG(){const s=S.stage,g=fmtG(timeGamma(s)),dil=s>=DILATION_STAGE;  
 function paintSpeed(){const s=S.stage,g=fmtG(timeGamma(s)),h=document.getElementById('hV'),dil=s>=DILATION_STAGE;
   document.getElementById('hLab').textContent='VELOCITY';if(s>=13&&nines(s)>=DOT9){h.innerHTML='99.'+nineDots(nines(s))+'<span class="hvC">%\u00a0c</span>';hvSize(h,'99.% c');}else{h.textContent=s<=5?KMS[s].toLocaleString('ja-JP')+' km/s':stagePct(s)+'%\u00a0c';hvSize(h,h.textContent);}
   paintHG();
-  document.getElementById('spdG').innerHTML=dil?'時間の進み /'+g+(s>MAX_STAGE+law('lc')?'<span class="sc">softcap</span>':''):speedText(s);}   // 境目を越えたら softcap（2026-11-24。リングの中身は上下の真ん中にそろえて収める）
+  document.getElementById('spdG').innerHTML=dil?'時間の進み /'+g+(s>MAX_STAGE+law('lc')&&!(S.beyond&&S.beyond.sr)?'<span class="sc">softcap<i>÷'+fmt(stageGamma(s)/timeGamma(s))+'</i></span>':''):speedText(s);}   // 境目を越えたら softcap（2026-11-24。リングの中身は上下の真ん中にそろえて収める）
 /* 字幕 */
 let subT=[];
 function clearSub(){subT.forEach(clearTimeout);subT=[];document.getElementById('sub').style.opacity='0';document.getElementById('subT').innerHTML='';}   // タイトルを閉じるとき、前の字幕（「着いた。」など）を残さない

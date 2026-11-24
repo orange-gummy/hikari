@@ -20,18 +20,19 @@ function galaxySvg(k,r,a,tint){const key=k+'|'+r+'|'+a+'|'+tint;if(GALAXY_SVG[ke
 function renderUniverse(){
   if(curTab==='laws'){renderLawTab();return;}
   const key='u|'+[S.uni,uniPast===S.uni?Math.floor((S.uTime||0)/60):0,S.U,S.shard,JSON.stringify(S.law),uniSel,uniPast,S.uTint,S.uKind,canFold(),uGain()].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
-  const W=360,H=330,cx=180,cy=168,n=S.uni+1,show=Math.min(n,6);
-  // いまの宇宙と、下に沈んでいく過去の宇宙（多いときは新しい5つだけ）
-  const ys=[];let y=cy;for(let age=0;age<show;age++){ys.push(y);y+=age===0?78:Math.max(24,52-age*8);}
+  // 宇宙の系譜（2026-11-24、試作 B「奥へ蛇行」）：いまの宇宙が手前（下）に大きく、過去の宇宙は曲がりながら上の奥へ遠ざかる。
+  // いくつあっても絵の中に収まるよう、古いほど小さく間を詰める（多いときは新しい20まで）
+  const pw=pbody.clientWidth||360,ph=pbody.clientHeight||400,W=360,H=Math.round(Math.max(190,Math.min(330,(ph-56)*W/Math.max(200,Math.min(pw,560))))),n=S.uni+1,show=Math.min(n,20),y0=H-40,y1=22;   // 絵の高さはパネルの見える高さに合わせる（スマホでいまの宇宙が下に隠れないように）
+  const P=t=>{const e=1-Math.pow(1-t,1.8),amp=W*0.3*(1-e*0.75);return [W/2+Math.sin(t*5.2+0.6)*amp,y0+(y1-y0)*e];};
   let v='<svg class="uniSky" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="宇宙の系譜"><defs><radialGradient id="ugc"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#fffaf0" stop-opacity="0"/></radialGradient>'+
     UNI_TINT.map((t,i)=>'<radialGradient id="ugl'+i+'"><stop offset="0" stop-color="'+rgb(t.a,0.45)+'"/><stop offset="1" stop-color="'+rgb(t.a,0)+'"/></radialGradient>').join('')+'</defs>';
-  let path='';for(let yy=ys[show-1]+30;yy>=cy;yy-=3)path+=(path?'L':'M')+(cx+Math.sin(yy/23)*3).toFixed(1)+' '+yy;
-  v+='<path d="'+path+'" fill="none" stroke="rgba(236,238,242,.18)" stroke-width=".6"/>';
-  for(let age=show-1;age>=0;age--){const k=n-1-age,yy=ys[age],gx=cx+Math.sin(yy/23)*3,r=age===0?24:Math.max(6,15-age*2.5),a=age===0?1:Math.max(0.35,0.8-age*0.13);
-    const tint=age===0?S.uTint:(S.uHist[k]?S.uHist[k].tint:k),sel=uniPast===k;
-    v+='<g transform="translate('+gx.toFixed(1)+' '+yy+')"'+' data-up="'+k+'" style="cursor:pointer"><circle r="'+(r+10)+'" fill="transparent"/>'+galaxySvg(k,r,a,tint)+
+  if(show>1){let path='';const T=show>1?1:0;for(let i=0;i<=80;i++){const q=P(i/80*T);path+=(path?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1);}
+    v+='<path d="'+path+'" fill="none" stroke="rgba(236,238,242,.18)" stroke-width=".6" stroke-dasharray="1.5 3"/>';}
+  for(let age=show-1;age>=0;age--){const k=n-1-age,t=show>1?age/(show-1):0,[gx,yy]=show>1?P(t):[W/2,y0-60],r=age===0?24:Math.max(4.5,17*(1-t*0.8)),a=age===0?1:Math.max(0.3,0.9-t*0.6);
+    const tint=age===0?S.uTint:(S.uHist[k]?S.uHist[k].tint:k),sel=uniPast===k,lab=age<3||age===show-1||sel;
+    v+='<g transform="translate('+gx.toFixed(1)+' '+yy.toFixed(1)+')"'+' data-up="'+k+'" style="cursor:pointer"><circle r="'+(r+8)+'" fill="transparent"/>'+galaxySvg(k,r,a,tint)+
       (sel?'<circle r="'+(r+6)+'" fill="none" stroke="'+rgb(UNI_TINT[tint%UNI_TINT.length].a,0.6)+'" stroke-width=".7"/>':'')+
-      '<text x="'+(r+14)+'" y="4" font-size="'+(age===0?11:9.5)+'" fill="rgba(236,238,242,'+(age===0||sel?0.85:0.4)+')">宇宙 '+roman(k+1)+'</text></g>';}
+      (lab?'<text x="'+(r+9)+'" y="4" font-size="'+(age===0?11:Math.max(8,9.5-t*1.5)).toFixed(1)+'" fill="rgba(236,238,242,'+(age===0||sel?0.85:0.4)+')">宇宙 '+roman(k+1)+'</text>':'')+'</g>';}
   v+='</svg>';
   let d='';
   if(uniPast===S.uni){const K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind),lw=LAWS.filter(L=>law(L.id)).map(L=>L.name+' '+law(L.id)).join('・')||'まだ書き換えていない';   // いまの宇宙の記録
@@ -49,10 +50,30 @@ function renderUniverse(){
   const fb=document.getElementById('uFold');if(fb)fb.onclick=()=>confirmBox('宇宙を畳む','公理を '+uGain()+' 得て、新しい宇宙で故郷から航海をやり直す。次の宇宙の時の流れを、候補から選ぶ。距離・航跡とその強化は戻る。見つけた色と装置・灯した星・記憶の強化・実績は残る。',()=>startFold());
 }
 // LAWS タブ（2026-11-24、MAP から分けた）：開いている式ごとに項の段と効き目。見るだけ
-function renderLawTab(){const key='lw|'+[S.U,S.uni,JSON.stringify(S.law),JSON.stringify(S.beyond||{}),S.shard].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
-  let d=LAW_EQS.filter(e=>lawEqOpen(e.id)).map(e=>'<div class="note" style="margin:8px 0 2px;letter-spacing:.1em">'+e.name+'</div>'+LAWS.filter(X=>X.eq===e.id).map(X=>{const lx=law(X.id);return '<div class="row" style="padding:3px 0"><span style="font-size:13px"><span class="M" style="font-family:var(--log);display:inline-block;min-width:30px">'+lawSym(X,lx)+'</span>'+X.name+'　<span class="num" style="font-size:11px;color:var(--ink-dim)">'+lx+' / '+X.max+'</span></span><span class="num" style="font-size:12px">'+lawNow(X.id,lx)+'</span></div>';}).join('')).join('')+
-      '<div class="note" style="margin:6px 0 8px;color:rgba(236,238,242,.4)">法則は、宇宙を畳んだときに書き換える。式の項をすべて書き換えると、その式を超えられる。</div>'+(beyondAll()?'<button class="act" id="uEnd">すべての法則を超えた場面を見る</button>':'');
-  pbody.innerHTML='<div class="phead"><span class="lab">LAWS</span><span class="num" style="font-size:12px;color:var(--ink-dim)">公理 '+fmt(S.U)+'</span></div>'+d;
+// LAWS タブ（2026-11-24、試作 B「四つの式の星図」）：真ん中に公理、四方に4つの式（開いていない式は暗い点と「宇宙 ○ で開く」）。
+// 式の下に書き換えた段の光の点と「8 / 14」。式を押すと、その式の項（記号・名前・段の点・効き目）を下に出す。見るだけ
+let lawTabEq='sr';
+function renderLawTab(){if(!lawEqOpen(lawTabEq))lawTabEq='sr';const key='lw|'+[S.U,S.uni,JSON.stringify(S.law),JSON.stringify(S.beyond||{}),lawTabEq].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
+  const W=360,H=250,cx=W/2,cy=H/2,f=n=>n.toFixed(1),pos={sr:[cx-W*0.24,58],ex:[cx+W*0.24,58],th:[cx-W*0.24,H-52],qu:[cx+W*0.24,H-52]};
+  let v='<svg class="lawMap" viewBox="0 0 '+W+' '+H+'" style="display:block;width:100%;max-width:520px;margin:0 auto"><defs><radialGradient id="lhl"><stop offset="0" stop-color="rgba(255,236,210,.2)"/><stop offset="1" stop-color="rgba(255,236,210,0)"/></radialGradient></defs>';
+  {let sd=5;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};for(let i=0;i<60;i++)v+='<circle cx="'+f(r()*W)+'" cy="'+f(r()*H)+'" r="'+(0.3+r()*0.6).toFixed(2)+'" fill="#eceef2" opacity="'+(0.08+r()*0.3).toFixed(2)+'"/>';}
+  v+='<circle cx="'+cx+'" cy="'+cy+'" r="30" fill="url(#lhl)"/><text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-family="var(--label)" font-size="8" letter-spacing="2" fill="rgba(236,238,242,.5)">AXIOM</text><text x="'+cx+'" y="'+(cy+14)+'" text-anchor="middle" font-family="var(--num)" font-size="17" fill="#fff1dc">'+fmt(S.U)+'</text>';
+  for(const e of LAW_EQS){const [x,y]=pos[e.id],op=lawEqOpen(e.id),T=LAWS.filter(L=>L.eq===e.id),tot=T.reduce((a,L)=>a+L.max,0),got=T.reduce((a,L)=>a+law(L.id),0),bd=!!(S.beyond&&S.beyond[e.id]),sel=op&&lawTabEq===e.id;
+    v+='<line x1="'+cx+'" y1="'+cy+'" x2="'+f(x)+'" y2="'+f(y)+'" stroke="rgba(236,238,242,'+(op?(sel?0.3:0.14):0.05)+')" stroke-width=".6" stroke-dasharray="1.5 3"/>';
+    if(!op){v+='<circle cx="'+f(x)+'" cy="'+y+'" r="2" fill="rgba(236,238,242,.25)"/><text x="'+f(x)+'" y="'+(y+18)+'" text-anchor="middle" font-size="9.5" fill="rgba(236,238,242,.25)">宇宙 '+roman(e.open+1)+' で開く</text>';continue;}
+    v+='<g data-le="'+e.id+'" style="cursor:pointer"><rect x="'+f(x-W*0.23)+'" y="'+(y-40)+'" width="'+f(W*0.46)+'" height="96" fill="transparent"/>';
+    if(sel||bd)v+='<circle cx="'+f(x)+'" cy="'+(y+4)+'" r="'+(bd?58:50)+'" fill="url(#lhl)"/>';
+    v+='<g transform="translate('+f(x)+' '+(y-4)+') scale(.62)" opacity="'+(sel||bd?1:0.75)+'">'+lawEqSvg(e.id,0,0,null).v+'</g>';
+    for(let k=0;k<tot;k++){const a=Math.PI*0.15+k/(tot-1||1)*Math.PI*0.7,lit=k<got;v+='<circle cx="'+f(x+Math.cos(a)*62)+'" cy="'+f(y+10+Math.sin(a)*26)+'" r="'+(lit?1.6:0.9)+'" fill="rgba(255,236,210,'+(lit?0.9:0.22)+')"/>';}
+    v+='<text x="'+f(x)+'" y="'+(y+50)+'" text-anchor="middle" font-size="10" fill="rgba(236,238,242,'+(sel?0.9:0.6)+')">'+e.name+'　'+(bd?'超えた':got+' / '+tot)+'</text></g>';}
+  v+='</svg>';
+  const e=LAW_EQS.find(x=>x.id===lawTabEq),T=LAWS.filter(L=>L.eq===e.id),bd=!!(S.beyond&&S.beyond[e.id]);
+  let d='<div class="note" style="margin:4px 0 2px;letter-spacing:.1em">'+e.name+(bd?'　· 超えた　'+BEYOND[e.id].fx:'')+'</div>';
+  for(const L of T){const l=law(L.id);let dots='';for(let k=0;k<L.max;k++){const lit=k<l;dots+='<circle cx="'+(4+k*9)+'" cy="4" r="'+(lit?2:1.1)+'" fill="'+rgb(L.col,lit?0.95:0.25)+'"/>';}
+    d+='<div class="row" style="padding:4px 0"><span style="font-size:13px;display:flex;align-items:center;gap:8px"><span class="M" style="font-family:var(--log);display:inline-block;min-width:30px;color:'+rgb(L.col,l?1:0.6)+'">'+lawSym(L,l)+'</span>'+L.name+'<svg width="'+(L.max*9)+'" height="8">'+dots+'</svg></span><span class="num" style="font-size:12px">'+lawNow(L.id,l)+'</span></div>';}
+  d+='<div class="note" style="margin:8px 0 8px;color:rgba(236,238,242,.4)">法則は、宇宙を畳んだときに書き換える。式の項をすべて書き換えると、その式を超えられる。</div>'+(beyondAll()?'<button class="act" id="uEnd">すべての法則を超えた場面を見る</button>':'');
+  pbody.innerHTML='<div class="phead"><span class="lab">LAWS</span><span class="num" style="font-size:12px;color:var(--ink-dim)">公理 '+fmt(S.U)+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
+  pbody.querySelectorAll('[data-le]').forEach(g=>g.onclick=()=>{lawTabEq=g.dataset.le;renderLawTab();});
   const ue=document.getElementById('uEnd');if(ue)ue.onclick=()=>showBeyondEnd();}
 function lawNow(id,l){const X=LAWS.find(x=>x.id===id);return l?X.fx(l).map(f=>f[1]).join('・'):'—';}
 function durText(sec){const h=sec/3600;return h>=24?(h/24).toFixed(1)+'日':h>=1?h.toFixed(1)+'時間':Math.max(1,Math.round(sec/60))+'分';}

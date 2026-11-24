@@ -342,9 +342,9 @@ function renderVoy(){let h='';const part='voy';   // WAKE タブは 2026-11-19 �
     h+='<div class="phead"><span class="lab">VOYAGE</span><span class="num" style="font-size:12px;color:var(--ink-dim)">航跡 '+fmt(S.T)+'</span></div>'+routeMap(Math.max(300,Math.min(520,(pbody.clientWidth||340))))+
     '<div class="row"><span>引き直すと得る航跡</span><span class="big">'+fmt(tgn)+'</span></div>'+
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">この航海で進んだ距離</span><span class="num">'+lyText(S.vdist)+' 光年</span></div>'+
-    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の目的地</span><span class="num">'+(n?n.name+'（'+lyText(n.ly)+' 光年）':'もう、ない')+'</span></div>'+
+    '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の目的地</span><span class="num">'+(n?n.name+'（'+lyText(n.ly)+' 光年）':'すべて着いた')+'</span></div>'+
     '<div class="note" style="margin:6px 0 0">航跡の強化　'+TRAIL.map(a=>a.name+' '+tg(a.id)).join('　·　')+'</div>'+
-    '<div class="note">航路を引き直すと、故郷から航海をやり直す。航跡の強化は、引き直すときに買える。距離とエネルギー、装置、歪みとスキルはなくなる。航跡、見つけた色と装置の種類、記憶とその強化は残る。航海では船は止まらず、歪みは走りながらたまり、スキルは自動で覚える。進んだ距離が2倍になるたびに（1万・2万・4万光年…）記憶が入る（1回 '+fmt(lPer())+'）。</div>'+
+    '<div class="vGuide"><span>引き直すと</span><b>故郷から航海をやり直す</b><span>なくなる</span><b>距離・エネルギー・装置・歪み・スキル</b><span>残る</span><b>航跡・見つけた色と装置・記憶</b><span>強化</span><b>引き直すときに航跡で買う</b><span>記憶</span><b>距離が2倍になるたび +'+fmt(lPer())+'</b></div>'+
     (S.uni>0?'<div class="row"><span class="note" style="margin:0">航跡がたまったら自動で引き直す</span><button class="auto" id="aRedraw"'+(S.autoRedraw!==false?' data-on':'')+'>'+(S.autoRedraw!==false?'自動':'手動')+'</button></div>':'')+
     '<button class="act" id="vrGo"'+(tgn<1?' disabled':'')+'>航路を引き直す</button>';}
   pbody.dataset.k='';pbody.innerHTML=h;
