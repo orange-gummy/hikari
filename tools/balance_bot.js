@@ -96,6 +96,15 @@ function voyManage(){if(!S.voy)return;spendL();uniManage();lightWatch();
   }   // 航跡の強化は引き直すときだけ買う（2026-11-19、ゲームと同じ）
 function summary(){if(process.env.DBG)console.log('DBG maxE',S.maxE.toExponential(2),'E',S.E.toExponential(2),'stage',S.stage,'vbest',S.vbest.toExponential(2),'years',S.years.toExponential(2));if(ULOG.length||S.uni)console.log('宇宙',ULOG.join('、')||'-','／法則',JSON.stringify(S.law),'残り',S.U,'／光の上限10段',lcDay||'まだ','／光になれる日',lightDay||'まだ');if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('チャレンジ',CLOG.join(' / ')||'-');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
 
+// チャレンジ段2・3の試し（2026-11-24）：PROBE=<セーブ> で、そのセーブから各チャレンジの段2（と段3）に挑み、触り続けて越えるまでの時間を出す。
+// PROBE_LV=2,3（既定）、PROBE_H=24（打ち切りの時間）。段3は段2を越えた扱いで挑む
+if(process.env.PROBE){const raw=require('fs').readFileSync(process.env.PROBE,'utf8'),LVS=(process.env.PROBE_LV||'2,3').split(',').map(Number),LIM=+(process.env.PROBE_H||24)*3600;
+  const ids=process.env.PROBE_IDS?process.env.PROBE_IDS.split(','):Object.keys(CHAL);
+  for(const id of ids)for(const lv of LVS){S=normalize(JSON.parse(raw));S.chalTier[id]=lv-1;if(!S.lit.includes(id))S.lit.push(id);t=0;done=false;lastP=0;
+    if(!startChallenge(id)){console.log(CHAL[id].name.padEnd(8),'段'+lv,'挑めない');continue;}
+    const t0=t;while(S.chal&&t-t0<LIM){act();t++;if(done)break;}
+    const ok=!S.chal;console.log((CHAL[id].name+'　').padEnd(8),'段'+lv,ok?('越えた '+((t-t0)/3600).toFixed(2)+'時間'):('届かず（'+(LIM/3600)+'時間で打ち切り）'),'9×'+nines(S.maxStage),'停止'+S.prestiges,'距離'+Math.round(S.dist));}
+  process.exit(0);}
 if(!DAYS){
   for(;;){const t0=t;
     while(t-t0<7*86400&&!done){act();t++;}
