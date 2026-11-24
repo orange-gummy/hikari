@@ -8,7 +8,7 @@ let curTab='drive',buyMode='1';
 const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['photon','sail','voy']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
 const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',photon:'PHOTON',sail:'SAIL',wake:'WAKE',uni:'MAP',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
 const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
-function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||S.voyStash||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&(S.lightDone||(S.uni>0&&nines(S.maxStage)>=LIGHT_N-10)));}
+function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||S.voyStash||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&!!S.lightDone);}
 function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}
 function tabClick(t){if(t==='skill'){openSkill(false);return;}curTab=t;renderPanel(true);}
 function buildTabs(){const open=LAYERS.filter(L=>layerOpen(L.id));   // 上の段に層（HOME〜LIGHT と ETC）、下の段にその層の中のタブ
@@ -35,7 +35,7 @@ let devUI=[],TIERFX=null;
 /* 次の章までの道しるべ（2026-11-16）：STAR・GALAXY・UNIVERSE・LIGHT の層の上に一行。いまの章と、次の扉までの進み具合 */
 function chapterHint(){const ks=SKILLS.filter(k=>k.glow).length,n=S.lit.length;
   if(S.lightDone)return ['終章','光になった。旅は、まだ続けられる。',1];
-  if(S.voy||S.voyStash||S.uni>0){if(S.uni>0||canFold())return ['次の章　光になる','9を'+LIGHT_N+'個並べる　いま9が'+nines(Math.max(S.stage,S.maxStage))+'個',Math.min(1,nines(S.maxStage)/LIGHT_N)];
+  if(S.voy||S.voyStash||S.uni>0){if(S.uni>0){const nb=LAW_EQS.filter(e=>S.beyond&&S.beyond[e.id]).length;return nb>=LAW_EQS.length?['終章','すべての法則を、超えた。旅は、まだ続けられる。',1]:['次の章　法則を超える','超えた法則 '+nb+' / '+LAW_EQS.length+'　式の項をすべて書き換えると、超えられる',nb/LAW_EQS.length];}
     const e=DEST[DEST.length-1].ly;return ['次の章　新しい宇宙','宇宙の果てまで あと '+lyText(Math.max(0,e-S.vdist))+' 光年',Math.min(1,Math.log10(1+S.vdist)/Math.log10(e))];}
   return ['次の章　さらに遠くへ','上位の星 '+n+' / '+ks+(n>=ks?'　故郷に着くと開く':''),n/ks];}
 function paintChap(){const el=document.getElementById('chap'),L=curLayer;if(!(L==='star'||L==='galaxy'||L==='universe'||L==='light')){el.innerHTML='';el.style.display='none';return;}

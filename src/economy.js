@@ -9,7 +9,7 @@ function stagePct(s){if(s<=5)return (SPEEDS[s]*100).toPrecision(1);if(s<=11)retu
 function stageLabel(s){return stagePct(s);}
 function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':s>22?'光速の99.999…%（9が'+nines(s)+'個）':'光速の'+stagePct(s)+'%';}
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
-function lightReach(){return S.uni>0&&nines(S.maxStage)>=LIGHT_N;}   // ⑤ 宇宙を一度畳んだあと、航海で9が LIGHT_N 個に届く
+function lightReach(){return false;}   // ⑤「光になる」は 2026-11-24 にやめ、④で4つの法則を超えるのを終わりにした（光になった人の記録は残す）   // ⑤ 宇宙を一度畳んだあと、航海で9が LIGHT_N 個に届く
 function maxStage(){return S.voy?VOY_CAP:TOP_STAGE;}   // 故郷への周回は9が22個まで。航海には天井がない（2026-11-17、VOY_CAP は数の上限を越えないための目安）
 function stageCost(s){if(s<=12)return STAGE_COST[s];const m=S.voy?vaMultAt(tg('va')):stageMultAt(glowFx('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);const k=s-MAX_STAGE,ch=Math.min(k,FINAL_N-1);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(FINAL_MULT,ch)*Math.pow(m,k-ch);}   // 9が12個と13個への加速は、値段の上がり方を FINAL_MULT 倍に抑える（1周目の終わりまで届く目標を残す）
 function accelCost(s){let c=stageCost(s)*ukf('cost',1);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}

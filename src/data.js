@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='2026.11.24.13';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
+const VERSION='2026.11.24.14';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
 /* =====================================================================
    DATA  ― 数値・台本・色の定義（将来 data/*.js に切り出す）
    ===================================================================== */
@@ -198,7 +198,7 @@ const LAWS=[
   {id:'hb',eq:'qu',sym:'ħ',name:'作用量子',max:3,col:[200,180,255],cost:l=>4+2*l,fx:l=>[['分かれ道の候補','+'+l,1],['未知の星系','+'+(4*l)+'%',1]]},
   {id:'dx',eq:'qu',sym:'Δx',name:'位置の幅',max:3,col:[180,230,255],cost:l=>4+2*l,fx:l=>[['宇宙の性格の候補','+'+l,1],['候補の引き直し','×'+Math.pow(2,l),-1]]}];
 // 法則を超える（2026-11-24）：式の項をすべて最後の段にすると、公理を払ってその式を超えられる。超えた式は宇宙を畳んでも残る。4つ超えると④の終わり
-const BEYOND={sr:{name:'相対論',cost:+(typeof process!=='undefined'&&process.env.BY_SR||40),wall:'光速の壁',from:'−',to:'+'},ex:{name:'宇宙の膨張',cost:+(typeof process!=='undefined'&&process.env.BY_EX||15),wall:'宇宙の果て',from:'Λ',to:'∞'},th:{name:'熱力学',cost:+(typeof process!=='undefined'&&process.env.BY_TH||20),wall:'時間の矢',from:'≥',to:'≤'},qu:{name:'不確定性原理',cost:+(typeof process!=='undefined'&&process.env.BY_QU||10),wall:'不確かさ',from:'≥',to:'='}};
+const BEYOND={sr:{name:'相対論',fx:'softcap がなくなる',cost:+(typeof process!=='undefined'&&process.env.BY_SR||40),wall:'光速の壁',from:'−',to:'+'},ex:{name:'宇宙の膨張',fx:'宇宙項 Λ で、宇宙の果てが遠くならない',cost:+(typeof process!=='undefined'&&process.env.BY_EX||15),wall:'宇宙の果て',from:'Λ',to:'∞'},th:{name:'熱力学',fx:'エントロピー ΔS で、航跡が減らない',cost:+(typeof process!=='undefined'&&process.env.BY_TH||20),wall:'時間の矢',from:'≥',to:'≤'},qu:{name:'不確定性原理',fx:'分かれ道と宇宙の性格の候補が、すべて出る',cost:+(typeof process!=='undefined'&&process.env.BY_QU||10),wall:'不確かさ',from:'≥',to:'='}};
 function lawSym(L,l){return typeof L.sym==='function'?L.sym(l):L.sym;}
    // 宇宙の色合い（ut）は 2026-11-18 にやめ、宇宙の性格の色にした（使っていた法則は normalize で返す）
 const UNI_TINT=[{name:'白',a:[235,238,250],b:[200,210,240]},{name:'青緑',a:[150,230,210],b:[255,214,150]},{name:'朱',a:[255,170,140],b:[255,230,180]},{name:'紫',a:[180,160,255],b:[150,200,255]},{name:'橙',a:[255,200,120],b:[255,140,120]},

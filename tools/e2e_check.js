@@ -32,8 +32,8 @@ await step('18_fold',async()=>{await ev(()=>{S.found=DEST.length;S.ubest=DEST[DE
 await step('19_pick',async()=>{await clickIf('[data-pk="1"]');await wait(500);await clickIf('#pickGo');await wait(1500);});
 await step('19b_laws',async()=>{await ev(()=>{if(!lawOpen){S.U+=20;S.flags.lawPend=1;openLaws();}});await wait(2800);await clickIf('#lawBuy');await wait(1200);await ev(()=>document.querySelector('[data-lw="td"]').dispatchEvent(new MouseEvent('click',{bubbles:true})));await wait(300);await clickIf('#lawBuy');await wait(800);await clickIf('#lawGo');await wait(2500);});
 await step('20_redraw_auto',async()=>{await ev(()=>{S.law.ar=1;S.vdist=5e9;S.T=1;S.tTotal=1;});await wait(8000);});
-await step('21_light',async()=>{await until(()=>!RST&&!BRK&&!glowOpen&&!wakeOpen,30000,'自動の引き直しが終わる');await ev(()=>{S.law.ar=0;S.stage=S.maxStage=10+LIGHT_N;S.E=lightCost()*2;curLayer='light';curTab='light';renderPanel(true);});await wait(800);await clickIf('#ltGo');await wait(300);await wait(25000);});
-await step('22_light_end',async()=>{await p.mouse.click(W/2,H/2);await wait(3000);});
+await step('21_beyond',async()=>{await until(()=>!RST&&!BRK&&!glowOpen&&!wakeOpen,30000,'自動の引き直しが終わる');await ev(()=>{S.uni=Math.max(S.uni,5);for(const L of LAWS)S.law[L.id]=L.max;S.U=500;S.beyond={qu:1,ex:1,th:1};openLaws();});await wait(2800);await clickIf('#lawBy');await wait(1600);await clickIf('#lawGo');await wait(2500);await until(()=>endOpen,10000,'終わりの場面が開く');await wait(7600);});
+await step('22_beyond_end',async()=>{await p.mouse.click(W/2,H/2);await wait(2500);await clickIf('#rcGo');await wait(1500);});
 await step('23_reload',async()=>{await ev(()=>save());await p.reload();await wait(1500);await clickIf('#bGo');await wait(3000);});
 await step('24_run',async()=>{await ev(()=>{timeMult=1000;});await wait(10000);});
 require('fs').writeFileSync(OUT+'log.txt',log.join('\n')+'\n\nERRORS\n'+errs.join('\n'));console.log(log.join('\n'));console.log('ERRORS',errs.length);console.log(errs.slice(0,30).join('\n'));
