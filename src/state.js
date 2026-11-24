@@ -19,6 +19,8 @@ function has(id){if(id[0]==='a'&&S.chal==='c7'&&S.chalLv>=2)return false;   // �
   return _hasC.set.has(id);}
 function law(id){return S.law[id]||0;}
 function glow(id){return S.ag[id]||0;}
+// 記憶の強化の効き目（2026-11-24）：チャレンジの段2・3では航路の記憶・記憶の重み・船内時間が効かない（積み上げた強さを置いて挑む）
+function glowFx(id){return S.chal&&(S.chalLv||1)>=2&&(id==='rm'||id==='mw'||id==='sk')?0:glow(id);}
 function upgHas(id){return S.upg.includes(id);}
 let welcomeOn=false;   // 戻ったときの小窓が出ている間（到着の演出を待たせる）
 function save(){S.last=Date.now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}

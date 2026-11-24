@@ -11,7 +11,7 @@ function speedText(s){return s<=5?'秒速'+KMS[s].toLocaleString('ja-JP')+'km':s
 function kmsOf(s){return Math.round(stageBeta(s)*C_KMS);}
 function lightReach(){return S.uni>0&&nines(S.maxStage)>=LIGHT_N;}   // ⑤ 宇宙を一度畳んだあと、航海で9が LIGHT_N 個に届く
 function maxStage(){return S.voy?VOY_CAP:TOP_STAGE;}   // 故郷への周回は9が22個まで。航海には天井がない（2026-11-17、VOY_CAP は数の上限を越えないための目安）
-function stageCost(s){if(s<=12)return STAGE_COST[s];const m=S.voy?vaMultAt(tg('va')):stageMultAt(glow('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);const k=s-MAX_STAGE,ch=Math.min(k,FINAL_N-1);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(FINAL_MULT,ch)*Math.pow(m,k-ch);}   // 9が12個と13個への加速は、値段の上がり方を FINAL_MULT 倍に抑える（1周目の終わりまで届く目標を残す）
+function stageCost(s){if(s<=12)return STAGE_COST[s];const m=S.voy?vaMultAt(tg('va')):stageMultAt(glowFx('rm'));if(s<MAX_STAGE)return STAGE_COST[12]*Math.pow(m,s-12);const k=s-MAX_STAGE,ch=Math.min(k,FINAL_N-1);return STAGE_COST[12]*Math.pow(m,MAX_STAGE-13)*FINAL_MULT*Math.pow(FINAL_MULT,ch)*Math.pow(m,k-ch);}   // 9が12個と13個への加速は、値段の上がり方を FINAL_MULT 倍に抑える（1周目の終わりまで届く目標を残す）
 function accelCost(s){let c=stageCost(s)*ukf('cost',1);if(has('p1'))c*=0.8;if(has('p2'))c*=0.7;return c;}
 function regionIndex(d){let r=0;for(let i=0;i<REGIONS.length;i++)if(d>=REGIONS[i].from)r=i;return r;}
 function regionMult(i){const m=REGIONS[S.region].m;return (m[i]||1)*(m.all||1);}
@@ -23,7 +23,7 @@ const TIER_FREE=+((typeof process!=='undefined'&&process.env.TIER_FREE)||4),TIER
    // TIER は、装置が出てきた段階で TIER_FREE まで、そこから加速1回ごとに1つ上まで上げられる（2026-11-16。出てきた瞬間に V まで上がらないように）
 function tierStage(i,t){return (DEVICES[i].unlock||0)+Math.max(0,t-TIER_FREE);}
 function tierNext(i){const t=(S.tier[i]||1)+1;if(t>6)return null;const st=tierStage(i,t);return{t,need:TIER_NEED[t],cost:DEVICES[i].cost*TIER_COST[t],st,lock:S.stage<st};}
-function tierUp(i){const n=tierNext(i);if(!n||n.lock||S.dev[i]<n.need||S.E<n.cost)return;S.E-=n.cost;S.tier[i]=n.t;FXQ.tier=i;}
+function tierUp(i){if(S.chal==='c7'&&(S.chalLv||1)>=3)return;const n=tierNext(i);if(!n||n.lock||S.dev[i]<n.need||S.E<n.cost)return;S.E-=n.cost;S.tier[i]=n.t;FXQ.tier=i;}
 function kinds(){let k=0;for(const i of PRODI)if(S.dev[i]>0)k++;return k;}
 function synMult(i){if((S.tier[i]||1)<3)return 1;const n=S.dev,k=synK();
   switch(i){case 0:return 1+0.02*n[1]*k;case 1:return 1+0.02*n[2]*k;case 2:return 1+0.03*n[5]*k;case 3:return 1+0.01*n[0]*k;case 4:return 1+0.03*n[6]*k;case 6:return 1+0.05*n[ANCHOR]*k;case 7:return 1+0.10*kinds()*k;default:return 1;}}
@@ -52,7 +52,7 @@ function sp(id){return STAR_P[id].p[Math.max(1,Math.min(3,S.chalTier[id]||1))-1]
 function starText(id){return STAR_P[id]?STAR_P[id].t(sp(id)):'';}
 function wMult(){return 1+0.01*S.W;}   // 使わずに持っている歪み1つにつき生産+1%
 function globalMult(){return ukf('prod',1)*memMult()*Math.pow(timeGamma(S.stage),1+0.1*law('td')+ukf('gam',0))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+sp('pL')*S.stage:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
-function achMult(){return 1+ACH_BONUS*S.ach.length;}
+function achMult(){return S.chal&&(S.chalLv||1)>=3?1:1+ACH_BONUS*S.ach.length;}   // 段3は実績の倍率も効かない（2026-11-24）
 function resonant(){const c={};for(const i of PRODI){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
 function memHas(i){if(S.cleared||S.voy)return true;return i===6?!S.greyLost:i>=S.lost;}
@@ -77,8 +77,8 @@ function batteryRate(){return 0.03+(has('e2')?0.02:0);}
 function windMigrate(){if(!(S.wind>0))return;const P=prodRate();S.windT=Math.min(WIND_CAP,(S.windT||0)+Math.min(P>0?S.wind/(P*(WIND_X-1)):0,offlineCap()*(1-OFF_NOW)/(WIND_X-1)));delete S.wind;}   // 版6の途中まで追い風はエネルギーで貯めていた。留守の上限に見合う時間までに切り詰めて移す
 function offlineCap(){return (has('c7')?sp('c7'):has('c3')?24:has('c1')?8:2)*3600;}
 function wGain(){return Math.floor(Math.pow(S.Erun/1e6,0.22));}
-function memMult(){return 1+MW_K/100*glow('mw')*Math.max(0,S.L||0);}   // 記憶の重み
-function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glow('sk'));}
+function memMult(){return 1+MW_K/100*glowFx('mw')*Math.max(0,S.L||0);}   // 記憶の重み
+function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glowFx('sk'));}
 function anchorCut(){return 0;}
 // 故郷の時間の速まり：9が（12＋光の上限）個までは γ のまま、その先は γ の TIME_K 乗でゆるやかに
 function timeGamma(s){const c=MAX_STAGE+law('lc');if(s<=c)return stageGamma(s);const g=stageGamma(c);return g*Math.pow(stageGamma(s)/g,TIME_K);}
@@ -138,7 +138,7 @@ function prestige(respec){
   const g=wGain();if(S.stage<BRAKE_STAGE||g<1)return;
   const carry=has('c5')?S.peakP*60:0,st0=has('pR')?Math.floor(S.stage*sp('pR')):0,keep=0;
   if(respec){S.W+=skillSpent();S.skills=[];}
-  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.lastBuy=[];S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&(S.chalLv||1)<3&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
+  S.W+=g;S.wTotal+=g;S.prestiges++;S.st.stops++;S.lastBuy=[];S.E=carry;S.Erun=0;S.dev=DEVICES.map((_,i)=>S.chal==='c7'&&i===0?1:0);S.frac=DEVICES.map(()=>0);S.upg=[];S.tier=DEVICES.map(()=>1);S.stage=st0;S.battery*=keep;S.batDep*=keep;S.over=0;S.peakP=0;S.runTime=0;S.pulse=0;S.burst=0;
   story('prest1',LINES.prest1);FXQ.prestige=true;voyLearn();
 }
 /* 再出発（第二層） */
@@ -165,7 +165,7 @@ const STASH_KEYS=['route','ph','phDev','phBuy','sail','E','Erun','dev','frac','u
 function voyStashSave(){const o={};for(const k of STASH_KEYS)o[k]=JSON.parse(JSON.stringify(S[k]===undefined?null:S[k]));S.voyStash=o;S.voy=false;}
 function voyStashBack(){if(!S.voyStash)return false;const o=S.voyStash;for(const k of STASH_KEYS)S[k]=o[k];S.voyStash=null;S.voy=true;FXQ.voyBack=true;return true;}
 function chalNext(id){const t=S.chalTier[id]||0;return t<3?t+1:0;}   // 次に挑む段（3段すべて越えたら0）
-function startChallenge(id){if(!CHAL[id])return false;const lv=chalNext(id);if(!canChallengeAt(lv))return false;if(S.voy)voyStashSave();resetRun();S.chal=id;S.chalLv=lv;S.lastBuy=[];if(id==='c7'&&lv<3)S.dev[0]=1;FXQ.chal=id;return true;}
+function startChallenge(id){if(!CHAL[id])return false;const lv=chalNext(id);if(!canChallengeAt(lv))return false;if(S.voy)voyStashSave();resetRun();S.chal=id;S.chalLv=lv;S.lastBuy=[];if(id==='c7')S.dev[0]=1;FXQ.chal=id;return true;}
 function quitChallenge(){S.chal=null;S.chalLv=0;voyStashBack();}
 function chalCheck(){if(!S.chal)return;const id=S.chal,lv=S.chalLv||1,g=CHAL[id].goal[lv-1];if((g.stage&&S.maxStage>=g.stage)||(g.home&&S.dist>=GOAL_LY)){S.chal=null;S.chalLv=0;S.chalTier[id]=Math.max(S.chalTier[id]||0,lv);if(!S.lit.includes(id))S.lit.push(id);if(lv===1)S.st.chal[id]=Date.now();const k=SKILLS.find(x=>x.id===id);logLine(lv===1?k.name+'が灯った。':'「'+CHAL[id].name+'」の段'+lv+'を越えた。',-1);FXQ.chalDone={id,lv};voyStashBack();}}
 /* ③ さらに遠くへ（航跡） */
