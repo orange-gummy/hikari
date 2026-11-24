@@ -46,14 +46,9 @@ function forkGauge(f){if(forkOpen)return forkChooser(f);const W=FR.w,H=FR.h,n=f.
       '<path d="M'+f1(bx+6)+' '+f1(ym)+'C'+f1(bx+30)+' '+f1(ym)+' '+f1(bx+20)+' '+f1(y)+' '+f1(ex-10)+' '+f1(y)+'H'+f1(ex-8)+'" fill="none" stroke="'+col+'" stroke-opacity=".75" stroke-width="1"/>'+
       '<g transform="translate('+f1(ex)+' '+f1(y)+')" class="fkNode">'+sym+'</g>'+(tight?'<text x="'+f1(ex+14)+'" y="'+f1(y+4)+'" font-size="10.5" fill="#f6f7fb">'+o.name+'<tspan dx="8" font-size="9.5" fill="'+col+'">'+forkText(id)+'</tspan></text>':'<text x="'+f1(ex+14)+'" y="'+f1(y-1)+'" font-size="11" fill="#f6f7fb">'+o.name+'</text><text x="'+f1(ex+14)+'" y="'+f1(y+12)+'" font-size="9.5" fill="'+col+'">'+forkText(id)+'</text>')+'</g>';});
   return v+'</svg>';}
-function paintFork(){const f=S.fork,show=f&&S.voy&&!BRK&&!RST&&!climax&&!FOLD&&!LIGHTFX&&!skillOpen&&!glowOpen;
-  if(!show)forkOpen=false;
-  if(!show){if(forkKey||forkEl.innerHTML){forkKey='';forkEl.innerHTML='';forkEl.classList.remove('on');document.body.classList.remove('forkOn');}return;}
-  const key=f.opts.join(',')+'|'+Math.round(FR.w)+'x'+Math.round(FR.h)+'|'+forkOpen+'|'+((S.route&&S.route.pick)||'');
-  if(key!==forkKey){forkKey=key;forkEl.innerHTML=forkGauge(f);forkEl.classList.add('on');document.body.classList.add('forkOn');setTimeout(()=>firstHint('fork','押すと、次の宙域の道を選べる',()=>{const g=forkEl.querySelector('[data-fk]');if(!g)return null;const r=g.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top};},'up'),400);
-    forkEl.querySelectorAll('[data-fk]').forEach(g=>{const go=e=>{e.stopPropagation();e.preventDefault();if(g.dataset.fk==='__map'){forkOpen=true;SND.play('tab');forkKey='';paintFork();return;}if(g.dataset.fk==='__close'){forkOpen=false;forkKey='';paintFork();return;}pickFork(g.dataset.fk);};g.addEventListener('pointerdown',e=>e.stopPropagation());g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e);});});}
-  // 残り時間：中心の小さな輪が欠けていく
-  const lf=forkEl.querySelector('.fkLife');if(lf){const k=Math.max(0,f.life/FORK_LIFE);const L=+lf.getAttribute('r')*6.283;lf.setAttribute('stroke-dasharray',(L*k).toFixed(1)+' '+L.toFixed(1));}
-  forkEl.style.opacity=f.life<10?Math.max(0,f.life/10).toFixed(2):'';}
+// 2026-11-24：窓の中の分岐図（NEXT SECTOR）はやめた。道が出ている間は GALAXY の層と VOYAGE のタブに光の点（panel.js paintTabs の fkDot）、選ぶのは VOYAGE の一覧で
+function paintFork(){const f=S.fork,show=!!(f&&S.voy&&!S.chal);forkOpen=false;if(forkEl.innerHTML){forkEl.innerHTML='';forkEl.classList.remove('on');document.body.classList.remove('forkOn');}
+  const key=show?f.opts.join(','):'';if(key===forkKey)return;forkKey=key;paintTabs();
+  if(show)setTimeout(()=>firstHint('fork','次の宙域の道を、GALAXY の VOYAGE で選べる',()=>{const g=document.querySelector('#tabs [data-l="galaxy"]');if(!g||!g.offsetWidth)return null;const r=g.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top};},'up'),400);}
 function pickFork(id){const o=FORKS.find(x=>x.id===id),txt=forkText(id);if(!chooseFork(id))return;forkOpen=false;SND.play('light');fla=Math.max(fla,0.12);
   toast('次の宙域　<b>'+o.name+'</b>　'+txt);forkKey='';paintFork();save();if(curTab==='drive'||curTab==='voy')renderPanel(true);}

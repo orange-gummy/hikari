@@ -42,8 +42,8 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(FXQ.region){FXQ.region=false;fla=Math.max(fla,0.12);if(curTab==='drive')renderDrive(true);}
   if(S.stage!==lastStage){lastStage=S.stage;paintSpeed();if(curTab==='drive')renderDrive(false);}
   {const want=musOn&&sndVol>0&&!bootOn&&!climax&&!LIGHTFX&&!document.hidden;if(want&&!SND.mus)SND.musicStart();else if(!want&&SND.mus)SND.musicStop();}   // 音楽：到着と光になる場面では止める
-  paintHUD();rollHV();if(curTab==='photon'||curTab==='sail')paintPhoton();acc+=dt;if(acc>0.25){acc=0;paintGoal();paintHG();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();else if(!panelHold&&(curTab==='glow'||curTab==='restart'))renderGlow();else if(!panelHold&&curTab==='stars')renderUnlock();else if(!panelHold&&(curTab==='voy'||curTab==='wake'))renderVoy();}
-  secAcc+=dt;if(secAcc>1){secAcc=0;telTick();checkAch();if(S.voy&&!S.chal&&S.autoGlow!==false&&glowAffordable())glowAutoSpend();   // GALAXY では残光の強化は自動（2026-11-17）
+  paintHUD();rollHV();if(curTab==='photon'||curTab==='sail')paintPhoton();acc+=dt;hushTick();if(acc>0.25){acc=0;paintGoal();paintHG();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();else if(!panelHold&&(curTab==='glow'||curTab==='restart'))renderGlow();else if(!panelHold&&curTab==='stars')renderUnlock();else if(!panelHold&&(curTab==='voy'||curTab==='wake'))renderVoy();}
+  secAcc+=dt;if(secAcc>1){sigTick(secAcc);secAcc=0;telTick();checkAch();if(S.voy&&!S.chal&&S.autoGlow!==false&&glowAffordable())glowAutoSpend();   // GALAXY では残光の強化は自動（2026-11-17）
 renderPanelTabsOnly();if(curTab==='stats')renderStats();if(skillOpen&&S.W!==lastWShown)renderSkill();}
   saveAcc+=dt;if(saveAcc>10){saveAcc=0;save();}
 }
@@ -58,10 +58,11 @@ function rollHV(){if(!HVR)return;const h=document.getElementById('hV'),el2=Date.
   if(p>=1){paintSpeed();HVR=null;}}
 function renderPanelTabsOnly(){paintTabs();}
 function offline(){windMigrate();const el2=(Date.now()-(S.last||Date.now()))/1000;if(el2<30||S.cleared)return;S.st.idle+=Math.min(el2,offlineCap());if(S.flags.bat)vesAdd(Math.min(el2,offlineCap())/600);const t=Math.min(el2,offlineCap());const e0=S.Erun,y0=S.years,w0=S.windT||0;const steps=200,mul=has('cB')?2:1;for(let k=0;k<steps;k++)tick(t/steps,mul);
-  if(el2>=600)S.idleBack=true;welcomeOn=true;checkStory();
+  if(el2>=600)S.idleBack=true;if(el2>=3*86400)S.flags.hAway=1;welcomeOn=true;checkStory();
   // 2026-11-19「おかえり」は枠のない全面の画面に。眠っていた間の星の軌跡（弧の長さ＝留守の時間、24時間でほぼひと回り）が伸び、数字が下から出る（試作 B）
   const h=Math.floor(t/3600),m=Math.floor(t%3600/60),eg=Math.max(0,S.Erun-e0),row=(a,b)=>'<div class="wR"><span>'+a+'</span><b>'+b+'</b></div>';
   document.getElementById('wLine').textContent=el2<3600?'少しのあいだ、目を閉じていた。':el2<6*3600?'眠っている間に、星が少し動いた。':el2<20*3600?'眠っている間に、星が大きく回った。':el2<30*3600?'眠っている間に、星がひと回りした。':'星が、何度も回った。';
+  {const lt=welcomeLetter(el2);if(lt)document.getElementById('wLine').insertAdjacentHTML('beforeend','<span class="wMail">便り　'+lt+'</span>');}   // 12通目の便り（隠し要素）
   document.getElementById('wBody').innerHTML=row('眠っていた時間',(h?h+'<small>時間</small>':'')+m+'<small>分</small>')+row('故郷で過ぎた年月',fmtY(S.years-y0)+'<small>年</small>')+row('集めたエネルギー','<span id="wE">0</span>')+((S.windT||0)>w0?row('追い風 ×'+WIND_X,'<small>あと</small>'+windMin()+'<small>分</small>'):'');
   document.getElementById('wNote').textContent=el2>t?'放置できる上限（'+(offlineCap()/3600)+'時間）までの分を受け取る':'';
   {let v='',sd=11;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},span=Math.max(0.25,Math.min(6.1,el2/86400*6.283)),cx=120,cy=120;

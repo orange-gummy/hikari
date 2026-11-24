@@ -559,3 +559,14 @@ html,body,#app,#cv{height:var(--appH,100%)}   /* 高さは JS（scene.js fitVP�
 #endOv svg{position:absolute;inset:0}
 #endOv .eLine{position:absolute;left:0;right:0;top:calc(46% + 70px);text-align:center;font-family:var(--log);font-size:17px;letter-spacing:.16em;opacity:0;animation:gFade 1.4s 6s both}
 #endOv .eTap{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);text-align:center;font-size:11px;color:var(--ink-dim);opacity:0;transition:opacity 1s}#endOv.t1 .eTap{opacity:1}#endOv.t1{cursor:pointer}
+
+/* 隠し要素（2026-11-24、src/secret.js）：窓の隅のかすかな光（短く長く点滅）・「＝ 1」・おかえりの便り */
+#sigDot{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border:0;padding:0;background:none;cursor:pointer;display:none;z-index:4;-webkit-tap-highlight-color:transparent}
+#sigDot.on{display:block}
+#sigDot::after{content:"";position:absolute;left:13px;top:13px;width:4px;height:4px;border-radius:50%;background:#fff6e6;box-shadow:0 0 8px rgba(255,236,210,.9);opacity:0;animation:sigBlink 3.2s infinite}
+@keyframes sigBlink{0%,4%{opacity:0}5%,12%{opacity:.9}13%,20%{opacity:0}21%,44%{opacity:.9}45%,100%{opacity:0}}
+.oneEq{position:fixed;z-index:30;pointer-events:none;display:flex;align-items:center;padding:0 10px;font-family:var(--num);font-size:30px;color:#fff6e6;text-shadow:0 0 14px rgba(255,236,210,.9);background:radial-gradient(closest-side,rgba(4,5,12,.95),rgba(4,5,12,0));opacity:0;transition:opacity .5s}
+.oneEq.on{opacity:1}
+#wLine .wMail{display:block;margin-top:10px;color:#fff1dc}
+#tabs button.fkDot{position:relative}
+#tabs button.fkDot::before{content:"";position:absolute;right:6px;top:6px;width:4px;height:4px;border-radius:50%;background:#ffd6aa;box-shadow:0 0 6px rgba(255,214,170,.9);animation:hPulse 1.6s ease-in-out infinite}
