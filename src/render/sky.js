@@ -176,6 +176,7 @@ let VRP=[],VRT={x:0,y:0},VROLD=null,VMINI=null;
 function vrGeom(n,seed,bx){bx=bx||{x0:FR.x+FR.w/2,yb:FR.y+FR.h-46,yt:FR.y+100,amp:Math.min(FR.w*0.2,120)};let sd=Math.max(1,Math.floor(seed*7919)%2147483646);const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},ph=r()*6.283,P=[];
   for(let k=0;k<=n;k++){const t=k/n;P.push({x:bx.x0+Math.sin(k*0.9+ph)*bx.amp*(0.35+0.65*t)+(r()-.5)*bx.amp*0.06,y:bx.yb-(bx.yb-bx.yt)*t});}
   const o=[];for(let k=0;k<n;k++){const a=P[k],b=P[k+1],ym=(a.y+b.y)/2;for(let i=0;i<12;i++){const t=i/12,u=1-t;o.push({x:u*u*u*a.x+3*u*u*t*a.x+3*u*t*t*b.x+t*t*t*b.x,y:u*u*u*a.y+3*u*u*t*ym+3*u*t*t*ym+t*t*t*b.y});}}o.push(P[n]);return {P,pts:o};}
+function vrVeil(a){if(a<=0.005)return;cx.save();cx.beginPath();if(cx.roundRect)cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);else cx.rect(FR.x,FR.y,FR.w,FR.h);cx.clip();cx.fillStyle='rgba(4,5,12,'+a.toFixed(3)+')';cx.fillRect(FR.x,FR.y,FR.w,FR.h);cx.restore();}
 function vrLine(pts,i1,a,w){if(i1<1||a<=0.002)return;w=w||1;cx.lineCap='round';cx.beginPath();cx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<=i1;i++)cx.lineTo(pts[i].x,pts[i].y);cx.strokeStyle='rgba(255,226,190,'+(a*0.13).toFixed(3)+')';cx.lineWidth=5*w;cx.stroke();cx.strokeStyle='rgba(255,226,190,'+a.toFixed(3)+')';cx.lineWidth=w;cx.stroke();}
 function vrTip(x,y,a,big){if(a<=0.01)return;blob(x,y,big?34:16,[255,226,190],0.28*a);cx.fillStyle='rgba(255,244,230,'+a.toFixed(3)+')';cx.beginPath();cx.arc(x,y,big?2.6:1.6,0,6.283);cx.fill();}
 function vrHome(h,a,label){cx.fillStyle='rgba(255,214,170,'+(0.9*a).toFixed(3)+')';cx.beginPath();cx.arc(h.x,h.y,2.2,0,6.283);cx.fill();if(label){cx.font='300 10px Murecho, sans-serif';cx.textAlign='center';cx.fillStyle='rgba(236,238,242,'+(0.5*a).toFixed(3)+')';cx.fillText('故郷',h.x,h.y+16);}}
@@ -187,6 +188,7 @@ function drawVr(){const b=BRK;b.t++;const t=b.t,low=fxLow;
   if(t===1){document.getElementById('app').classList.add('rstDim','vrOn');b.geo=vrGeom(b.n,(S.st.redraws||0)+3);}
   if(t<=120){const k=1-ei(t/120);SPDF=b.sp0*k;ROTV=b.rv0*k;ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');}else{SPDF=0;ROTV=0;}
   if(t===110)STILL=true;
+  vrVeil(0.82*ei(cl((t-40)/90)));   // 背景（光の帯・銀河・星）を暗く沈めてから航路を浮かべる（重なって見えにくかった、2026-11-24）
   const gm=b.geo,N=gm.pts.length-1;VRT={x:FR.x+FR.w/2,y:FR.y+50};
   if(t>=110){const a=cl((t-110)/50);let tip=t<230?Math.round(N*ei(cl((t-110)/110))):t<250?N:Math.round(N*(1-ei(cl((t-250)/280))));
     vrLine(gm.pts,tip,0.75*a,1);vrSyms(b,gm,tip,a,t>=250?tip:null);const q=gm.pts[tip];vrTip(q.x,q.y,a,true);vrHome(gm.P[0],a,true);
@@ -196,6 +198,7 @@ function drawVr(){const b=BRK;b.t++;const t=b.t,low=fxLow;
   if(t>=545){VROLD=gm;redraw();BRK=null;STILL=false;SPDF=0;document.getElementById('block').style.display='none';paintSpeed();renderPanel(true);glowAutoSpend();openWake(()=>startRestart(false,false,true));}}
 function drawLaunch(){const r=RST;r.t++;const t=r.t;
   if(t===1){r.geo=vrGeom(22,(S.st.redraws||0)*7+11);STILL=false;}
+  vrVeil(0.82*(1-ei(cl((t-150)/100))));
   const gm=r.geo,N=gm.pts.length-1,fade=1-cl((t-200)/70);
   if(VROLD&&fade>0)vrLine(VROLD.pts,VROLD.pts.length-1,0.08*fade,1);
   const tip=Math.round(N*eo(cl(t/170)));vrLine(gm.pts,tip,0.8*fade,1);const q=gm.pts[tip];vrTip(q.x,q.y,fade,true);vrHome(gm.P[0],fade,false);
