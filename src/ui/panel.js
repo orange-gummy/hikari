@@ -5,8 +5,8 @@
 /* タブ */
 let curTab='drive',buyMode='1';
 /* タブは入れ子：下の段で層（HOME・STAR・GALAXY）と LOG を選び、上の段にその層の中のタブを出す。層が1つのうちは1段 */
-const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['photon','sail','voy']},{id:'universe',name:'UNIVERSE',tabs:['uni']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
-const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',photon:'PHOTON',sail:'SAIL',wake:'WAKE',uni:'MAP',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING'};
+const LAYERS=[{id:'home',name:'HOME',tabs:['drive','boost','battery','reset']},{id:'star',name:'STAR',tabs:['restart','stars']},{id:'galaxy',name:'GALAXY',tabs:['photon','sail','voy']},{id:'universe',name:'UNIVERSE',tabs:['uni','laws']},{id:'light',name:'LIGHT',tabs:['light']},{id:'etc',name:'ETC',tabs:['log','ach','stats','set']}];
+const TAB_NAME={drive:'DRIVE',boost:'BOOST',battery:'METEOR',skill:'SKILL',reset:'STOP',restart:'RESTART',glow:'UPGRADE',stars:'CHALLENGE',voy:'VOYAGE',photon:'PHOTON',sail:'SAIL',wake:'WAKE',uni:'MAP',light:'LIGHT',log:'LOG',ach:'RECORD',stats:'STATS',set:'SETTING',laws:'LAWS'};
 const lastTab={home:'drive',star:'restart',galaxy:'voy',universe:'uni',light:'light',etc:'log'};let curLayer='home',tabs=[],tabKey='';
 function layerOpen(id){return id==='home'||id==='etc'||(id==='star'&&(S.cleared||S.restarts>0||S.lTotal>0))||(id==='galaxy'&&(S.voy||S.voyStash||canVoyage()))||(id==='universe'&&(S.uni>0||canFold()))||(id==='light'&&!!S.lightDone);}
 function layerOf(t){const L=LAYERS.find(x=>x.tabs.includes(t));return L?L.id:null;}
@@ -29,7 +29,7 @@ function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if
 function setSel(b,v){const s=v?'true':'false';if(b.getAttribute('aria-selected')!==s)b.setAttribute('aria-selected',s);}
 function setCls(b,c,v){if(b.classList.contains(c)!==!!v)b.classList.toggle(c,!!v);}
 function paintTabs(){buildTabs();tabs.forEach(b=>{if(b.dataset.l){setSel(b,b.dataset.l===curLayer);return;}setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
-function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;if((t==='photon'||t==='sail')&&(!S.voy||S.chal))return true;return (t==='battery'&&((S.chal==='c7')||!S.flags.bat))||(t==='reset'&&((S.maxStage<BRAKE_STAGE&&S.restarts===0)||(S.voy&&!S.chal)))||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
+function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;if((t==='photon'||t==='sail')&&(!S.voy||S.chal))return true;if(t==='laws'&&!(S.uni>0))return true;return (t==='battery'&&((S.chal==='c7')||!S.flags.bat))||(t==='reset'&&((S.maxStage<BRAKE_STAGE&&S.restarts===0)||(S.voy&&!S.chal)))||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&!S.flags.bat);}
 let devUI=[],TIERFX=null;
 /* 次の章までの道しるべ（2026-11-16）：STAR・GALAXY・UNIVERSE・LIGHT の層の上に一行。いまの章と、次の扉までの進み具合 */
@@ -46,7 +46,7 @@ function renderPanel(force){
   if(S.voy&&!S.chal){if(curLayer==='galaxy')S.view='ph';else if(curLayer==='home')S.view='e';}   // 真ん中の表示をタブと合わせる（2026-11-17）：GALAXY は PHOTON、HOME は ENERGY。ほかの層では前のまま
   const isSet=curTab==='set',ps=document.getElementById('pset');pbody.style.display=isSet?'none':'';ps.style.display=isSet?'':'none';
   paintTabs();paintChap();
-  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='photon'||curTab==='sail')renderPhoton();else if(curTab==='uni')renderUniverse();else if(curTab==='light')renderLight();else if(curTab==='set')renderSet();else if(curTab==='stats')renderStats();else renderLog();
+  if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='photon'||curTab==='sail')renderPhoton();else if(curTab==='uni'||curTab==='laws')renderUniverse();else if(curTab==='light')renderLight();else if(curTab==='set')renderSet();else if(curTab==='stats')renderStats();else renderLog();
 }
 function devVisible(i){return devOpen(i);}
 function upgVisible(u){return !upgHas(u.id)&&S.dev[u.dev]>=u.need;}

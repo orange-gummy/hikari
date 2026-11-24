@@ -18,6 +18,7 @@ function galaxySvg(k,r,a,tint){const key=k+'|'+r+'|'+a+'|'+tint;if(GALAXY_SVG[ke
   h+='<circle r="'+(r*0.35).toFixed(1)+'" fill="url(#ugc)" opacity="'+(0.8*a).toFixed(2)+'"/><circle r="1.2" fill="#fff" opacity="'+a+'"/>';
   return GALAXY_SVG[key]=h;}
 function renderUniverse(){
+  if(curTab==='laws'){renderLawTab();return;}
   const key='u|'+[S.uni,uniPast===S.uni?Math.floor((S.uTime||0)/60):0,S.U,S.shard,JSON.stringify(S.law),uniSel,uniPast,S.uTint,S.uKind,canFold(),uGain()].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
   const W=360,H=330,cx=180,cy=168,n=S.uni+1,show=Math.min(n,6);
   // いまの宇宙と、下に沈んでいく過去の宇宙（多いときは新しい5つだけ）
@@ -34,14 +35,12 @@ function renderUniverse(){
   v+='</svg>';
   let d='';
   if(uniPast===S.uni){const K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind),lw=LAWS.filter(L=>law(L.id)).map(L=>L.name+' '+law(L.id)).join('・')||'まだ書き換えていない';   // いまの宇宙の記録
-    d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(S.uni+1)+'（いま）</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+(S.ubest?lyText(S.ubest)+' 光年':'—')+'<br>この宇宙にいる時間　'+durText(S.uTime||0)+'<br>いまの法則　'+lw+(K?'<br>時の流れ　'+K.name:'')+(canFold()?'<br>畳むと得る公理　'+uGain():'')+'</div><button class="act" id="uBack">法則に戻る</button>';}
+    d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(S.uni+1)+'（いま）</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+(S.ubest?lyText(S.ubest)+' 光年':'—')+'<br>この宇宙にいる時間　'+durText(S.uTime||0)+'<br>いまの法則　'+lw+(K?'<br>時の流れ　'+K.name:'')+(canFold()?'<br>畳むと得る公理　'+uGain():'')+'</div><button class="act" id="uBack">戻る</button>';}
   else if(uniPast>=0&&S.uHist[uniPast]){const h=S.uHist[uniPast],lw=LAWS.filter(L=>h.law[L.id]).map(L=>L.name+' '+h.law[L.id]).join('・')||'まだ書き換えていない';
     d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(uniPast+1)+'</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+lyText(h.far)+' 光年<br>得た法則　'+h.gain+'<br>この宇宙にいた時間　'+durText(h.time)+'<br>そのときの法則　'+lw+(h.kind?'<br>時の流れ　'+UNI_KIND.find(x=>x.id===h.kind).name:'')+'</div><button class="act" id="uBack">いまの宇宙に戻る</button>';}
   else{const K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind);
     if(K)d+='<div class="note" style="margin:0 0 10px">この宇宙の時の流れ　<span style="color:'+rgb(UNI_TINT[K.tint].a,1)+'">'+K.name+'</span>　'+K.p[0]+' '+K.p[1]+(K.p2?'・'+K.p2[0]+' '+K.p2[1]:'')+'・'+K.m[0]+' '+K.m[1]+'</div>';
-    // いまの法則の段と効き目を全部並べる（2026-11-24。書き換えは畳んだときの小窓だけ）
-    d+=LAW_EQS.filter(e=>lawEqOpen(e.id)).map(e=>'<div class="note" style="margin:8px 0 2px;letter-spacing:.1em">'+e.name+'</div>'+LAWS.filter(X=>X.eq===e.id).map(X=>{const lx=law(X.id);return '<div class="row" style="padding:3px 0"><span style="font-size:13px"><span class="M" style="font-family:var(--log);display:inline-block;min-width:30px">'+lawSym(X,lx)+'</span>'+X.name+'　<span class="num" style="font-size:11px;color:var(--ink-dim)">'+lx+' / '+X.max+'</span></span><span class="num" style="font-size:12px">'+lawNow(X.id,lx)+'</span></div>';}).join('')).join('')+
-      '<div class="note" style="margin:6px 0 8px;color:rgba(236,238,242,.4)">法則は、宇宙を畳んだときに書き換える。式の項をすべて書き換えると、その式を超えられる。</div>'+(beyondAll()?'<button class="act" id="uEnd">すべての法則を超えた場面を見る</button>':'');}
+}
   d+=canFold()?'<button class="act" id="uFold" style="margin-top:10px">宇宙を畳む　公理 +'+uGain()+'</button>':'<div class="note" style="margin-top:8px">宇宙の果てに着くと、宇宙を畳める。距離・航跡とその強化は戻り、見つけた色と装置・灯した星・記憶の強化・実績は残る。</div>';
   pbody.innerHTML='<div class="phead"><span class="lab">UNIVERSE '+roman(S.uni+1)+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">公理 '+fmt(S.U)+((S.shard||0)>0?'　かけら '+S.shard:'')+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
   pbody.querySelectorAll('[data-up]').forEach(g=>g.onclick=()=>{uniPast=+g.dataset.up;renderUniverse();});
@@ -49,6 +48,12 @@ function renderUniverse(){
   const ue=document.getElementById('uEnd');if(ue)ue.onclick=()=>showBeyondEnd();
   const fb=document.getElementById('uFold');if(fb)fb.onclick=()=>confirmBox('宇宙を畳む','公理を '+uGain()+' 得て、新しい宇宙で故郷から航海をやり直す。次の宇宙の時の流れを、候補から選ぶ。距離・航跡とその強化は戻る。見つけた色と装置・灯した星・記憶の強化・実績は残る。',()=>startFold());
 }
+// LAWS タブ（2026-11-24、MAP から分けた）：開いている式ごとに項の段と効き目。見るだけ
+function renderLawTab(){const key='lw|'+[S.U,S.uni,JSON.stringify(S.law),JSON.stringify(S.beyond||{}),S.shard].join('|');if(pbody.dataset.k===key)return;pbody.dataset.k=key;
+  let d=LAW_EQS.filter(e=>lawEqOpen(e.id)).map(e=>'<div class="note" style="margin:8px 0 2px;letter-spacing:.1em">'+e.name+'</div>'+LAWS.filter(X=>X.eq===e.id).map(X=>{const lx=law(X.id);return '<div class="row" style="padding:3px 0"><span style="font-size:13px"><span class="M" style="font-family:var(--log);display:inline-block;min-width:30px">'+lawSym(X,lx)+'</span>'+X.name+'　<span class="num" style="font-size:11px;color:var(--ink-dim)">'+lx+' / '+X.max+'</span></span><span class="num" style="font-size:12px">'+lawNow(X.id,lx)+'</span></div>';}).join('')).join('')+
+      '<div class="note" style="margin:6px 0 8px;color:rgba(236,238,242,.4)">法則は、宇宙を畳んだときに書き換える。式の項をすべて書き換えると、その式を超えられる。</div>'+(beyondAll()?'<button class="act" id="uEnd">すべての法則を超えた場面を見る</button>':'');
+  pbody.innerHTML='<div class="phead"><span class="lab">LAWS</span><span class="num" style="font-size:12px;color:var(--ink-dim)">公理 '+fmt(S.U)+'</span></div>'+d;
+  const ue=document.getElementById('uEnd');if(ue)ue.onclick=()=>showBeyondEnd();}
 function lawNow(id,l){const X=LAWS.find(x=>x.id===id);return l?X.fx(l).map(f=>f[1]).join('・'):'—';}
 function durText(sec){const h=sec/3600;return h>=24?(h/24).toFixed(1)+'日':h>=1?h.toFixed(1)+'時間':Math.max(1,Math.round(sec/60))+'分';}
 /* ④ 次の宇宙の時の流れを選ぶ（2026-11-18）：宇宙を畳んだあと、候補（S.uOffer）から1つ選ぶまで開く。開いている間はゲームの時間を止める。
