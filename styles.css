@@ -72,7 +72,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--ink-dim);o
 #ringWrap{position:absolute;left:50%;top:50%;width:176px;height:176px;transform:translate(-50%,-52%);pointer-events:none}
 #ring{position:absolute;inset:0}
 #spd{position:absolute;left:0;right:0;top:50px;text-align:center}
-#spdG .sc{font-family:var(--label);font-size:8px;letter-spacing:.06em;color:var(--ink-dim);margin-left:6px}
+#scTag{position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);font-family:var(--label);font-size:8.5px;letter-spacing:.2em;padding-left:.2em;color:var(--ink-dim);opacity:0;transition:opacity .6s;pointer-events:none;white-space:nowrap}
+#scTag.on{opacity:1}
 #spdL{font-family:var(--label);font-size:10px;color:var(--ink-dim);letter-spacing:.14em}
 #spdV{font-family:var(--num);font-weight:400;font-size:26px;letter-spacing:.02em;color:var(--ink-strong);transition:transform .4s,color .4s;display:inline-block;margin-top:2px}
 #spdG{margin-top:5px;font-size:11px;color:rgba(236,238,242,.75)}
