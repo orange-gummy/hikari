@@ -43,7 +43,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(S.stage!==lastStage){lastStage=S.stage;paintSpeed();if(curTab==='drive')renderDrive(false);}
   {const want=musOn&&sndVol>0&&!bootOn&&!climax&&!LIGHTFX&&!document.hidden;if(want&&!SND.mus)SND.musicStart();else if(!want&&SND.mus)SND.musicStop();}   // 音楽：到着と光になる場面では止める
   paintHUD();rollHV();if(curTab==='photon'||curTab==='sail')paintPhoton();acc+=dt;if(acc>0.25){acc=0;paintGoal();paintHG();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();else if(!panelHold&&(curTab==='glow'||curTab==='restart'))renderGlow();else if(!panelHold&&curTab==='stars')renderUnlock();else if(!panelHold&&(curTab==='voy'||curTab==='wake'))renderVoy();}
-  secAcc+=dt;if(secAcc>1){secAcc=0;checkAch();if(S.voy&&!S.chal&&glowAffordable())glowAutoSpend();   // GALAXY では残光の強化は自動（2026-11-17）
+  secAcc+=dt;if(secAcc>1){secAcc=0;telTick();checkAch();if(S.voy&&!S.chal&&glowAffordable())glowAutoSpend();   // GALAXY では残光の強化は自動（2026-11-17）
 renderPanelTabsOnly();if(curTab==='stats')renderStats();if(skillOpen&&S.W!==lastWShown)renderSkill();}
   saveAcc+=dt;if(saveAcc>10){saveAcc=0;save();}
 }
@@ -175,7 +175,7 @@ function bootGo(quiet){if(!bootOn)return;bootOn=false;const b=document.getElemen
   lastT=performance.now();if(quiet)return;SND.play('resail');if(!S.flags.start)setTimeout(prologue,900);else offline();if(!S.voy&&canVoyage())setTimeout(showDoor,900);}   // 星8つで着いたままなら、章の扉へ
 document.getElementById('bGo').onclick=()=>bootGo();document.getElementById('bGear').onclick=()=>openSettings();
 addEventListener('resize',()=>{if(bootOn)paintBoot();});
-function boot(){for(const id of ['bVer','sVer']){const e=document.getElementById(id);if(e)e.textContent='ver '+VERSION;}const had=load();initScene();resize();applyLoadedVisuals();S.region=regionIndex(S.dist);renderPanel(true);paintGoal();
+function boot(){for(const id of ['bVer','sVer']){const e=document.getElementById(id);if(e)e.textContent='ver '+VERSION+(id==='sVer'?'　id '+TEL_ID:'');}const had=load();initScene();resize();applyLoadedVisuals();S.region=regionIndex(S.dist);renderPanel(true);paintGoal();
   showBoot();
   addEventListener('resize',resize);const reFit=()=>{const h=vpH();if(h!==CH||innerWidth!==CW)dispatchEvent(new Event('resize'));};addEventListener('pageshow',reFit);addEventListener('orientationchange',()=>setTimeout(reFit,300));document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(reFit,200);});if(window.visualViewport)visualViewport.addEventListener('resize',reFit);new ResizeObserver(measure).observe(frameEl);
   // タイトルが出ている間は保存しない（保存すると「最後に遊んだ時刻」が進み、留守の分を受け取れなくなる）

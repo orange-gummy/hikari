@@ -25,7 +25,7 @@
 ## ファイル
 - `index.html`：HTML の骨組みだけ。`styles.css` と `src/` のスクリプトを普通の `<script src>` で順に読み込む（ビルドなし、ES Modules ではない）。
 - `src/`：JS。全ファイルが同じグローバル空間を共有する（`S` の入れ替えやファイルをまたぐ参照はそのまま動く）。**読み込み順が大事**：読み込み時に実行される処理は、前のファイルにあるものしか使えない。
-  `data` → `state` → `economy` → `story` → `sound` → `render/scene` → `render/sky` → `ui/common` → `ui/hud` → `ui/panel` → `ui/universe` → `ui/skills` → `ui/settings` → `climax` → `light` → `main`
+  `data` → `state` → `economy` → `story` → `sound` → `render/scene` → `render/sky` → `ui/common` → `ui/hud` → `ui/panel` → `ui/universe` → `ui/skills` → `ui/settings` → `climax` → `light` → `shower` → `fork` → `telemetry` → `main`
   - `state.js` の `FXQ` は経済の計算から演出への合図。経済側（data〜story）は DOM や描画に触れない（試算ツールが読むため）。
 - `tools/balance_bot.js`：`src/` の data・state・economy・story を読み込み、自動プレイで試算する。`--days A`（1日3回×15分＋放置）／`--days B`（1日1回×30分＋放置）／`--days C`（1日3回×1時間＋放置。2026-11-08 から遊ぶ時間の想定はこちらを基準にする）で1週間を日数で、引数なしならずっと触り続けた場合を分で出す。`--verbose` で遊ぶたびの段階と年月も出す。
 - `tools/e2e_check.js`（2026-11-18）：通しの確認。`python -m http.server 8123` を動かしてから `node tools/e2e_check.js`（`W=1280 H=800` で PC の大きさ）。新しいセーブから、遊ぶ→緊急停止→星図→到着→再出発と記憶→チャレンジ→星8つで扉→航海→光子→航路の分かれ道→引き直しと航跡の小窓→SAIL タブで帆→宇宙を畳む→時の流れを選ぶ→自動の引き直し→光になる→読み込み直し、を状態を飛ばしながら実際の画面と演出で通し、各場面の状態と画面のエラーを出す（画像は OUT、既定は一時フォルダ）。`tools/e2e_oldsave.js` は古い形のセーブ（法則の色合い・航海の速さ・歪みの増幅・選ぶ途中・知らないチャレンジ）を読み込んで確かめる。11-18 にこれで見つけて直したもの：①9が12個までの加速のたびに、消した `sizeFor` を呼んで毎コマ止まり、パネルの書き換え・実績・自動の保存が止まっていた（11-17 の版 .18 から）。②星8つで着いて扉から航海に出ると、到着の演出が片づかず（`climax` のまま）、読み込み直すまで時間が止まっていた（climax.js `goFarther()`）。③知らないチャレンジのセーブで止まる（`normalize()` で外す）。④⑤に届いても、航海の自動の加速がエネルギーを先に使い、「光になる」の値段（次の加速1つ分）に届かなかった。⑤に届いたら光になるまで自動の加速を止める（economy.js `tick()`）。
@@ -80,7 +80,9 @@
 - 設定：早送り（×1〜×1000）、演出の強さ、数字の表記（2.47e8／漢字）、セーブ書き出し、最後の場面だけ見る（確認用）。
 
 ## 保存まわりの注意
-- localStorage のキー：`hikari_save`（本体）、`hikari_fx`（演出の強さ）、`hikari_num`（数字の表記）、`hikari_snd`（音量）、`hikari_mus`（音楽 入・切）。
+- セーブの守り（2026-11-24、state.js `load()`・`save()`）：①読み込めなかったセーブは `hikari_save_broken` に残し、そのあとは上書きしない（`SAVE_BAD`、画面に「セーブを読み込めなかった。元のデータは残してあり、上書きしない。」。前は新しいゲームとして始まり、自動の保存で本物を消していた。設定の「最初からやり直す」で解除）。②数がおかしい（NaN・Infinity、`SAVE_NUM` の項目）ときは保存しない（`SAVE_NG` に回数）。③その日はじめて保存するとき、前のセーブを `hikari_save_prev` に控える（`hikari_save_bakday`）。戻す画面はまだない。
+- 進み具合の送信（2026-11-24、src/telemetry.js、受け口は tools/telemetry_apps_script.gs）：遊ぶ人には作者が了承をとっているので、確認の画面も設定の切り替えもない。`TELEMETRY_URL`（空なら送らない）へ、開いたとき・節目（着いた回数・灯した星・チャレンジの段・航海・目的地・宇宙・光になったか、が変わって5秒後）・30分ごと・裏に回したとき（1分あけて）に、進み具合とセーブ（書き出しと同じ形、消えたときの控え）を送る。読み込めなかったときは壊れたセーブの中身をそのまま送る（`why`＝broken）。ID は端末ごとのでたらめな文字列（`hikari_tid`、設定の版の横に出す）。スプレッドシートの log・latest・saves に入る。
+- localStorage のキー：`hikari_save`（本体）、`hikari_fx`（演出の強さ）、`hikari_num`（数字の表記）、`hikari_snd`（音量）、`hikari_mus`（音楽 入・切）、`hikari_tid`（送信の ID）、`hikari_save_prev`・`hikari_save_bakday`（前の日の控え）、`hikari_save_broken`（読み込めなかったセーブ）。
 - `SAVE_VERSION` は 6（版5で残光まわり：`L` `lTotal` `restarts` `ag` `lit` `prevSkills` `sig` を追加、`auto` は時間の錨の分を足して9個。版6で自動の緊急停止をなくし、覚えていた歪み2048と自動化の記憶3段目の残光20を返す）。`normalize()` で古いセーブを読み替えている（速度段階の番号のずれ、旧「改良」→ TIER など）。構造を変えるときは版を上げ、読み替えを足す。
 
 ## 第二段階でやること
