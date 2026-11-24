@@ -99,30 +99,19 @@ function windText(){const m=windMin();return m<60?m+'分':m<6000?Math.round(m/60
 function phView(){return S.voy&&!S.chal&&S.view==='ph';}
 document.getElementById('viewT').addEventListener('click',e=>{e.stopPropagation();const ph=S.view!=='ph';SND.play('tap');curTab=ph?(lastTab.galaxy&&!tabHidden(lastTab.galaxy)?lastTab.galaxy:'photon'):(lastTab.home||'drive');renderPanel(true);S.view=ph?'ph':'e';paintHUD();});   // 切り替えるとタブも GALAXY／HOME へ
 document.getElementById('viewT').addEventListener('pointerdown',e=>e.stopPropagation());
-/* ③ 衛星のリング（2026-11-24、試作 E）：大きいリング（速さ）の右下に、もう片方（ENERGY／PHOTON）の小さなリング。
-   押すと2つが弧を描いてすれ違い、真ん中の数字と入れ替わる。大きいリングの目盛りはいつも9の数で */
-const SAT={x:198,y:214,k:72/176};let satAnim=null;
-document.getElementById('sat').addEventListener('pointerdown',e=>e.stopPropagation());
-document.getElementById('sat').addEventListener('click',e=>{e.stopPropagation();if(satAnim)return;const ph=S.view!=='ph';SND.play('tap');curTab=ph?(lastTab.galaxy&&!tabHidden(lastTab.galaxy)?lastTab.galaxy:'photon'):(lastTab.home||'drive');renderPanel(true);});   // タブも GALAXY／HOME へ（表示とタブは連動）
-function paintSat(){const el=document.getElementById('sat'),on=S.voy&&!S.chal;el.style.display=on?'':'none';if(!on)return;
-  const ph=!phView(),n=ph?(S.sail||0):nines(S.stage),lit=n<=0?0:((n-1)%12)+1,key=(ph?'p':'e')+lit;
-  if(el.dataset.k!==key){el.dataset.k=key;let v='';const c=ph?'255,226,180':'255,255,255';for(let i=0;i<12;i++){const a0=-1.5708+i/12*6.283+0.08,a1=-1.5708+(i+1)/12*6.283-0.08,on=i<lit;v+='<path d="M'+(50+Math.cos(a0)*40).toFixed(2)+' '+(50+Math.sin(a0)*40).toFixed(2)+' A40 40 0 0 1 '+(50+Math.cos(a1)*40).toFixed(2)+' '+(50+Math.sin(a1)*40).toFixed(2)+'" fill="none" stroke="rgba('+c+','+(on?.85:.2)+')" stroke-width="1.6"/>';}
-    for(let i=0;i<36;i++){const a=i/36*6.283,r2=i%3===0?44:45.5;v+='<line x1="'+(50+Math.cos(a)*47).toFixed(2)+'" y1="'+(50+Math.sin(a)*47).toFixed(2)+'" x2="'+(50+Math.cos(a)*r2).toFixed(2)+'" y2="'+(50+Math.sin(a)*r2).toFixed(2)+'" stroke="rgba(236,238,242,.22)" stroke-width=".5"/>';}
-    el.querySelector('svg').innerHTML=v;el.querySelector('.sl').textContent=ph?'PHOTON':'ENERGY';}
-  el.querySelector('.sv').textContent=fmt(ph?S.ph:S.E);}
-// 入れ替える：真ん中の数字は右下へ縮みながら、衛星は真ん中へ広がりながら、弧を描いてすれ違う（約0.65秒）。終わったら中身を入れ替えて元の場所に戻す
-function swapView(to){if(satAnim&&satAnim.to===to)return;const sat=document.getElementById('sat'),spd=document.getElementById('spd'),rg=document.getElementById('ring');
-  const done=()=>{satAnim=null;spd.style.transform='';spd.style.opacity='';sat.style.transform='';sat.style.opacity='';rg.style.transform='';rg.style.opacity='';S.view=to;paintHUD();};
-  if(satAnim)satAnim.stop=true;if(sat.style.display==='none'||document.hidden||!frameEl.offsetWidth||fxLow){done();return;}
-  const me={to,t0:performance.now()};satAnim=me;const C=[88,88],P=[SAT.x,SAT.y],ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-  const pos=t=>{const b=Math.sin(t*Math.PI)*40;return [C[0]+(P[0]-C[0])*t+b*.7,C[1]+(P[1]-C[1])*t-b*.4];};
-  const st=now=>{if(me.stop)return;const p=Math.min(1,(now-me.t0)/650),e=ease(p),a=pos(e),b=pos(1-e),k=SAT.k;
-    spd.style.transform='translate('+(a[0]-C[0]).toFixed(1)+'px,'+(a[1]-C[1]).toFixed(1)+'px) translateY(-50%) scale('+(1-(1-k)*e).toFixed(3)+')';spd.style.opacity=(1-0.5*e).toFixed(2);
-    sat.style.transform='translate('+(b[0]-P[0]).toFixed(1)+'px,'+(b[1]-P[1]).toFixed(1)+'px) scale('+(1+(1/k-1)*e).toFixed(3)+')';sat.style.opacity=(1-0.5*Math.sin(e*Math.PI)).toFixed(2);
-    const d=Math.sin(e*Math.PI);rg.style.transform='scale('+(1-0.12*d).toFixed(3)+')';rg.style.opacity=(1-0.55*d).toFixed(2);
+/* ③ 真ん中の表示の切り替え（2026-11-24、試作 C）：タブの層で ENERGY／PHOTON が切り替わるとき、リングの目盛りが半回転し、
+   その間に数字が奥へ沈んで、新しい数字が手前に浮かぶ（約0.6秒）。動きを減らす設定では動かさない */
+let viewAnim=null;
+function swapView(to){if(viewAnim&&viewAnim.to===to)return;const spd=document.getElementById('spd');
+  const done=()=>{viewAnim=null;spd.style.transform='';spd.style.opacity='';spd.style.filter='';TKG.removeAttribute('transform');S.view=to;paintHUD();};
+  if(viewAnim)viewAnim.stop=true;if(document.hidden||!frameEl.offsetWidth||fxLow||!S.voy||S.chal){done();return;}
+  const me={to,t0:performance.now(),half:false},dir=to==='ph'?1:-1;viewAnim=me;const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  const st=now=>{if(me.stop)return;const p=Math.max(0,Math.min(1,(now-me.t0)/600)),e=ease(p);TKG.setAttribute('transform','rotate('+(dir*e*180).toFixed(1)+' 88 88)');
+    if(p<0.5){const a=p*2;spd.style.transform='translateY(-50%) scale('+(1-0.25*a).toFixed(3)+')';spd.style.opacity=(1-a).toFixed(2);spd.style.filter='blur('+(a*3).toFixed(1)+'px)';}
+    else{if(!me.half){me.half=true;S.view=to;paintHUD();}const b=(p-0.5)*2;spd.style.transform='translateY(-50%) scale('+(1.2-0.2*b).toFixed(3)+')';spd.style.opacity=b.toFixed(2);spd.style.filter='blur('+((1-b)*3).toFixed(1)+'px)';}
     if(p<1)requestAnimationFrame(st);else done();};
   requestAnimationFrame(st);}
-function paintHUD(){paintSat();const vt=document.getElementById('viewT'),on=S.voy&&!S.chal;vt.style.display='none';   // 切り替えはタブの層で（2026-11-17、リングの下の ENERGY · PHOTON は出さない）
+function paintHUD(){const vt=document.getElementById('viewT'),on=S.voy&&!S.chal;vt.style.display='none';   // 切り替えはタブの層で（2026-11-17、リングの下の ENERGY · PHOTON は出さない）
   if(on)vt.dataset.v=phView()?'ph':'e';document.getElementById('spdL').textContent=phView()?'PHOTON':'ENERGY';
   if(phView()){const q=fmtParts(S.ph);setNum(document.getElementById('eV'),q[0]);document.getElementById('eU').textContent=q[1];const L2=(q[0]+q[1]).length;document.getElementById('spdV').style.fontSize=(L2<=9?23:19)+'px';document.getElementById('rate').innerHTML='+'+fmt(phRate())+' / 秒<span class="wind">帆 '+(S.sail||0)+' 段　×'+fmtG(sailMult())+'</span>';}
   else{const p=fmtParts(S.E);setNum(document.getElementById('eV'),p[0]);document.getElementById('eU').textContent=p[1];const L=(p[0]+p[1]).length;document.getElementById('spdV').style.fontSize=(L<=9?23:19)+'px';document.getElementById('rate').innerHTML='+'+fmt(prodRate())+' / 秒'+(S.over>0?'　過負荷 ×'+S.overMul.toFixed(1):'')+(S.windT>0?'<span class="wind">追い風 ×'+WIND_X+'　あと'+windText()+'</span>':'')+(S.windT>0&&!S.flags.h_wind&&!HINT?(setTimeout(()=>firstHint('wind','留守の間にたまった追い風。遊んでいる間、生産が ×'+WIND_X,()=>{const w=document.querySelector('#rate .wind');if(!w)return null;const r=w.getBoundingClientRect(),st=document.getElementById('sat'),bot=document.getElementById('ring').getBoundingClientRect().bottom,sr=st&&st.style.display!=='none'?st.getBoundingClientRect():null;return {x:r.left+r.width/2,y:r.bottom+2,L:Math.max(34,bot-r.bottom+10),maxR:sr&&sr.width?sr.left-10:0};},'down'),0),''):'');}   // 追い風は2行目に（1行だと輪にかかる）
