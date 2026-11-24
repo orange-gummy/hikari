@@ -50,17 +50,17 @@ function renderUniverse(){
     d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(uniPast+1)+'</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+lyText(h.far)+' 光年<br>得た法則　'+h.gain+'<br>この宇宙にいた時間　'+durText(h.time)+'<br>そのときの法則　'+lw+(h.kind?'<br>時の流れ　'+UNI_KIND.find(x=>x.id===h.kind).name:'')+'</div><button class="act" id="uBack">いまの宇宙に戻る</button>';}
   else{const L=LAWS.find(x=>x.id===uniSel)||LAWS[0],l=law(L.id),nx=lawNext(L.id),K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind);
     if(K)d+='<div class="note" style="margin:0 0 10px">この宇宙の時の流れ　<span style="color:'+rgb(UNI_TINT[K.tint].a,1)+'">'+K.name+'</span>　'+K.p[0]+' '+K.p[1]+(K.p2?'・'+K.p2[0]+' '+K.p2[1]:'')+'・'+K.m[0]+' '+K.m[1]+'</div>';
-    d+='<div class="row" style="padding:0"><span style="font-size:14px">'+L.name+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">'+l+' / '+L.max+'</span></div>'+
-      '<div class="note" style="margin:4px 0 8px">'+(nx?nx.text:'書き換えきった。')+'</div>'+(nx&&(S.flags.lawFold||!S.U)?'<div class="note" style="margin:0 0 8px;color:rgba(236,238,242,.4)">法則は、宇宙を畳んだときに書き換える。</div>':'');
-    if(nx&&!S.flags.lawFold&&S.U>0)d+='<button class="act" id="uLaw"'+(S.U<nx.cost?' disabled':'')+' style="border-color:rgba(200,210,255,.6);color:#dfe4ff">書き換える　法則 '+nx.cost+'</button>';}
+    // いまの法則の段と効き目を全部並べる（2026-11-24。書き換えは畳んだときの小窓だけ）
+    d+=LAWS.map(X=>{const lx=law(X.id),on=X.id===L.id;return '<div class="row" data-law="'+X.id+'" style="padding:3px 0;cursor:pointer;opacity:'+(on?1:0.6)+'"><span style="font-size:13px">'+X.name+'　<span class="num" style="font-size:11px;color:var(--ink-dim)">'+lx+' / '+X.max+'</span></span><span class="num" style="font-size:12px">'+lawNow(X.id,lx)+'</span></div>';}).join('')+
+      '<div class="note" style="margin:6px 0 8px;color:rgba(236,238,242,.4)">法則は、宇宙を畳んだときに書き換える。</div>';}
   d+=canFold()?'<button class="act" id="uFold" style="margin-top:10px">宇宙を畳む　法則 +'+uGain()+'</button>':'<div class="note" style="margin-top:8px">宇宙の果てに着くと、宇宙を畳める。距離・航跡とその強化は戻り、見つけた色と装置・灯した星・記憶の強化・実績は残る。</div>';
   pbody.innerHTML='<div class="phead"><span class="lab">UNIVERSE '+roman(S.uni+1)+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">法則 '+fmt(S.U)+((S.shard||0)>0?'　かけら '+S.shard:'')+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
   pbody.querySelectorAll('[data-law]').forEach(g=>g.onclick=()=>{uniSel=g.dataset.law;uniPast=-1;renderUniverse();});
   pbody.querySelectorAll('[data-up]').forEach(g=>g.onclick=()=>{uniPast=+g.dataset.up;renderUniverse();});
   const bk=document.getElementById('uBack');if(bk)bk.onclick=()=>{uniPast=-1;renderUniverse();};
-  const lb=document.getElementById('uLaw');if(lb)lb.onclick=()=>{if(buyLaw(uniSel)){SND.play('light');fla=Math.max(fla,0.12);renderPanel(true);paintSpeed();}};
   const fb=document.getElementById('uFold');if(fb)fb.onclick=()=>confirmBox('宇宙を畳む','法則を '+uGain()+' 得て、新しい宇宙で故郷から航海をやり直す。次の宇宙の時の流れを、候補から選ぶ。距離・航跡とその強化は戻る。見つけた色と装置・灯した星・記憶の強化・実績は残る。',()=>startFold());
 }
+function lawNow(id,l){return id==='lc'?'softcap 9×'+(12+l):id==='td'?'γ^'+(1+0.1*l).toFixed(1):l?'引き直しが自動':'—';}
 function durText(sec){const h=sec/3600;return h>=24?(h/24).toFixed(1)+'日':h>=1?h.toFixed(1)+'時間':Math.max(1,Math.round(sec/60))+'分';}
 /* ④ 次の宇宙の時の流れを選ぶ（2026-11-18）：宇宙を畳んだあと、候補（S.uOffer）から1つ選ぶまで開く。開いている間はゲームの時間を止める。
    畳んだ一点から候補の宇宙へ線が伸び、選んだ宇宙は大きく明るく。速い＝尾を引く星・重い＝細かく巻いて中心が沈む・澄んだ＝少ない星が十字に光る・静か＝ゆっくり漂う淡い星 */
@@ -77,7 +77,7 @@ function renderPick(){const b=document.getElementById('pickBody'),K=pickKinds(),
     '<button class="pGo" id="pickGo">この宇宙を始める</button>';
   b.querySelectorAll('[data-pk]').forEach(x=>x.onclick=()=>{pickSel=+x.dataset.pk;SND.play('tab');renderPick();});
   const re=document.getElementById('pickRe');if(re)re.onclick=()=>{if(uReroll()){SND.play('light');pickSel=0;save();renderPick();}};
-  document.getElementById('pickGo').onclick=()=>{if(chooseKind(k.id)){SND.play('light');fla=Math.max(fla,0.14);closePick();applyLoadedVisuals();S.flags.lawFold=1;if(LAWS.some(L=>{const n=lawNext(L.id);return n&&S.U>=n.cost;}))S.flags.lawPend=1;save();pbody.dataset.k='';renderPanel(true);if(S.flags.lawPend)openLaws();}};
+  document.getElementById('pickGo').onclick=()=>{if(chooseKind(k.id)){SND.play('light');fla=Math.max(fla,0.14);closePick();applyLoadedVisuals();if(LAWS.some(L=>{const n=lawNext(L.id);return n&&S.U>=n.cost;}))S.flags.lawPend=1;save();pbody.dataset.k='';renderPanel(true);if(S.flags.lawPend)openLaws();}};
   const cv=document.getElementById('pickCv');cv.onclick=e=>{const r=cv.getBoundingClientRect(),x=e.clientX-r.left,i=Math.max(0,Math.min(K.length-1,Math.floor(x/(r.width/K.length))));if(e.clientY-r.top>r.height*0.3&&e.clientY-r.top<r.height*0.62&&i!==pickSel){pickSel=i;SND.play('tab');renderPick();}};
   pickPaint(0);}
 function pickRnd(s){return()=>{s=(s*16807)%2147483647;return s/2147483647;};}
