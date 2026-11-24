@@ -213,7 +213,7 @@ function closeGlow(){glowOpen=false;document.getElementById('glowOv').classList.
 /* 航跡の強化（2026-11-19）：WAKE タブをなくし、航路を引き直すときに開く小窓で買う。背景はいま終えた航海の航路（故郷から、通った宙域の記号を光の線でつなぐ）。「船を出す」で閉じる */
 let wakeOpen=false,wakeAfter=null,wakeFX=null;
 function openWake(after){if(!trailAffordable()){after();return;}wakeOpen=true;wakeAfter=after;const ov=document.getElementById('wakeOv');ov.classList.add('on','sIntro');renderWakeOv();setTimeout(()=>ov.classList.remove('sIntro'),3000);}
-function closeWake(){wakeOpen=false;document.getElementById('wakeOv').classList.remove('on');const f=wakeAfter;wakeAfter=null;if(f)f();}
+function closeWake(){wakeOpen=false;const ov=document.getElementById('wakeOv');ov.classList.add('out');const f=wakeAfter;wakeAfter=null;setTimeout(()=>{ov.classList.remove('on','out');if(f)f();},450);}   // ふっと消えてから船を出す（2026-11-24）
 function wakeScene(W,H,yt,yb){const r=S.lastRun&&S.lastRun.k==='voy'?S.lastRun:null,path=r&&r.path?r.path:[],far=r?r.far:0,N=Math.max(1,voyDoublings(far||1e4)),f2=x=>x.toFixed(1),ink=a=>'rgba(255,226,190,'+a+')',
     col=id=>{const o=FORKS.find(x=>x.id===id);return o?'rgb('+o.col.join(',')+')':ink(.6);},amp=Math.min(W*0.2,150);
   const X=k=>W/2+Math.sin(k*0.9+0.4)*amp*(0.35+0.65*k/N),Y=k=>yb-(yb-yt)*k/N;

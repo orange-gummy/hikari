@@ -39,7 +39,8 @@ function frame(){requestAnimationFrame(frame);const n=performance.now();FRA=Math
   if(FRA>16.667)FRA=16.667;}
 /* ③ 光子の帆（2026-11-17 試作）：PHOTON の表示のとき、リングの外に細い光の輪が1本、ゆっくり回る（段が多いほど明るく太い）。光の粒が中心から外へ流れる */
 let SAILP=[];
-function drawSail(){if(typeof phView!=='function'||!phView()||LANDED||HOMEA)return;const n=Math.min(S.sail||0,14),r0=74*RCS+10;
+function drawSail(){if(typeof phView!=='function'||!phView()||LANDED||HOMEA||document.getElementById('app').classList.contains('vrOn'))return;   // 引き直しの演出の間は帆の輪を出さない（残って見えていた、2026-11-24）
+const n=Math.min(S.sail||0,14),r0=74*RCS+10;
   // 2026-11-19：段の数だけ輪を重ねていたのをやめ、輪は1本。段が増えるほど明るく太くなる（段は文字でも出ている）
   if(n>0){const k=n/14;cx.save();cx.lineCap='round';cx.setLineDash([3,7]);cx.lineDashOffset=T*0.08;cx.beginPath();cx.arc(RC.x,RC.y,r0+4*RCS,0,6.283);cx.strokeStyle='rgba(255,236,200,'+(0.16+0.34*k).toFixed(3)+')';cx.lineWidth=0.7+1.1*k;cx.stroke();cx.restore();}
   cx.save();
@@ -188,7 +189,7 @@ function drawVr(){const b=BRK;b.t++;const t=b.t,low=fxLow;
   if(t===1){document.getElementById('app').classList.add('rstDim','vrOn');b.geo=vrGeom(b.n,(S.st.redraws||0)+3);}
   if(t<=120){const k=1-ei(t/120);SPDF=b.sp0*k;ROTV=b.rv0*k;ROT+=ROTV;TKG.setAttribute('transform','rotate('+ROT.toFixed(2)+' 88 88)');}else{SPDF=0;ROTV=0;}
   if(t===110)STILL=true;
-  vrVeil(0.82*ei(cl((t-40)/90)));   // 背景（光の帯・銀河・星）を暗く沈めてから航路を浮かべる（重なって見えにくかった、2026-11-24）
+  vrVeil(0.82*ei(cl((t-40)/90))+0.18*ei(cl((t-505)/40)));   // 最後は真っ暗まで沈めて、航跡の小窓へつなぐ   // 背景（光の帯・銀河・星）を暗く沈めてから航路を浮かべる（重なって見えにくかった、2026-11-24）
   const gm=b.geo,N=gm.pts.length-1;VRT={x:FR.x+FR.w/2,y:FR.y+50};
   if(t>=110){const a=cl((t-110)/50);let tip=t<230?Math.round(N*ei(cl((t-110)/110))):t<250?N:Math.round(N*(1-ei(cl((t-250)/280))));
     vrLine(gm.pts,tip,0.75*a,1);vrSyms(b,gm,tip,a,t>=250?tip:null);const q=gm.pts[tip];vrTip(q.x,q.y,a,true);vrHome(gm.P[0],a,true);

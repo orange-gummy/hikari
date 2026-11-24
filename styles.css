@@ -463,7 +463,7 @@ html,body,#app,#cv{height:var(--appH,100%)}   /* 高さは JS（scene.js fitVP�
 #pickBody .pGo:after{background:linear-gradient(270deg,transparent,rgba(255,240,215,.7))}
 @media (max-height:620px){#pickBody .pTop{top:3%}#pickBody .pRe{top:calc(3% + 78px)}#pickBody .pDet{top:63%}#pickBody .pFx{margin-top:8px;line-height:1.7}}
 #wakeOv{position:fixed;inset:0;z-index:11;background:#04050C;display:none;overflow:hidden}
-#wakeOv.on{display:block}
+#wakeOv.on{display:block;animation:gFade .9s both}#wakeOv.out{opacity:0;transition:opacity .45s}   /* 引き直しの演出から、暗闇のままふっと開く（2026-11-24） */
 #wakeBody{position:absolute;inset:0}
 #wakeBody .gSky{position:absolute;inset:0;z-index:0}
 .sScene .gTw{animation:gTw 4.5s ease-in-out infinite}
