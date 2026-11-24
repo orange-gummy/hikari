@@ -53,10 +53,12 @@ const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawSail();
 let FOLD=null;
 function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
 function drawFold(){const f=FOLD;if(!f)return;if((pickOpen||lawOpen)&&f.t>=340)return;f.t++;const t=f.t,X=RC.x||CW/2,Y=RC.y||CH/2;let dark=0,pt=0;   // 2026-11-20：真っ暗になったところで次の宇宙を選び、選び終えてから新しい宇宙が明ける（前は新しい宇宙が明けてから選ぶ画面が出ていた）
+  if(t===150)document.getElementById('app').classList.add('foldOn');   // 暗くなる前に上の表示とリングの数字を消す（0に戻るのが見えていた、2026-11-24）
+  if(t===430)document.getElementById('app').classList.remove('foldOn');
   if(t<=240){CONV=ei(t/240);SPDF=1+4*t/240;stk=Math.max(stk,30);dark=cl((t-170)/70);pt=t/240;}
   else if(t<380){dark=1;pt=1;if(t===300){fold();CONV=0;SPDF=1;stk=0;BAND=null;applyLoadedVisuals();curTab='uni';uniPast=-1;renderPanel(true);save();}if(t===340&&S.uOffer)openPick();}
   else if(t<560){const k=(t-380)/180;dark=1-ei(k);pt=1-k;if(t===400)logLine(UNI_LINES[Math.min(S.uni,UNI_LINES.length-1)],-1);}
-  else{FOLD=null;document.getElementById('block').style.display='none';document.getElementById('panel').style.opacity='1';paintGoal();return;}
+  else{FOLD=null;document.getElementById('app').classList.remove('foldOn');document.getElementById('block').style.display='none';document.getElementById('panel').style.opacity='1';paintGoal();return;}
   if(dark>0){cx.fillStyle='rgba(4,5,12,'+dark.toFixed(3)+')';cx.fillRect(0,0,CW,CH);}
   if(pt>0){blob(X,Y,(t<380?16+70*pt:16+260*(1-pt)),[230,235,255],0.5*pt);blob(X,Y,6,[255,255,255],pt);}
   if(t>=380){const a=Math.sin(Math.PI*cl((t-380)/180));cx.save();cx.font='400 17px "Shippori Mincho B1",serif';cx.textAlign='center';cx.fillStyle='rgba(236,238,242,'+(0.85*a).toFixed(3)+')';cx.fillText('宇宙 '+roman(S.uni+1),X,Y+125*RCS);cx.restore();}}
