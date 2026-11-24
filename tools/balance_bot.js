@@ -86,7 +86,7 @@ let litDay=null,voyDay=null;const FOUND=[],REDRAW=[];
 const FOLD_H=+(process.env.FOLD_H||8),ULOG=[];let endAt=null,lcDay=null;
 function uniManage(){lightWatch();if(!canFold()){endAt=null;return;}if(endAt==null)endAt=t;
   if(t-endAt>=FOLD_H*(DAYS?3600:60)){const g=fold();const pk=process.env.KIND&&S.uOffer.includes(process.env.KIND)?process.env.KIND:S.uOffer[0];if(!process.env.NOKIND)chooseKind(pk);ULOG.push('宇宙'+(S.uni+1)+'へ '+(t/86400).toFixed(2)+'日目 +'+g+' '+pk);endAt=null;lastP=t;
-    let b=true;while(b){b=false;const c=LAWS.map(a=>[a.id,lawNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.U).sort((x,y)=>x[1].cost*(x[0]==='ar'?0.6:1)-y[1].cost*(y[0]==='ar'?0.6:1));if(c.length){buyLaw(c[0][0]);b=true;}}
+    let b=true;while(b){b=false;const c=LAWS.filter(a=>(process.env.LAW_IDS||'lc,td,L').split(',').includes(a.id)).map(a=>[a.id,lawNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.U).sort((x,y)=>x[1].cost-y[1].cost);if(c.length){buyLaw(c[0][0]);b=true;}}
     if(law('lc')>=10&&!lcDay)lcDay=(t/86400).toFixed(2)+'日目';}
   }
 let lightDay=null;function lightWatch(){if(!lightDay&&lightReach())lightDay=(t/86400).toFixed(2)+'日目';}

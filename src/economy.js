@@ -51,7 +51,8 @@ function chalP(){return CHAL[S.chal]&&CHAL[S.chal].p?CHAL[S.chal].p[(S.chalLv||1
 function sp(id){return STAR_P[id].p[Math.max(1,Math.min(3,S.chalTier[id]||1))-1];}   // 上位の星の強さ（越えた段で変わる）
 function starText(id){return STAR_P[id]?STAR_P[id].t(sp(id)):'';}
 function wMult(){return 1+0.01*S.W;}   // 使わずに持っている歪み1つにつき生産+1%
-function globalMult(){return ukf('prod',1)*memMult()*Math.pow(timeGamma(S.stage),1+0.1*law('td')+ukf('gam',0))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+sp('pL')*S.stage:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
+function lv(id){return S.voy?law(id):0;}   // 新しい項（Λ・ρ・ΔS・T・ħ・Δx）は航海の間だけ効く（2026-11-24）
+function globalMult(){return ukf('prod',1)*Math.pow(0.7,lv('T'))*memMult()*Math.pow(timeGamma(S.stage),1+0.1*law('td')-0.05*lv('rho')+ukf('gam',0))*(has('p5')?1.5:1)*(has('e1')?2:1)*(has('p3')?1.5:1)*wMult()*fissionBonus()*(has('pB')?1+0.2*nines(S.stage):1)*(has('pA')&&S.burst>0?5:1)*(S.over>0?S.overMul:1)*(has('pS')&&S.sling>0?3:1)*(has('pI')?Math.min(3,1+2*S.coast/300):1)*(has('eC')&&S.crit>0?2:1)*(has('eR')&&resonant()?1.5:1)*(has('cM')?1+0.2*lostN():1)*(1+0.25*glow('sk'))*(has('pL')?1+sp('pL')*S.stage:1)*(has('cG')&&S.sig>0?10:1)*achMult();}
 function achMult(){return S.chal&&(S.chalLv||1)>=3?1:1+ACH_BONUS*S.ach.length;}   // 段3は実績の倍率も効かない（2026-11-24）
 function resonant(){const c={};for(const i of PRODI){const t=S.tier[i]||1;if(t>=2&&S.dev[i]>0)c[t]=(c[t]||0)+1;}return Object.values(c).some(v=>v>=3);}
 function lostN(){if(S.cleared)return 0;let n=S.greyLost?1:0;for(let i=0;i<6;i++)if(!memHas(i))n++;return n;}
@@ -180,7 +181,7 @@ function startVoyage(){if(!canVoyage())return false;resetRun();S.voy=true;S.vdis
 /* ③ 光子（2026-11-17 試作） */
 function phOpen(k){return S.voy&&!S.chal&&(S.found||0)>=(PH_DEV[k].find||0);}
 function sailMult(){return S.voy&&!S.chal?Math.pow(SAIL_X,S.sail||0):1;}
-function phMult(){return ukf('ph',1)*(SAIL_PH?sailMult():1)*Math.pow(PF_X,tg('pf'));}   // 光子の列の生産の倍率（航跡の強化「光子の灯り」）
+function phMult(){return ukf('ph',1)*Math.pow(3,lv('T'))*(SAIL_PH?sailMult():1)*Math.pow(PF_X,tg('pf'));}   // 光子の列の生産の倍率（航跡の強化「光子の灯り」）
 function phRate(){return S.voy&&!S.chal?(S.phDev[0]||0)*PH_DEV[0].rate*phMult():0;}
 function phCost(k){return PH_DEV[k].cost*Math.pow(PH_DEV[k].g,S.phBuy[k]||0);}
 function phBuyDev(k){if(!phOpen(k)||S.ph<phCost(k))return false;S.ph-=phCost(k);S.phBuy[k]=(S.phBuy[k]||0)+1;S.phDev[k]=(S.phDev[k]||0)+1;return true;}
@@ -193,41 +194,44 @@ function sailCost(){return SAIL_COST*Math.pow(SAIL_G,S.sail||0);}
 function raiseSail(){if(S.ph<sailCost())return false;S.ph-=sailCost();S.sail=(S.sail||0)+1;FXQ.sail=S.sail;return true;}
 function phReset(keepSail){S.ph=0;S.phDev=[1,0,0,0];S.phBuy=[0,0,0,0];if(!keepSail)S.sail=0;}
 function phTick(dt){if(!S.voy||S.chal)return;const m=phMult();for(let k=PH_DEV.length-1;k>=1;k--)if(S.phDev[k]>0)S.phDev[k-1]+=S.phDev[k]*PH_DEV[k].rate*m*dt;S.ph+=phRate()*dt;}
-function routeOpts(){const ids=ROUTE_TYPES.slice().sort(()=>Math.random()-0.5).slice(0,2+(Math.random()<0.5?1:0));if(Math.random()<ROUTE_UNKNOWN)ids[ids.length-1]='unknown';return ids;}
+function routeOpts(){const ids=ROUTE_TYPES.slice().sort(()=>Math.random()-0.5).slice(0,Math.min(ROUTE_TYPES.length,2+(Math.random()<0.5?1:0)+lv('hb')));if(Math.random()<ROUTE_UNKNOWN+0.04*lv('hb'))ids[ids.length-1]='unknown';return ids;}
 function routeInit(){S.route={n:voyDoublings(S.vdist||0),cur:null,opts:routeOpts(),pick:null,path:[],wreck:0};}
 function routeCur(){return S.voy&&S.route?S.route.cur:null;}
 function routeAuto(){const R=S.route;return R.pick||(R.opts.includes(R.cur)?R.cur:R.opts[0]);}
 function routeEnter(n){const R=S.route,c=routeAuto();R.cur=c;R.path.push(c);R.n=n;R.pick=null;R.opts=routeOpts();
   if(c==='wreck')R.wreck++;else if(c==='calm')S.windT=Math.min(WIND_CAP,(S.windT||0)+ROUTE_CALM);else if(c==='unknown')S.shard=(S.shard||0)+1;
   FXQ.route=c;S.fork={opts:R.opts.slice(),life:FORK_LIFE};FXQ.fork=true;}
-function voyAdvance(d){if(!S.route)routeInit();d*=ukf('dist',1);const rc=S.route.cur;if(rc==='neb')d*=ROUTE_NEB;else if(rc==='rough')d*=ROUTE_ROUGH;S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
-  const n=voyDoublings(S.vdist);while(S.route.n<n)routeEnter(S.route.n+1);if(n>S.vL){const g=(n-S.vL)*lPer()*(S.route.cur==='cluster'?2:1)*ukf('mem',1);S.L+=g;S.lTotal+=g;S.vL=n;}
+function voyAdvance(d){if(!S.route)routeInit();d*=ukf('dist',1)*Math.pow(2,lv('rho'));const rc=S.route.cur;if(rc==='neb')d*=ROUTE_NEB;else if(rc==='rough')d*=ROUTE_ROUGH;S.vdist+=d;if(S.vdist>S.vbest)S.vbest=S.vdist;if(S.vdist>S.ubest)S.ubest=S.vdist;
+  const n=voyDoublings(S.vdist);while(S.route.n<n)routeEnter(S.route.n+1);if(n>S.vL){const g=(n-S.vL)*lPer()*(S.route.cur==='cluster'?2:1)*ukf('mem',1)*Math.pow(1.5,lv('S'));S.L+=g;S.lTotal+=g;S.vL=n;}
   while(S.found<DEST.length&&S.vdist>=DEST[S.found].ly){const k=S.found;S.found++;S.st.dest[k]=Date.now();story('find'+k,NEW_COLORS[k].find);FXQ.found=(FXQ.found||[]).concat([k]);}}
 function redrawReady(){return S.voy&&tGain()>=Math.max(3,Math.ceil(S.tTotal*REDRAW_R));}
 // 分かれ道：得られるもの（そのときの強さに合わせる）
 function forkText(id){return id==='cluster'?'この宙域の記憶 ×2':id==='wreck'?'引き直しの航跡 +'+Math.round(ROUTE_WRECK*100)+'%':id==='neb'?'この宙域を ×'+ROUTE_NEB+' の速さで':id==='calm'?'追い風 +'+Math.round(ROUTE_CALM/60)+'分':id==='rough'?'速さ ×'+ROUTE_ROUGH+'・生産 ×'+ROUTE_ROUGH_P:'記憶のかけら +1（宇宙を選ぶときに使う）';}
 function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0)S.fork=null;}}   // 窓の下の分岐図は、宙域の境目に来たときだけ出る
 function chooseFork(id){if(!S.voy||!S.route||!S.route.opts.includes(id))return false;S.route.pick=id;S.fork=null;S.st.forks=(S.st.forks||0)+1;return true;}   // 次の宙域へ向かう星系を選ぶ（境目に来たときに効く）
-function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))*ukf('trail',1)):0;}
+function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))*ukf('trail',1)*Math.pow(0.85,lv('S'))):0;}
 function psStart(prev){const l=tg('ps');return l?11+Math.floor(Math.max(0,prev-11)*0.2*l):0;}   // 先回り：前の航海の9の数の 20%×段 から
 function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now(),path:S.route?S.route.path.slice():[],found:S.found};S.st.redraws++;S.T+=g;S.tTotal+=g;const prevSt=S.maxStage;resetRun();S.vdist=0;S.vL=0;routeInit();phReset(true);S.stage=S.maxStage=psStart(prevSt);logLine(VOY_LINES.redraw,-1,true);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
-function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=DEST[DEST.length-1].ly;}   // この宇宙で宇宙の果てに着いたら
-function uGain(){if(!canFold())return 0;return Math.max(1,Math.floor((2+Math.floor(Math.log2(Math.max(1,S.ubest/DEST[DEST.length-1].ly))))*ukf('law',1))+ukf('lawAdd',0));}
+function edgeLy(){return DEST[DEST.length-1].ly*Math.pow(2,law('L'));}   // 宇宙項 Λ で宇宙の果てが遠くなる
+function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=edgeLy();}   // この宇宙で宇宙の果てに着いたら
+function uGain(){if(!canFold())return 0;return Math.max(1,Math.floor((2+Math.floor(Math.log2(Math.max(1,S.ubest/edgeLy()))))*ukf('law',1)*(1+0.2*law('L')))+ukf('lawAdd',0));}
 function ukind(){return S.voy&&!S.chal&&S.uKind?UNI_KIND.find(x=>x.id===S.uKind):null;}   // いまの宇宙の性格（チャレンジ中は効かない）
 function ukf(key,d){const k=ukind();return k&&k.fx[key]!=null?k.fx[key]:d;}
-function uOfferRoll(){const a=UNI_KIND.map(x=>x.id);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,UNI_OFFER);}
+function uOfferRoll(){const a=UNI_KIND.map(x=>x.id);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,UNI_OFFER+law('dx'));}
 // 記憶のかけら（2026-11-19）：宇宙を選ぶときに候補を引き直す。値段は1から引き直すたびに倍（宇宙ごとに1へ戻る）
-function uRerollCost(){return Math.pow(2,S.uRerolls||0);}
+function uRerollCost(){return Math.pow(2,(S.uRerolls||0)+law('dx'));}
 function uReroll(){if(!S.uOffer||(S.shard||0)<uRerollCost())return false;S.shard-=uRerollCost();S.uRerolls=(S.uRerolls||0)+1;const k=S.uOffer.slice().sort().join();let n;do{n=uOfferRoll();}while(n.slice().sort().join()===k);S.uOffer=n;return true;}
 function chooseKind(id){if(!S.uOffer||!S.uOffer.includes(id))return false;const k=UNI_KIND.find(x=>x.id===id);S.uKind=id;S.uTint=k.tint;S.uOffer=null;return true;}   // 宇宙の果てで2、その先は距離が2倍になるたびに+1
 function fold(){const g=uGain();if(g<1)return 0;
   S.uHist.push({far:S.ubest,gain:g,time:Math.round(S.uTime),law:Object.assign({},S.law),tint:S.uTint,kind:S.uKind});
   S.U+=g;S.uTotal+=g;S.uni++;resetRun();S.vdist=0;S.vL=0;routeInit();phReset();S.T=0;S.tTotal=0;S.tg={};S.ubest=0;S.uTime=0;S.uRerolls=0;
   S.uTint=0;S.uKind=null;S.uOffer=uOfferRoll();FXQ.fold=g;return g;}   // 次の宇宙の性格は chooseKind() で選ぶまで決まらない（効果なし）
-function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
+function lawEqOpen(eq){const e=LAW_EQS.find(x=>x.id===eq);return !!e&&S.uni>=e.open;}
+function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return !a||l>=a.max||!lawEqOpen(a.eq)?null:{l,cost:a.cost(l),text:a.fx(l+1).map(f=>f[0]+' '+f[1]).join('・')};}
+function unbuyLaw(id){const a=LAWS.find(x=>x.id===id),l=law(id);if(!a||l<1)return false;S.law[id]=l-1;S.U+=a.cost(l-1);return true;}   // 畳んだときの小窓でだけ（戻す）
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}
-function autoRedrawReady(){return law('ar')>0&&S.voy&&redrawReady();}
+function autoRedrawReady(){return S.uni>0&&S.voy&&redrawReady();}   // 引き直しの自動は④に着いたら最初から（2026-11-24、法則「引き直しの記憶」はやめた）
 function trailNext(id){const a=TRAIL.find(x=>x.id===id),l=tg(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function trailAutoSpend(){let b=true;while(b){b=false;const c=TRAIL.map(a=>[a.id,trailNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.T).sort((x,y)=>x[1].cost*(x[0]==='va'?0.5:1)-y[1].cost*(y[0]==='va'?0.5:1));if(c.length){buyTrail(c[0][0]);b=true;}}}   // 自動の引き直しのとき、航跡の強化を安い順に（航跡の加速を少し優先、2026-11-19）
 function trailAffordable(){return TRAIL.some(a=>{const n=trailNext(a.id);return n&&S.T>=n.cost;});}

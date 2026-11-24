@@ -31,36 +31,24 @@ function renderUniverse(){
     v+='<g transform="translate('+gx.toFixed(1)+' '+yy+')"'+' data-up="'+k+'" style="cursor:pointer"><circle r="'+(r+10)+'" fill="transparent"/>'+galaxySvg(k,r,a,tint)+
       (sel?'<circle r="'+(r+6)+'" fill="none" stroke="'+rgb(UNI_TINT[tint%UNI_TINT.length].a,0.6)+'" stroke-width=".7"/>':'')+
       '<text x="'+(r+14)+'" y="4" font-size="'+(age===0?11:9.5)+'" fill="rgba(236,238,242,'+(age===0||sel?0.85:0.4)+')">宇宙 '+roman(k+1)+'</text></g>';}
-  // 法則の筋
-  const A=[-2.4,-1.57,-0.74],r0=34,len=92;
-  LAWS.forEach((L,i)=>{const a=A[i],l=law(L.id),m=L.max,step=len/m,on=uniPast<0&&uniSel===L.id,al=on?1:0.55,c=L.col,P=k=>[cx+Math.cos(a)*(r0+k*step),cy+Math.sin(a)*(r0+k*step)];
-    const [sx,sy]=P(0),[ex,ey]=P(m),cs=Math.cos(a),anc=cs<-0.3?'end':cs>0.3?'start':'middle',tx=cx+Math.cos(a)*(r0+len+15),ty=cy+Math.sin(a)*(r0+len+15);
-    v+='<g data-law="'+L.id+'" style="cursor:pointer"><line x1="'+sx.toFixed(1)+'" y1="'+sy.toFixed(1)+'" x2="'+ex.toFixed(1)+'" y2="'+ey.toFixed(1)+'" stroke="transparent" stroke-width="16"/>'+
-      '<line x1="'+sx.toFixed(1)+'" y1="'+sy.toFixed(1)+'" x2="'+ex.toFixed(1)+'" y2="'+ey.toFixed(1)+'" stroke="'+rgb(c,on?0.3:0.14)+'" stroke-width=".6" stroke-dasharray="1.2 3.5"/>';
-    if(l>0){const [lx,ly]=P(l);v+='<line x1="'+sx.toFixed(1)+'" y1="'+sy.toFixed(1)+'" x2="'+lx.toFixed(1)+'" y2="'+ly.toFixed(1)+'" stroke="'+rgb(c,0.7*al)+'" stroke-width="'+(on?1.1:0.8)+'"/>';
-      for(let k=1;k<=l;k++){const [px,py]=P(k);if(k===l)v+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="'+(on?9:6)+'" fill="'+rgb(c,0.22*al)+'"/>';v+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="'+(k===l?2:1.1)+'" fill="'+rgb(c,al)+'"/>';}}
-    if(on){const [qx,qy]=P(Math.max(l,0));v+='<circle cx="'+qx.toFixed(1)+'" cy="'+qy.toFixed(1)+'" r="7" fill="none" stroke="'+rgb(c,0.5)+'" stroke-width=".6"/>';}
-    v+='<text x="'+tx.toFixed(1)+'" y="'+(ty+3).toFixed(1)+'" text-anchor="'+anc+'" font-size="10" fill="rgba(236,238,242,'+(on?0.9:0.5)+')">'+L.name+'</text>'+
-      '<text x="'+tx.toFixed(1)+'" y="'+(ty+15).toFixed(1)+'" text-anchor="'+anc+'" font-size="9" class="num" fill="rgba(236,238,242,'+(on?0.6:0.3)+')">'+l+'/'+m+'</text></g>';});
   v+='</svg>';
   let d='';
   if(uniPast===S.uni){const K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind),lw=LAWS.filter(L=>law(L.id)).map(L=>L.name+' '+law(L.id)).join('・')||'まだ書き換えていない';   // いまの宇宙の記録
-    d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(S.uni+1)+'（いま）</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+(S.ubest?lyText(S.ubest)+' 光年':'—')+'<br>この宇宙にいる時間　'+durText(S.uTime||0)+'<br>いまの法則　'+lw+(K?'<br>時の流れ　'+K.name:'')+(canFold()?'<br>畳むと得る法則　'+uGain():'')+'</div><button class="act" id="uBack">法則に戻る</button>';}
+    d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(S.uni+1)+'（いま）</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+(S.ubest?lyText(S.ubest)+' 光年':'—')+'<br>この宇宙にいる時間　'+durText(S.uTime||0)+'<br>いまの法則　'+lw+(K?'<br>時の流れ　'+K.name:'')+(canFold()?'<br>畳むと得る公理　'+uGain():'')+'</div><button class="act" id="uBack">法則に戻る</button>';}
   else if(uniPast>=0&&S.uHist[uniPast]){const h=S.uHist[uniPast],lw=LAWS.filter(L=>h.law[L.id]).map(L=>L.name+' '+h.law[L.id]).join('・')||'まだ書き換えていない';
     d='<div class="row" style="padding:0"><span style="font-size:14px">宇宙 '+roman(uniPast+1)+'</span></div><div class="note" style="margin:4px 0 10px">いちばん遠く　'+lyText(h.far)+' 光年<br>得た法則　'+h.gain+'<br>この宇宙にいた時間　'+durText(h.time)+'<br>そのときの法則　'+lw+(h.kind?'<br>時の流れ　'+UNI_KIND.find(x=>x.id===h.kind).name:'')+'</div><button class="act" id="uBack">いまの宇宙に戻る</button>';}
-  else{const L=LAWS.find(x=>x.id===uniSel)||LAWS[0],l=law(L.id),nx=lawNext(L.id),K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind);
+  else{const K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind);
     if(K)d+='<div class="note" style="margin:0 0 10px">この宇宙の時の流れ　<span style="color:'+rgb(UNI_TINT[K.tint].a,1)+'">'+K.name+'</span>　'+K.p[0]+' '+K.p[1]+(K.p2?'・'+K.p2[0]+' '+K.p2[1]:'')+'・'+K.m[0]+' '+K.m[1]+'</div>';
     // いまの法則の段と効き目を全部並べる（2026-11-24。書き換えは畳んだときの小窓だけ）
-    d+=LAWS.map(X=>{const lx=law(X.id),on=X.id===L.id;return '<div class="row" data-law="'+X.id+'" style="padding:3px 0;cursor:pointer;opacity:'+(on?1:0.6)+'"><span style="font-size:13px">'+X.name+'　<span class="num" style="font-size:11px;color:var(--ink-dim)">'+lx+' / '+X.max+'</span></span><span class="num" style="font-size:12px">'+lawNow(X.id,lx)+'</span></div>';}).join('')+
+    d+=LAW_EQS.filter(e=>lawEqOpen(e.id)).map(e=>'<div class="note" style="margin:8px 0 2px;letter-spacing:.1em">'+e.name+'</div>'+LAWS.filter(X=>X.eq===e.id).map(X=>{const lx=law(X.id);return '<div class="row" style="padding:3px 0"><span style="font-size:13px"><span class="M" style="font-family:var(--log);display:inline-block;min-width:30px">'+lawSym(X,lx)+'</span>'+X.name+'　<span class="num" style="font-size:11px;color:var(--ink-dim)">'+lx+' / '+X.max+'</span></span><span class="num" style="font-size:12px">'+lawNow(X.id,lx)+'</span></div>';}).join('')).join('')+
       '<div class="note" style="margin:6px 0 8px;color:rgba(236,238,242,.4)">法則は、宇宙を畳んだときに書き換える。</div>';}
-  d+=canFold()?'<button class="act" id="uFold" style="margin-top:10px">宇宙を畳む　法則 +'+uGain()+'</button>':'<div class="note" style="margin-top:8px">宇宙の果てに着くと、宇宙を畳める。距離・航跡とその強化は戻り、見つけた色と装置・灯した星・記憶の強化・実績は残る。</div>';
-  pbody.innerHTML='<div class="phead"><span class="lab">UNIVERSE '+roman(S.uni+1)+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">法則 '+fmt(S.U)+((S.shard||0)>0?'　かけら '+S.shard:'')+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
-  pbody.querySelectorAll('[data-law]').forEach(g=>g.onclick=()=>{uniSel=g.dataset.law;uniPast=-1;renderUniverse();});
+  d+=canFold()?'<button class="act" id="uFold" style="margin-top:10px">宇宙を畳む　公理 +'+uGain()+'</button>':'<div class="note" style="margin-top:8px">宇宙の果てに着くと、宇宙を畳める。距離・航跡とその強化は戻り、見つけた色と装置・灯した星・記憶の強化・実績は残る。</div>';
+  pbody.innerHTML='<div class="phead"><span class="lab">UNIVERSE '+roman(S.uni+1)+'</span><span class="num" style="font-size:12px;color:var(--ink-dim)">公理 '+fmt(S.U)+((S.shard||0)>0?'　かけら '+S.shard:'')+'</span></div>'+v+'<div class="gDet">'+d+'</div>';
   pbody.querySelectorAll('[data-up]').forEach(g=>g.onclick=()=>{uniPast=+g.dataset.up;renderUniverse();});
   const bk=document.getElementById('uBack');if(bk)bk.onclick=()=>{uniPast=-1;renderUniverse();};
-  const fb=document.getElementById('uFold');if(fb)fb.onclick=()=>confirmBox('宇宙を畳む','法則を '+uGain()+' 得て、新しい宇宙で故郷から航海をやり直す。次の宇宙の時の流れを、候補から選ぶ。距離・航跡とその強化は戻る。見つけた色と装置・灯した星・記憶の強化・実績は残る。',()=>startFold());
+  const fb=document.getElementById('uFold');if(fb)fb.onclick=()=>confirmBox('宇宙を畳む','公理を '+uGain()+' 得て、新しい宇宙で故郷から航海をやり直す。次の宇宙の時の流れを、候補から選ぶ。距離・航跡とその強化は戻る。見つけた色と装置・灯した星・記憶の強化・実績は残る。',()=>startFold());
 }
-function lawNow(id,l){return id==='lc'?'softcap 9×'+(12+l):id==='td'?'γ^'+(1+0.1*l).toFixed(1):l?'引き直しが自動':'—';}
+function lawNow(id,l){const X=LAWS.find(x=>x.id===id);return l?X.fx(l).map(f=>f[1]).join('・'):'—';}
 function durText(sec){const h=sec/3600;return h>=24?(h/24).toFixed(1)+'日':h>=1?h.toFixed(1)+'時間':Math.max(1,Math.round(sec/60))+'分';}
 /* ④ 次の宇宙の時の流れを選ぶ（2026-11-18）：宇宙を畳んだあと、候補（S.uOffer）から1つ選ぶまで開く。開いている間はゲームの時間を止める。
    畳んだ一点から候補の宇宙へ線が伸び、選んだ宇宙は大きく明るく。速い＝尾を引く星・重い＝細かく巻いて中心が沈む・澄んだ＝少ない星が十字に光る・静か＝ゆっくり漂う淡い星 */
@@ -77,7 +65,7 @@ function renderPick(){const b=document.getElementById('pickBody'),K=pickKinds(),
     '<button class="pGo" id="pickGo">この宇宙を始める</button>';
   b.querySelectorAll('[data-pk]').forEach(x=>x.onclick=()=>{pickSel=+x.dataset.pk;SND.play('tab');renderPick();});
   const re=document.getElementById('pickRe');if(re)re.onclick=()=>{if(uReroll()){SND.play('light');pickSel=0;save();renderPick();}};
-  document.getElementById('pickGo').onclick=()=>{if(chooseKind(k.id)){SND.play('light');fla=Math.max(fla,0.14);closePick();applyLoadedVisuals();if(LAWS.some(L=>{const n=lawNext(L.id);return n&&S.U>=n.cost;}))S.flags.lawPend=1;save();pbody.dataset.k='';renderPanel(true);if(S.flags.lawPend)openLaws();}};
+  document.getElementById('pickGo').onclick=()=>{if(chooseKind(k.id)){SND.play('light');fla=Math.max(fla,0.14);closePick();applyLoadedVisuals();S.flags.lawPend=1;save();pbody.dataset.k='';renderPanel(true);if(S.flags.lawPend)openLaws();}};
   const cv=document.getElementById('pickCv');cv.onclick=e=>{const r=cv.getBoundingClientRect(),x=e.clientX-r.left,i=Math.max(0,Math.min(K.length-1,Math.floor(x/(r.width/K.length))));if(e.clientY-r.top>r.height*0.3&&e.clientY-r.top<r.height*0.62&&i!==pickSel){pickSel=i;SND.play('tab');renderPick();}};
   pickPaint(0);}
 function pickRnd(s){return()=>{s=(s*16807)%2147483647;return s/2147483647;};}
@@ -102,38 +90,44 @@ function pickPaint(t){const cv=document.getElementById('pickCv');if(!cv)return;c
   K.forEach((k,i)=>{const on=i===pickSel;pickGal(g,W*(i+0.5)/n,gy+(on?14*sc:0),(on?R0*1.25:R0),k,on,t+i*1.3);});}
 addEventListener('resize',()=>{if(pickOpen)renderPick();});
 
-/* ④ 法則の書き換え（2026-11-24、試作 A）：宇宙を畳んで次の時の流れを選んだあと、暗闇のまま開く。MAP タブは見るだけ。
-   選んだ宇宙の銀河から3本の法則の筋が扇形に伸び、段の数だけ光の粒が灯る。筋を押して選び「書き換える」、「船を出す」で新しい空が明ける */
-let lawOpen=false,lawSel='lc',lawFX=null;
-function openLaws(){lawOpen=true;const ov=document.getElementById('lawOv');ov.classList.add('on','lIntro');renderLaws();setTimeout(()=>ov.classList.remove('lIntro'),2600);}
+/* ④ 法則の書き換え（2026-11-24、式の試作 B）：宇宙を畳んで次の時の流れを選んだあと、暗闇のまま開く（MAP タブは見るだけ）。
+   上に開いている式の一覧、真ん中に選んだ式を光の文字で小さく、その下に書き換えられる項が大きな光の円として浮かぶ（項の色、段の数だけ周りに粒、式の項と細い線でつながる）。
+   円を押して選び「書き換える」（公理を使う）・「戻す」（公理を返す、ここでだけ）。書き換えると項の文字が光の粒にほどけて組み直される。「船を出す」で閉じる */
+let lawOpen=false,lawEq='sr',lawSel='lc',lawFX=null;
+function openLaws(){lawOpen=true;if(!lawEqOpen(lawEq))lawEq='sr';const ov=document.getElementById('lawOv');ov.classList.add('on','lIntro');renderLaws();setTimeout(()=>ov.classList.remove('lIntro'),2600);}
 function closeLaws(){lawOpen=false;delete S.flags.lawPend;document.getElementById('lawOv').classList.remove('on');save();pbody.dataset.k='';renderPanel(true);paintSpeed();}
-function renderLaws(){const ov=document.getElementById('lawOv'),b=document.getElementById('lawBody'),W=ov.clientWidth||innerWidth,H=ov.clientHeight||vpH();
-  const cx=W/2,cy=Math.round(H*0.53),r0=40,len=Math.max(110,Math.min(165,H*0.2)),ang=[-2.12,-1.5708,-1.02],f=n=>n.toFixed(1),h=S.uHist[S.uHist.length-1];
-  let v='<svg class="lSky" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs><radialGradient id="ugc"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#fffaf0" stop-opacity="0"/></radialGradient>'+
-    UNI_TINT.map((t,i)=>'<radialGradient id="ugl'+i+'"><stop offset="0" stop-color="'+rgb(t.a,0.45)+'"/><stop offset="1" stop-color="'+rgb(t.a,0)+'"/></radialGradient>').join('')+'</defs>';
-  {let sd=3;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};for(let i=0;i<Math.round(W*H/1400);i++){const tw=r()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(r()*5).toFixed(1)+'s"':'')+' cx="'+f(r()*W)+'" cy="'+f(r()*H)+'" r="'+(0.3+r()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+(0.12+r()*0.45).toFixed(2)+'"/>';}}
-  // 畳んだ宇宙（下に小さく沈む）と、いまの宇宙
-  if(h)v+='<path d="M'+cx+' '+(cy+120)+' C '+(cx-6)+' '+(cy+80)+', '+(cx+6)+' '+(cy+50)+', '+cx+' '+(cy+18)+'" stroke="rgba(236,238,242,.16)" stroke-width=".6" fill="none"/><g transform="translate('+cx+' '+(cy+128)+')" opacity=".6">'+galaxySvg(S.uni-1,9,0.7,h.tint||0)+'</g><text x="'+(cx+20)+'" y="'+(cy+132)+'" font-size="9.5" fill="rgba(236,238,242,.38)">宇宙 '+roman(S.uni)+'</text>';
-  const K=S.uKind&&UNI_KIND.find(x=>x.id===S.uKind),tc=UNI_TINT[S.uTint%UNI_TINT.length].a;
-  v+='<g class="lGal" transform="translate('+cx+' '+cy+')">'+galaxySvg(S.uni,28,1,S.uTint)+'</g><text x="'+(cx+40)+'" y="'+(cy+28)+'" font-size="11" fill="rgba(236,238,242,.8)">宇宙 '+roman(S.uni+1)+'</text>'+(K?'<text x="'+(cx+40)+'" y="'+(cy+42)+'" font-size="9.5" fill="'+rgb(tc,0.7)+'">'+K.name+'</text>':'');
-  LAWS.forEach((L,i)=>{const a=ang[i],l=law(L.id),m=L.max,step=len/m,on=lawSel===L.id,c=L.col,P=k=>[cx+Math.cos(a)*(r0+k*step),cy+Math.sin(a)*(r0+k*step)];
-    const [sx,sy]=P(0),[ex,ey]=P(m),cs=Math.cos(a),anc=cs<-0.3?'end':cs>0.3?'start':'middle',tx=cx+Math.cos(a)*(r0+len+18),ty=cy+Math.sin(a)*(r0+len+18),n=lawNext(L.id);
-    v+='<g class="lBeam lb'+(i+1)+'" data-lw="'+L.id+'"><line x1="'+f(sx)+'" y1="'+f(sy)+'" x2="'+f(ex)+'" y2="'+f(ey)+'" stroke="transparent" stroke-width="24"/>'+
-      '<line class="lLine" x1="'+f(sx)+'" y1="'+f(sy)+'" x2="'+f(ex)+'" y2="'+f(ey)+'" stroke="'+rgb(c,on?0.32:0.15)+'" stroke-width=".7" stroke-dasharray="1.4 4"/>';
-    if(l>0){const [lx,ly]=P(l);v+='<line x1="'+f(sx)+'" y1="'+f(sy)+'" x2="'+f(lx)+'" y2="'+f(ly)+'" stroke="'+rgb(c,on?0.12:0.05)+'" stroke-width="6" stroke-linecap="round"/><line class="lLine" x1="'+f(sx)+'" y1="'+f(sy)+'" x2="'+f(lx)+'" y2="'+f(ly)+'" stroke="'+rgb(c,on?0.85:0.5)+'" stroke-width="'+(on?1.3:0.9)+'"/>';
-      for(let k=1;k<=l;k++){const [px,py]=P(k),last=k===l;if(last)v+='<circle cx="'+f(px)+'" cy="'+f(py)+'" r="'+(on?11:7)+'" fill="'+rgb(c,on?0.22:0.12)+'"/>';v+='<circle class="lDot" cx="'+f(px)+'" cy="'+f(py)+'" r="'+(last?2.2:1.3)+'" fill="'+rgb(c,on?1:0.65)+'"/>';}}
-    if(n&&S.U>=n.cost){const [nx,ny]=P(l+1);v+='<circle class="gTip" cx="'+f(nx)+'" cy="'+f(ny)+'" r="2" fill="'+rgb(c,0.9)+'"/>';}
-    if(on){const [qx,qy]=P(l);v+='<circle cx="'+f(qx)+'" cy="'+f(qy)+'" r="8" fill="none" stroke="'+rgb(c,0.55)+'" stroke-width=".7"/>';}
-    v+='<text class="lDot" x="'+f(tx)+'" y="'+f(ty+3)+'" text-anchor="'+anc+'" font-size="11" fill="rgba(236,238,242,'+(on?0.92:0.5)+')">'+L.name+'</text><text class="lDot" x="'+f(tx)+'" y="'+f(ty+17)+'" text-anchor="'+anc+'" font-size="9.5" class="num" fill="rgba(236,238,242,'+(on?0.6:0.3)+')">'+l+' / '+m+'</text></g>';});
-  if(lawFX){const L=LAWS.find(x=>x.id===lawFX),i=LAWS.indexOf(L),a=ang[i],d=r0+law(L.id)*(len/L.max),X=cx+Math.cos(a)*d,Y=cy+Math.sin(a)*d;
-    v+='<circle r="2.4" fill="#fff"><animate attributeName="cx" from="'+cx+'" to="'+f(X)+'" dur=".7s" fill="freeze"/><animate attributeName="cy" from="'+cy+'" to="'+f(Y)+'" dur=".7s" fill="freeze"/><animate attributeName="opacity" values="1;1;0" dur="1s" fill="freeze"/></circle>';
-    for(let k=0;k<14;k++){const q=Math.random()*6.283,dd=14+Math.random()*22;v+='<circle cx="'+f(X)+'" cy="'+f(Y)+'" r="1" fill="'+rgb(L.col,1)+'" opacity="0"><animate attributeName="cx" to="'+f(X+Math.cos(q)*dd)+'" begin=".65s" dur=".9s" fill="freeze"/><animate attributeName="cy" to="'+f(Y+Math.sin(q)*dd)+'" begin=".65s" dur=".9s" fill="freeze"/><animate attributeName="opacity" values="0;1;0" begin=".65s" dur=".9s" fill="freeze"/></circle>';}lawFX=null;}
+// 式を描いて、項の場所（円から線を引く先）を返す
+function lawEqSvg(eq,cx,y,sel){const M='font-family="Shippori Mincho B1,serif" fill="rgba(236,238,242,.85)"',A={},t=(id,x,yy,sz)=>{const L=LAWS.find(z=>z.id===id),on=sel===id;A[id]=[x,yy-sz*0.35];
+    return '<text x="'+x+'" y="'+yy+'" font-family="Shippori Mincho B1,serif" font-size="'+sz+'" text-anchor="middle" fill="'+(on?'#fff1dc':'rgba(236,238,242,.9)')+'"'+(lawFX===id?' class="lNew"':'')+'>'+lawSym(L,law(id))+'</text><line x1="'+(x-sz*0.4)+'" y1="'+(yy+sz*0.22)+'" x2="'+(x+sz*0.4)+'" y2="'+(yy+sz*0.22)+'" stroke="'+rgb(L.col,on?0.9:0.4)+'" stroke-width=".8" stroke-dasharray="1.5 3"/>';};
+  let v='';
+  if(eq==='sr')v='<text x="'+(cx-74)+'" y="'+y+'" '+M+' font-size="22" text-anchor="middle">γ</text><text x="'+(cx-54)+'" y="'+(y-1)+'" '+M+' font-size="17" text-anchor="middle">=</text><text x="'+(cx+12)+'" y="'+(y-28)+'" '+M+' font-size="17" text-anchor="middle">1</text><line x1="'+(cx-37)+'" y1="'+(y-15)+'" x2="'+(cx+72)+'" y2="'+(y-15)+'" stroke="rgba(236,238,242,.6)" stroke-width=".8"/><text x="'+(cx-27)+'" y="'+(y+18)+'" '+M+' font-size="17" text-anchor="middle">(1 −</text><text x="'+(cx+9)+'" y="'+(y+9)+'" '+M+' font-size="14" text-anchor="middle">v²</text><line x1="'+(cx-1)+'" y1="'+(y+14)+'" x2="'+(cx+20)+'" y2="'+(y+14)+'" stroke="rgba(236,238,242,.5)" stroke-width=".7"/>'+t('lc',cx+7,y+32,15)+'<text x="'+(cx+15)+'" y="'+(y+26)+'" '+M+' font-size="9">2</text><text x="'+(cx+32)+'" y="'+(y+18)+'" '+M+' font-size="17" text-anchor="middle">)</text>'+t('td',cx+54,y+2,12);
+  else if(eq==='ex')v='<text x="'+(cx-86)+'" y="'+y+'" '+M+' font-size="21" text-anchor="middle">H²</text><text x="'+(cx-64)+'" y="'+(y-1)+'" '+M+' font-size="17" text-anchor="middle">=</text><text x="'+(cx-36)+'" y="'+(y-10)+'" '+M+' font-size="13" text-anchor="middle">8πG</text><line x1="'+(cx-50)+'" y1="'+(y-5)+'" x2="'+(cx-22)+'" y2="'+(y-5)+'" stroke="rgba(236,238,242,.5)" stroke-width=".7"/><text x="'+(cx-36)+'" y="'+(y+10)+'" '+M+' font-size="13" text-anchor="middle">3</text>'+t('rho',cx-6,y+2,21)+'<text x="'+(cx+18)+'" y="'+(y-1)+'" '+M+' font-size="17" text-anchor="middle">+</text>'+t('L',cx+44,y-8,18)+'<line x1="'+(cx+32)+'" y1="'+(y-3)+'" x2="'+(cx+56)+'" y2="'+(y-3)+'" stroke="rgba(236,238,242,.5)" stroke-width=".7"/><text x="'+(cx+44)+'" y="'+(y+13)+'" '+M+' font-size="13" text-anchor="middle">3</text>';
+  else if(eq==='th')v=t('S',cx-48,y+2,22)+'<text x="'+(cx-14)+'" y="'+(y-1)+'" '+M+' font-size="18" text-anchor="middle">≥</text><text x="'+(cx+26)+'" y="'+(y-10)+'" '+M+' font-size="15" text-anchor="middle">Q</text><line x1="'+(cx+12)+'" y1="'+(y-4)+'" x2="'+(cx+40)+'" y2="'+(y-4)+'" stroke="rgba(236,238,242,.5)" stroke-width=".7"/>'+t('T',cx+26,y+14,15);
+  else v=t('dx',cx-62,y+2,20)+'<text x="'+(cx-38)+'" y="'+(y-1)+'" '+M+' font-size="16" text-anchor="middle">·</text><text x="'+(cx-16)+'" y="'+(y+2)+'" '+M+' font-size="20" text-anchor="middle">Δp</text><text x="'+(cx+12)+'" y="'+(y-1)+'" '+M+' font-size="18" text-anchor="middle">≥</text>'+t('hb',cx+42,y-8,17)+'<line x1="'+(cx+30)+'" y1="'+(y-2)+'" x2="'+(cx+54)+'" y2="'+(y-2)+'" stroke="rgba(236,238,242,.5)" stroke-width=".7"/><text x="'+(cx+42)+'" y="'+(y+14)+'" '+M+' font-size="13" text-anchor="middle">2</text>';
+  return {v,A};}
+function renderLaws(){const ov=document.getElementById('lawOv'),b=document.getElementById('lawBody'),W=ov.clientWidth||innerWidth,H=ov.clientHeight||vpH(),f=n=>n.toFixed(1),h=S.uHist[S.uHist.length-1];
+  if(!lawEqOpen(lawEq))lawEq='sr';const terms=LAWS.filter(x=>x.eq===lawEq);if(!terms.some(x=>x.id===lawSel))lawSel=terms[0].id;
+  const topY=Math.round(Math.max(250,H*0.33)),ny=Math.round((topY+60+H-260)/2),E=lawEqSvg(lawEq,W/2,topY,lawSel),R=Math.max(34,Math.min(46,W*0.11));
+  let v='<svg class="lSky" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><defs><radialGradient id="lhl"><stop offset="0" stop-color="rgba(255,236,210,.2)"/><stop offset="1" stop-color="rgba(255,236,210,0)"/></radialGradient></defs>';
+  {let sd=3;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};for(let i=0;i<Math.round(W*H/1400);i++){const tw=r()<0.3;v+='<circle'+(tw?' class="gTw" style="animation-delay:-'+(r()*5).toFixed(1)+'s"':'')+' cx="'+f(r()*W)+'" cy="'+f(r()*H)+'" r="'+(0.3+r()*0.7).toFixed(2)+'" fill="#eceef2" opacity="'+(0.1+r()*0.4).toFixed(2)+'"/>';}}
+  v+='<g class="lEq">'+E.v+'</g>';
+  terms.forEach((L,i)=>{const x=W/2+(i-(terms.length-1)/2)*Math.min(160,W*0.42),y=ny,l=law(L.id),on=lawSel===L.id,c=L.col,[ax,ay]=E.A[L.id]||[W/2,topY],n=lawNext(L.id);
+    v+='<g class="lNode ln'+(i+1)+'" data-lw="'+L.id+'" style="cursor:pointer"><line x1="'+f(ax)+'" y1="'+f(ay+10)+'" x2="'+f(x)+'" y2="'+f(y-R-6)+'" stroke="'+rgb(c,on?0.45:0.18)+'" stroke-width=".7"'+(on?'':' stroke-dasharray="2 4"')+'/>'+
+      '<circle cx="'+f(x)+'" cy="'+y+'" r="'+(R+14)+'" fill="transparent"/><circle cx="'+f(x)+'" cy="'+y+'" r="'+R+'" fill="'+rgb(c,on?0.08:0.03)+'" stroke="'+rgb(c,on?0.6:0.25)+'" stroke-width=".8"/>';
+    if(on)v+='<circle cx="'+f(x)+'" cy="'+y+'" r="'+(R*1.6)+'" fill="url(#lhl)"/>';
+    for(let k=0;k<L.max;k++){const a=-Math.PI/2+k*2*Math.PI/L.max,lit=k<l;v+='<circle cx="'+f(x+Math.cos(a)*(R+9))+'" cy="'+f(y+Math.sin(a)*(R+9))+'" r="'+(lit?1.8:1)+'" fill="'+rgb(c,lit?0.95:0.22)+'"'+(!lit&&k===l&&n&&S.U>=n.cost?' class="gTip"':'')+'/>';}
+    v+='<text x="'+f(x)+'" y="'+(y+R*0.24)+'" font-family="Shippori Mincho B1,serif" font-size="'+Math.round(R*0.72)+'" text-anchor="middle" fill="'+(on?'#fff1dc':'rgba(236,238,242,.8)')+'"'+(lawFX===L.id?' class="lNew"':'')+'>'+lawSym(L,l)+'</text>'+
+      '<text x="'+f(x)+'" y="'+(y+R+30)+'" font-size="11" text-anchor="middle" fill="rgba(236,238,242,'+(on?0.88:0.45)+')">'+L.name+'　'+l+'</text></g>';
+    if(lawFX===L.id){for(let k=0;k<22;k++){const q=Math.random()*6.283,dd=R*(0.5+Math.random());v+='<circle cx="'+f(x)+'" cy="'+f(y-R*0.1)+'" r="'+(0.7+Math.random())+'" fill="'+rgb(c,1)+'" opacity="0"><animate attributeName="cx" by="'+f(Math.cos(q)*dd)+'" dur="1s" fill="freeze"/><animate attributeName="cy" by="'+f(Math.sin(q)*dd)+'" dur="1s" fill="freeze"/><animate attributeName="opacity" values="0;1;0" dur="1s" fill="freeze"/></circle>';}}});
   v+='</svg>';
-  const L=LAWS.find(x=>x.id===lawSel),n=lawNext(L.id);
-  b.innerHTML=v+'<div class="lTop"><div class="gLab">LAWS</div><div class="lCnt">法則<b>'+fmt(S.U)+'</b></div>'+(h?'<div class="lRes">宇宙 '+roman(S.uni)+' を畳んだ　・　<i>法則 +'+h.gain+'</i></div>':'')+'</div>'+
-    '<div class="lBot"><div class="lNm"><span>'+L.name+'</span><i>'+law(L.id)+' / '+L.max+'</i></div><div class="lWhat">'+(n?n.text:'書き換えきった。')+'</div>'+
-    (n?'<button class="lBuy" id="lawBuy"'+(S.U<n.cost?' disabled':'')+'>書き換える　法則 '+n.cost+'</button>':'')+'<button class="lGo" id="lawGo">船を出す</button></div>';
-  b.querySelectorAll('[data-lw]').forEach(g=>g.onclick=()=>{lawSel=g.dataset.lw;SND.play('tab');document.getElementById('lawOv').classList.remove('lIntro');renderLaws();});
-  const bb=document.getElementById('lawBuy');if(bb)bb.onclick=()=>{if(buyLaw(lawSel)){SND.play('light');lawFX=lawSel;document.getElementById('lawOv').classList.remove('lIntro');renderLaws();}};
+  const L=LAWS.find(x=>x.id===lawSel),l=law(L.id),n=lawNext(L.id),now=L.fx(l),nx=n?L.fx(l+1):null;lawFX=null;
+  b.innerHTML=v+'<div class="lTop"><div class="gLab">LAWS</div><div class="lCnt">公理<b>'+fmt(S.U)+'</b></div>'+(h?'<div class="lRes">宇宙 '+roman(S.uni)+' を畳んだ　・　<i>公理 +'+h.gain+'</i></div>':'')+'</div>'+
+    '<div class="lTabs">'+LAW_EQS.map(e=>{const o=lawEqOpen(e.id);return '<button data-le="'+e.id+'" class="'+(e.id===lawEq?'on':'')+'"'+(o?'':' disabled')+'>'+e.name+(o?'':'<small>宇宙 '+roman(e.open+1)+' で開く</small>')+'</button>';}).join('')+'</div>'+
+    '<div class="lBot"><div class="lNm"><span>'+L.name+'</span><i>'+l+' / '+L.max+'</i></div><div class="lFx">'+now.map((q,i)=>'<div class="'+(q[2]>0?'up':'dn')+'"><span class="k">'+(q[2]>0?'＋':'−')+' '+q[0]+'</span><span class="v">'+(l?q[1]:'—')+(nx?'<span>→</span><b>'+nx[i][1]+'</b>':'')+'</span></div>').join('')+'</div>'+
+    '<div class="lStep"><button id="lawDn"'+(l?'':' disabled')+'>戻す</button><span>'+(n?'公理 '+n.cost:'書き換えきった')+'</span><button id="lawBuy"'+(n&&S.U>=n.cost?'':' disabled')+'>書き換える</button></div><button class="lGo" id="lawGo">船を出す</button></div>';
+  b.querySelectorAll('[data-lw]').forEach(g=>g.addEventListener('click',()=>{lawSel=g.dataset.lw;SND.play('tab');ov.classList.remove('lIntro');renderLaws();}));
+  b.querySelectorAll('[data-le]').forEach(x=>x.onclick=()=>{lawEq=x.dataset.le;lawSel=LAWS.find(z=>z.eq===lawEq).id;SND.play('tab');ov.classList.remove('lIntro');renderLaws();});
+  const bb=document.getElementById('lawBuy');bb.onclick=()=>{if(buyLaw(lawSel)){SND.play('light');lawFX=lawSel;ov.classList.remove('lIntro');renderLaws();}};
+  document.getElementById('lawDn').onclick=()=>{if(unbuyLaw(lawSel)){SND.play('tab');lawFX=lawSel;ov.classList.remove('lIntro');renderLaws();}};
   document.getElementById('lawGo').onclick=()=>{SND.play('resail');closeLaws();};}
 addEventListener('resize',()=>{if(lawOpen)renderLaws();});

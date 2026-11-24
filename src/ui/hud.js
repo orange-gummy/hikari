@@ -79,7 +79,7 @@ function goal(){const s=S.stage,nx=s+1;
   if(!S.lightDone&&canLight())return['LIGHTで、光になる','light',false];
   if(S.flags.bat&&!S.deposited&&S.chal!=='c7')return['窓を横切る流れ星をタップで捕まえる',null,false];
   if(S.flags.bat&&!S.released&&canShower())return['METEORで、流星群を呼ぶ','battery',false];
-  if(canFold())return['UNIVERSEで宇宙を畳むと 法則 +'+uGain(),'uni',false];
+  if(canFold())return['UNIVERSEで宇宙を畳むと 公理 +'+uGain(),'uni',false];
   if(S.voy&&(S.stage>=maxStage()||redrawReady())){const g=tGain();return[redrawReady()?'GALAXYで航路を引き直すと 航跡 +'+fmt(g):(nextDest()?nextDest().name+'まで あと'+lyText(Math.max(0,nextDest().ly-S.vdist))+'光年':'宇宙の果ての先へ'),redrawReady()?'voy':null,false];}
   if(S.taps<5&&S.dev[0]===0)return['窓をタップして、エネルギーを集める',null,true];
   if(S.dev[0]===0)return['DRIVEで太陽帆を買う','drive',false];
