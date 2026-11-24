@@ -139,8 +139,11 @@ function paintSpeed(){const s=S.stage,g=fmtG(timeGamma(s)),h=document.getElement
 let subT=[];
 function clearSub(){subT.forEach(clearTimeout);subT=[];document.getElementById('sub').style.opacity='0';document.getElementById('subT').innerHTML='';}   // タイトルを閉じるとき、前の字幕（「着いた。」など）を残さない
 function subtitle(t){subT.forEach(clearTimeout);subT=[];const box=document.getElementById('sub'),st=document.getElementById('subT');st.innerHTML='';const sp=[...t].map(ch=>{const s=document.createElement('span');s.textContent=ch;s.style.opacity='0';st.appendChild(s);return s;});box.style.opacity='1';sp.forEach((s,k)=>subT.push(setTimeout(()=>{s.style.opacity='1';},120+k*60)));subT.push(setTimeout(()=>{box.style.opacity='0';},120+sp.length*60+3200));}
-function toast(html){const t=document.createElement('div');t.className='toast';t.innerHTML=html;document.getElementById('toasts').appendChild(t);requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='translateY(0)';});setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),600);},3000);}
-function checkAch(){for(const a of achCheck())toast('実績　<b>'+a[1]+'</b>　生産 ×'+achMult().toFixed(2));}
+// 知らせは同時に2つまで（2026-11-24）：宙域や実績が続けて来るとスマホで窓を覆っていたので、3つ目が来たらいちばん古いものをすぐ消す。同じ文は重ねない
+function toast(html){const box=document.getElementById('toasts'),live=[...box.children].filter(x=>!x.dataset.out);if(live.some(x=>x.innerHTML===html))return;
+  live.slice(0,Math.max(0,live.length-1)).forEach(x=>{x.dataset.out=1;x.style.transition='opacity .25s';x.style.opacity='0';setTimeout(()=>x.remove(),260);});
+  const t=document.createElement('div');t.className='toast';t.innerHTML=html;box.appendChild(t);requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='translateY(0)';});setTimeout(()=>{t.dataset.out=1;t.style.opacity='0';setTimeout(()=>t.remove(),600);},3000);}
+function checkAch(){const g=achCheck();if(g.length>2)toast('実績　<b>'+g[0][1]+'</b> ほか '+(g.length-1)+' 個　生産 ×'+achMult().toFixed(2));else for(const a of g)toast('実績　<b>'+a[1]+'</b>　生産 ×'+achMult().toFixed(2));}   // まとめて取ったときは1つにまとめる
 function hudPop(text){const r=document.getElementById('yr').getBoundingClientRect();POPS.push({x:r.right-30,y:r.bottom+38,t:0,s:text});}
 /* タップ */
 let lastTapAt=performance.now();
