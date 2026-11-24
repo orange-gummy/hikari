@@ -82,7 +82,8 @@ function memMult(){return 1+MW_K/100*glowFx('mw')*Math.max(0,S.L||0);}   // 記�
 function shipK(){return SHIP_K*(has('p3')?1.5:1)*(1+0.25*glowFx('sk'));}
 function anchorCut(){return 0;}
 // 故郷の時間の速まり：9が（12＋光の上限）個までは γ のまま、その先は γ の TIME_K 乗でゆるやかに
-function timeGamma(s){const c=MAX_STAGE+law('lc');if(s<=c)return stageGamma(s);const g=stageGamma(c);return g*Math.pow(stageGamma(s)/g,TIME_K);}
+function timeGamma(s){if(S.beyond&&S.beyond.sr)return stageGamma(s);const c=MAX_STAGE+law('lc');   // 相対論を超えたら softcap はない
+if(s<=c)return stageGamma(s);const g=stageGamma(c);return g*Math.pow(stageGamma(s)/g,TIME_K);}
 function yearsPerSec(){return timeGamma(S.stage)*shipK()*(1-anchorCut())/SECONDS_PER_YEAR*(S.chal==='cG'?chalP():1);}
 function nextMs(n){for(const m of MILESTONES)if(n<m)return m;return Math.ceil((n+1)/100)*100;}
 function autoBuy(){for(let i=DEVICES.length-1;i>=0;i--){if(!(has('a'+i)||(S.voy&&i>ANCHOR))||S.auto[i]===0)continue;if(!devOpen(i)||chalBlocksDevice(i))continue;let g=0;while(g++<60){const c=devCost(i,1);if(c>S.E)break;S.E-=c;const before=S.dev[i];S.dev[i]++;onBought(i);S.autoBought++;story('auto',LINES.auto);if(MILESTONES.some(x=>before<x&&S.dev[i]>=x))onMilestone();}}}
@@ -194,7 +195,7 @@ function sailCost(){return SAIL_COST*Math.pow(SAIL_G,S.sail||0);}
 function raiseSail(){if(S.ph<sailCost())return false;S.ph-=sailCost();S.sail=(S.sail||0)+1;FXQ.sail=S.sail;return true;}
 function phReset(keepSail){S.ph=0;S.phDev=[1,0,0,0];S.phBuy=[0,0,0,0];if(!keepSail)S.sail=0;}
 function phTick(dt){if(!S.voy||S.chal)return;const m=phMult();for(let k=PH_DEV.length-1;k>=1;k--)if(S.phDev[k]>0)S.phDev[k-1]+=S.phDev[k]*PH_DEV[k].rate*m*dt;S.ph+=phRate()*dt;}
-function routeOpts(){const ids=ROUTE_TYPES.slice().sort(()=>Math.random()-0.5).slice(0,Math.min(ROUTE_TYPES.length,2+(Math.random()<0.5?1:0)+lv('hb')));if(Math.random()<ROUTE_UNKNOWN+0.04*lv('hb'))ids[ids.length-1]='unknown';return ids;}
+function routeOpts(){const ids=ROUTE_TYPES.slice().sort(()=>Math.random()-0.5).slice(0,S.beyond&&S.beyond.qu&&S.voy?ROUTE_TYPES.length:Math.min(ROUTE_TYPES.length,2+(Math.random()<0.5?1:0)+lv('hb')));if(Math.random()<ROUTE_UNKNOWN+0.04*lv('hb'))ids[ids.length-1]='unknown';return ids;}
 function routeInit(){S.route={n:voyDoublings(S.vdist||0),cur:null,opts:routeOpts(),pick:null,path:[],wreck:0};}
 function routeCur(){return S.voy&&S.route?S.route.cur:null;}
 function routeAuto(){const R=S.route;return R.pick||(R.opts.includes(R.cur)?R.cur:R.opts[0]);}
@@ -209,16 +210,16 @@ function redrawReady(){return S.voy&&tGain()>=Math.max(3,Math.ceil(S.tTotal*REDR
 function forkText(id){return id==='cluster'?'この宙域の記憶 ×2':id==='wreck'?'引き直しの航跡 +'+Math.round(ROUTE_WRECK*100)+'%':id==='neb'?'この宙域を ×'+ROUTE_NEB+' の速さで':id==='calm'?'追い風 +'+Math.round(ROUTE_CALM/60)+'分':id==='rough'?'速さ ×'+ROUTE_ROUGH+'・生産 ×'+ROUTE_ROUGH_P:'記憶のかけら +1（宇宙を選ぶときに使う）';}
 function forkTick(dt){if(!S.voy||S.chal)return;if(S.fork){S.fork.life-=dt;if(S.fork.life<=0)S.fork=null;}}   // 窓の下の分岐図は、宙域の境目に来たときだけ出る
 function chooseFork(id){if(!S.voy||!S.route||!S.route.opts.includes(id))return false;S.route.pick=id;S.fork=null;S.st.forks=(S.st.forks||0)+1;return true;}   // 次の宙域へ向かう星系を選ぶ（境目に来たときに効く）
-function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))*ukf('trail',1)*Math.pow(0.85,lv('S'))):0;}
+function tGain(){return S.voy?Math.floor(Math.sqrt(S.vdist/1e4)*(1+ROUTE_WRECK*((S.route&&S.route.wreck)||0))*ukf('trail',1)*Math.pow(0.85,S.beyond&&S.beyond.th?0:lv('S'))):0;}
 function psStart(prev){const l=tg('ps');return l?11+Math.floor(Math.max(0,prev-11)*0.2*l):0;}   // 先回り：前の航海の9の数の 20%×段 から
 function redraw(){const g=tGain();if(g<1)return 0;S.lastRun={k:'voy',far:S.vdist,g,at:Date.now(),path:S.route?S.route.path.slice():[],found:S.found};S.st.redraws++;S.T+=g;S.tTotal+=g;const prevSt=S.maxStage;resetRun();S.vdist=0;S.vL=0;routeInit();phReset(true);S.stage=S.maxStage=psStart(prevSt);logLine(VOY_LINES.redraw,-1,true);FXQ.redraw=g;return g;}
 /* ④ 新しい宇宙（法則） */
-function edgeLy(){return DEST[DEST.length-1].ly*Math.pow(2,law('L'));}   // 宇宙項 Λ で宇宙の果てが遠くなる
+function edgeLy(){return DEST[DEST.length-1].ly*Math.pow(2,S.beyond&&S.beyond.ex?0:law('L'));}   // 宇宙項 Λ で宇宙の果てが遠くなる
 function canFold(){return S.voy&&S.found>=DEST.length&&S.ubest>=edgeLy();}   // この宇宙で宇宙の果てに着いたら
-function uGain(){if(!canFold())return 0;return Math.max(1,Math.floor((2+Math.floor(Math.log2(Math.max(1,S.ubest/edgeLy()))))*ukf('law',1)*(1+0.2*law('L')))+ukf('lawAdd',0));}
+function uGain(){if(!canFold())return 0;return Math.max(1,Math.floor((2+Math.floor(Math.log2(Math.max(1,S.ubest/edgeLy()))))*ukf('law',1)*(1+0.2*law('L'))*LAW_GAIN)+ukf('lawAdd',0));}
 function ukind(){return S.voy&&!S.chal&&S.uKind?UNI_KIND.find(x=>x.id===S.uKind):null;}   // いまの宇宙の性格（チャレンジ中は効かない）
 function ukf(key,d){const k=ukind();return k&&k.fx[key]!=null?k.fx[key]:d;}
-function uOfferRoll(){const a=UNI_KIND.map(x=>x.id);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,UNI_OFFER+law('dx'));}
+function uOfferRoll(){const a=UNI_KIND.map(x=>x.id);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,S.beyond&&S.beyond.qu?a.length:UNI_OFFER+law('dx'));}
 // 記憶のかけら（2026-11-19）：宇宙を選ぶときに候補を引き直す。値段は1から引き直すたびに倍（宇宙ごとに1へ戻る）
 function uRerollCost(){return Math.pow(2,(S.uRerolls||0)+law('dx'));}
 function uReroll(){if(!S.uOffer||(S.shard||0)<uRerollCost())return false;S.shard-=uRerollCost();S.uRerolls=(S.uRerolls||0)+1;const k=S.uOffer.slice().sort().join();let n;do{n=uOfferRoll();}while(n.slice().sort().join()===k);S.uOffer=n;return true;}
@@ -229,6 +230,9 @@ function fold(){const g=uGain();if(g<1)return 0;
   S.uTint=0;S.uKind=null;S.uOffer=uOfferRoll();FXQ.fold=g;return g;}   // 次の宇宙の性格は chooseKind() で選ぶまで決まらない（効果なし）
 function lawEqOpen(eq){const e=LAW_EQS.find(x=>x.id===eq);return !!e&&S.uni>=e.open;}
 function lawNext(id){const a=LAWS.find(x=>x.id===id),l=law(id);return !a||l>=a.max||!lawEqOpen(a.eq)?null:{l,cost:a.cost(l),text:a.fx(l+1).map(f=>f[0]+' '+f[1]).join('・')};}
+function canBeyond(eq){const B=BEYOND[eq];return !!B&&!(S.beyond&&S.beyond[eq])&&lawEqOpen(eq)&&LAWS.filter(x=>x.eq===eq).every(x=>law(x.id)>=x.max)&&S.U>=B.cost;}
+function beyondAll(){return LAW_EQS.every(e=>S.beyond&&S.beyond[e.id]);}
+function goBeyond(eq){if(!canBeyond(eq))return false;S.U-=BEYOND[eq].cost;S.beyond[eq]=Date.now();return true;}
 function unbuyLaw(id){const a=LAWS.find(x=>x.id===id),l=law(id);if(!a||l<1)return false;S.law[id]=l-1;S.U+=a.cost(l-1);return true;}   // 畳んだときの小窓でだけ（戻す）
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}
 function autoRedrawReady(){return S.uni>0&&S.voy&&redrawReady();}   // 引き直しの自動は④に着いたら最初から（2026-11-24、法則「引き直しの記憶」はやめた）

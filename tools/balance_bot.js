@@ -83,9 +83,14 @@ function spendL(){
 let litDay=null,voyDay=null;const FOUND=[],REDRAW=[];
 // ③：残光と航跡を使い、航跡が今までの合計以上たまるなら航路を引き直す
 // ④：宇宙の果てに着いてから FOLD_H 時間たったら宇宙を畳み、法則を安い順に（光の上限と時の遅れを先に）使う
-const FOLD_H=+(process.env.FOLD_H||8),ULOG=[];let endAt=null,lcDay=null;
+const FOLD_H=+(process.env.FOLD_H||8),ULOG=[],BYLOG=[],POOL=[];let beyondDay=null;let endAt=null,lcDay=null;
 function uniManage(){lightWatch();if(!canFold()){endAt=null;return;}if(endAt==null)endAt=t;
   if(t-endAt>=FOLD_H*(DAYS?3600:60)){const g=fold();const pk=process.env.KIND&&S.uOffer.includes(process.env.KIND)?process.env.KIND:S.uOffer[0];if(!process.env.NOKIND)chooseKind(pk);ULOG.push('宇宙'+(S.uni+1)+'へ '+(t/86400).toFixed(2)+'日目 +'+g+' '+pk);endAt=null;lastP=t;
+    // 法則を超える（2026-11-24）：畳むたびに書き換えを全部戻し、超えられる式（項を最後まで＋超える値段）が公理で足りるなら安い順に超える
+    for(const L of LAWS)while(law(L.id)>0)unbuyLaw(L.id);
+    for(let pr=true;pr;){pr=false;const cs=LAW_EQS.filter(e=>lawEqOpen(e.id)&&!S.beyond[e.id]).map(e=>[e.id,LAWS.filter(x=>x.eq===e.id).reduce((a,x)=>{let q=0;for(let l=law(x.id);l<x.max;l++)q+=x.cost(l);return a+q;},0)+BEYOND[e.id].cost]).sort((a,b)=>a[1]-b[1]);
+      if(cs.length&&cs[0][1]<=S.U){const eq=cs[0][0];for(const x of LAWS.filter(x=>x.eq===eq))while(law(x.id)<x.max)buyLaw(x.id);goBeyond(eq);BYLOG.push(BEYOND[eq].name+' '+(t/86400).toFixed(2)+'日目（宇宙'+(S.uni+1)+'）');for(const x of LAWS.filter(x=>x.eq===eq))while(law(x.id)>0)unbuyLaw(x.id);pr=true;if(beyondAll()&&!beyondDay)beyondDay=(t/86400).toFixed(2)+'日目';}}
+    POOL.push((t/86400).toFixed(1)+':'+S.U);
     let b=true;while(b){b=false;const c=LAWS.filter(a=>(process.env.LAW_IDS||'lc,td,L').split(',').includes(a.id)).map(a=>[a.id,lawNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.U).sort((x,y)=>x[1].cost-y[1].cost);if(c.length){buyLaw(c[0][0]);b=true;}}
     if(law('lc')>=10&&!lcDay)lcDay=(t/86400).toFixed(2)+'日目';}
   }
@@ -94,7 +99,7 @@ function voyManage(){if(!S.voy)return;spendL();uniManage();lightWatch();
   while(FOUND.length<S.found)FOUND.push(DEST[FOUND.length].name+' '+(t/86400).toFixed(2)+'日目');
   const g=tGain();if(redrawReady()){redraw();trailAutoSpend();REDRAW.push((t/86400).toFixed(2)+'日目 +'+g+(S.sail?' 帆'+S.sail:''));lastP=t;}
   }   // 航跡の強化は引き直すときだけ買う（2026-11-19、ゲームと同じ）
-function summary(){if(process.env.DBG)console.log('DBG maxE',S.maxE.toExponential(2),'E',S.E.toExponential(2),'stage',S.stage,'vbest',S.vbest.toExponential(2),'years',S.years.toExponential(2));if(ULOG.length||S.uni)console.log('宇宙',ULOG.join('、')||'-','／法則',JSON.stringify(S.law),'残り',S.U,'／光の上限10段',lcDay||'まだ','／光になれる日',lightDay||'まだ');if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('チャレンジ',CLOG.join(' / ')||'-');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
+function summary(){if(BYLOG.length||POOL.length)console.log('超えた',BYLOG.join('、')||'まだ','／4つ超えた日',beyondDay||'まだ','／畳んだときの公理',POOL.join(' '));if(process.env.DBG)console.log('DBG maxE',S.maxE.toExponential(2),'E',S.E.toExponential(2),'stage',S.stage,'vbest',S.vbest.toExponential(2),'years',S.years.toExponential(2));if(ULOG.length||S.uni)console.log('宇宙',ULOG.join('、')||'-','／法則',JSON.stringify(S.law),'残り',S.U,'／光の上限10段',lcDay||'まだ','／光になれる日',lightDay||'まだ');if(DAYS)console.log('上位の星が8つ灯った日',litDay||'まだ');console.log('チャレンジ',CLOG.join(' / ')||'-');console.log('実績',S.ach.length+'/'+ACHIEVEMENTS.length,'×'+achMult().toFixed(2),'afterglow',JSON.stringify(S.ag),'lit',S.lit.join(',')||'-','left',S.L);}
 
 // チャレンジ段2・3の試し（2026-11-24）：PROBE=<セーブ> で、そのセーブから各チャレンジの段2（と段3）に挑み、触り続けて越えるまでの時間を出す。
 // PROBE_LV=2,3（既定）、PROBE_H=24（打ち切りの時間）。段3は段2を越えた扱いで挑む
@@ -118,7 +123,7 @@ if(!DAYS){
   let lastEnd=0,played=0;
   const DL=[];
   const UNTIL=argv.includes('--until-light');   // ⑤に届いたらそこで止める（数値を探すとき用）
-  days:for(let d=0;d<WEEK;d++){for(const [h,m] of SCHED[DAYS]){if(UNTIL&&lightDay)break days;
+  days:for(let d=0;d<WEEK;d++){for(const [h,m] of SCHED[DAYS]){if(UNTIL&&lightDay)break days;if(argv.includes('--until-beyond')&&beyondDay)break days;
     const st=d*86400+h*3600;t=st;idle(st-lastEnd);if(done)arrive();
     for(let k=0;k<m*60;){const st=S.voy&&!S.chal&&VSTEP>1&&t%VSTEP===0&&k+VSTEP<=m*60?VSTEP:1;act(st);t+=st;k+=st;played+=st;if(done)arrive();}   // 航海の間は VSTEP 秒ずつ（2026-11-18、試算を速くするため。VSTEP=1 で前と同じ）
     voyManage();lastEnd=t;if(argv.includes('--verbose'))console.log('  '+(t/86400).toFixed(2)+'日 '+(S.restarts+1)+'周目 段階'+S.stage+' 年'+S.years.toFixed(1)+' 距離'+Math.round(S.dist));
