@@ -136,7 +136,7 @@ frameEl.addEventListener('pointerdown',ev=>{if(climax)return;if(S.chal==='c7'){i
 
 /* はじめて出会ったときだけの一行のヒント（2026-11-22）：指す場所に光の点、細い線の先に一行。どこかを押すか9秒で消え、二度と出ない（S.flags['h_'+id]） */
 let HINT=null;
-function firstHint(id,text,pos,side){const k='h_'+id;if(S.flags[k]||HINT||bootOn||document.querySelector('.modal.on,#door.on,#title.on,#glowOv.on,#wakeOv.on,#pickOv.on'))return false;const p=pos();if(!p||!(p.x>0)||!(p.y>0))return false;
+function firstHint(id,text,pos,side){const k='h_'+id;if(S.flags[k]||HINT||bootOn||document.querySelector('.modal.on,#door.on,#title.on,#glowOv.on,#wakeOv.on,#pickOv.on,#lawOv.on,#recOv.on'))return false;const p=pos();if(!p||!(p.x>0)||!(p.y>0))return false;
   S.flags[k]=1;const up=side==='up',L=34,el=document.createElement('div');el.className='hintTip'+(up?' up':'');el.style.left=Math.round(p.x)+'px';el.style.top=Math.round(p.y)+'px';
   el.innerHTML='<i class="hDot"></i><i class="hLine" style="height:'+L+'px"></i><span class="hTx">'+text+'</span>';document.body.appendChild(el);
   const tx=el.querySelector('.hTx');requestAnimationFrame(()=>{const r=tx.getBoundingClientRect();let dx=0;if(r.left<12)dx=12-r.left;else if(r.right>innerWidth-12)dx=innerWidth-12-r.right;if(dx)tx.style.marginLeft=dx+'px';el.classList.add('on');});

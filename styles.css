@@ -510,3 +510,23 @@ html,body,#app,#cv{height:var(--appH,100%)}   /* 高さは JS（scene.js fitVP�
 #recOv #rcGo{position:relative;margin-top:24px;background:none;border:0;padding:12px 16px 12px calc(16px + .3em);font-size:15px;letter-spacing:.3em;color:#f6f7fb;cursor:pointer;animation:gFade 1s 5.4s both}
 #recOv #rcGo:before,#recOv #rcGo:after{content:'';position:absolute;top:50%;width:52px;height:1px}#recOv #rcGo:before{right:100%;background:linear-gradient(90deg,transparent,rgba(255,240,215,.7))}#recOv #rcGo:after{left:100%;background:linear-gradient(270deg,transparent,rgba(255,240,215,.7))}
 @media (prefers-reduced-motion:reduce){#recOv *{animation:none!important}}
+
+/* ④ 法則の書き換え（2026-11-24、universe.js renderLaws()、宇宙を畳んで時の流れを選んだあと） */
+#lawOv{position:fixed;inset:0;z-index:11;background:#04050C;display:none;overflow:hidden}#lawOv.on{display:block}
+#lawOv .lSky{position:absolute;inset:0}
+#lawOv .lBeam{cursor:pointer}
+#lawOv .lTop{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 24px);text-align:center;pointer-events:none}
+#lawOv .lCnt{margin-top:8px;font-size:12px;color:var(--ink-dim)}#lawOv .lCnt b{font-family:var(--num);font-weight:400;font-size:28px;color:#e8ecff;margin-left:8px;vertical-align:-3px}
+#lawOv .lRes{margin-top:6px;font-size:11px;color:rgba(236,238,242,.45)}#lawOv .lRes i{font-style:normal;color:rgba(214,222,255,.85)}
+#lawOv .lBot{position:absolute;left:50%;transform:translateX(-50%);width:min(440px,calc(100% - 52px));bottom:calc(env(safe-area-inset-bottom,0px) + 22px)}
+#lawOv .lNm{display:flex;justify-content:space-between;align-items:baseline}#lawOv .lNm span{font-size:15px}#lawOv .lNm i{font-style:normal;font-family:var(--num);font-size:12px;color:var(--ink-dim)}
+#lawOv .lWhat{font-size:12px;color:var(--ink-dim);margin-top:5px;min-height:18px}
+#lawOv .lBuy{display:block;width:100%;margin-top:14px;background:none;font:inherit;font-size:13px;letter-spacing:.1em;padding:11px 0;color:#e3e8ff;border:0;border-top:1px solid rgba(200,210,255,.4);border-bottom:1px solid rgba(200,210,255,.4);cursor:pointer}
+#lawOv .lBuy:disabled{color:rgba(236,238,242,.3);border-color:rgba(255,255,255,.08);cursor:default}
+#lawOv .lGo{display:block;width:100%;margin-top:14px;background:none;border:0;color:var(--ink);font:inherit;font-size:14px;letter-spacing:.24em;cursor:pointer;padding:6px 0}
+#lawOv .lGo:before,#lawOv .lGo:after{content:'';display:inline-block;width:46px;height:1px;vertical-align:middle;margin:0 14px;background:linear-gradient(90deg,transparent,rgba(236,238,242,.6))}
+#lawOv .lGo:after{background:linear-gradient(270deg,transparent,rgba(236,238,242,.6))}
+#lawOv.lIntro .lLine{stroke-dashoffset:0;animation:lDraw 1.4s cubic-bezier(.3,.7,.3,1) both}#lawOv.lIntro .lb1 .lLine{animation-delay:.5s}#lawOv.lIntro .lb2 .lLine{animation-delay:.7s}#lawOv.lIntro .lb3 .lLine{animation-delay:.9s}
+@keyframes lDraw{from{opacity:0}to{opacity:1}}
+#lawOv.lIntro .lDot{animation:gFade .8s 1.4s both}#lawOv.lIntro .lTop{animation:gFade .9s .3s both}#lawOv.lIntro .lBot{animation:gFade .9s 1.5s both}#lawOv.lIntro .lGal{animation:gFade 1.4s both}
+@media (prefers-reduced-motion:reduce){#lawOv *{animation:none!important}}

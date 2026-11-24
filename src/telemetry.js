@@ -1,6 +1,6 @@
 // 進み具合を作者のスプレッドシートへ送る（2026-11-24。遊ぶ人には作者が了承をとっている。受け口は tools/telemetry_apps_script.gs）
 // 送るのは進み具合とセーブ（書き出しと同じ形。消えたときの控え）。名前や端末の情報は送らない。ID は端末ごとのでたらめな文字列（設定の版の横に出す）
-let TELEMETRY_URL='https://script.google.com/macros/s/AKfycbwNIcDl53RaHRP2AHjDDbAUCXNLAKGU8VVHADOncF0gL5ghetihjmc8qxZMUkJdaqGT7A/exec';   // ウェブアプリとして公開した URL（https://script.google.com/macros/s/…/exec）。空なら送らない
+let TELEMETRY_URL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'':'https://script.google.com/macros/s/AKfycbwNIcDl53RaHRP2AHjDDbAUCXNLAKGU8VVHADOncF0gL5ghetihjmc8qxZMUkJdaqGT7A/exec';   // ウェブアプリとして公開した URL（https://script.google.com/macros/s/…/exec）。空なら送らない
 let TEL_ID='';try{TEL_ID=localStorage.getItem('hikari_tid')||'';if(!TEL_ID){TEL_ID=Math.random().toString(36).slice(2,7)+Date.now().toString(36).slice(-3);localStorage.setItem('hikari_tid',TEL_ID);}}catch(e){TEL_ID='x'+Math.random().toString(36).slice(2,8);}
 let telLast=0,telKey='',telTimer=null;
 function telChapter(){return S.lightDone?5:S.uni>0?4:(S.voy||S.voyStash||S.found>0)?3:(S.restarts>0||S.cleared)?2:1;}
