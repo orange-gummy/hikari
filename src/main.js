@@ -43,7 +43,7 @@ function loop(){const now=performance.now();let dt=Math.min(1,(now-lastT)/1000);
   if(S.stage!==lastStage){lastStage=S.stage;paintSpeed();if(curTab==='drive')renderDrive(false);}
   {const want=musOn&&sndVol>0&&!bootOn&&!climax&&!LIGHTFX&&!document.hidden;if(want&&!SND.mus)SND.musicStart();else if(!want&&SND.mus)SND.musicStop();}   // 音楽：到着と光になる場面では止める
   paintHUD();rollHV();if(curTab==='photon'||curTab==='sail')paintPhoton();acc+=dt;if(acc>0.25){acc=0;paintGoal();paintHG();if(curTab==='drive')renderDrive(false);else if(!panelHold&&curTab==='boost')renderBoost();else if(!panelHold&&curTab==='battery')renderBattery();else if(!panelHold&&curTab==='reset')renderReset();else if(!panelHold&&(curTab==='glow'||curTab==='restart'))renderGlow();else if(!panelHold&&curTab==='stars')renderUnlock();else if(!panelHold&&(curTab==='voy'||curTab==='wake'))renderVoy();}
-  secAcc+=dt;if(secAcc>1){secAcc=0;telTick();checkAch();if(S.voy&&!S.chal&&glowAffordable())glowAutoSpend();   // GALAXY では残光の強化は自動（2026-11-17）
+  secAcc+=dt;if(secAcc>1){secAcc=0;telTick();checkAch();if(S.voy&&!S.chal&&S.autoGlow!==false&&glowAffordable())glowAutoSpend();   // GALAXY では残光の強化は自動（2026-11-17）
 renderPanelTabsOnly();if(curTab==='stats')renderStats();if(skillOpen&&S.W!==lastWShown)renderSkill();}
   saveAcc+=dt;if(saveAcc>10){saveAcc=0;save();}
 }

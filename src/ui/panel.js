@@ -57,13 +57,13 @@ function renderDrive(force){
   if(force||pbody.dataset.k!==key){pbody.dataset.k=key;pbody.innerHTML='';devUI=[];
     const h=document.createElement('div');h.className='phead';h.innerHTML='<span class="lab">DEVICES</span><span class="seg"><button data-m="1">×1</button><button data-m="10">×10</button><button data-m="max">MAX</button></span>';pbody.appendChild(h);
     h.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.m===buyMode);b.addEventListener('click',()=>{buyMode=b.dataset.m;renderPanel(true);});});
-    {const ai=visible.filter(i=>has('a'+i));if(ai.length>=2){const on=ai.filter(i=>S.auto[i]).length,st=on===ai.length?'自動':on===0?'手動':'一部';   // 購入の自動化を一括で（2026-11-23）
+    {const ai=visible.filter(i=>has('a'+i)||(S.voy&&i>ANCHOR));if(ai.length>=2){const on=ai.filter(i=>S.auto[i]).length,st=on===ai.length?'自動':on===0?'手動':'一部';   // 購入の自動化を一括で（2026-11-23）
       const w=document.createElement('div');w.className='ws';w.innerHTML='<div class="row" style="padding:0"><span>購入の自動化</span><button class="auto" id="aBuyAll"'+(on===ai.length?' data-on':'')+'>'+st+'</button></div>';pbody.appendChild(w);
       w.querySelector('#aBuyAll').onclick=()=>{const v=on===ai.length?0:1;ai.forEach(i=>S.auto[i]=v);renderPanel(true);};}}
     if(has('aT')){const w=document.createElement('div');w.className='ws';w.innerHTML='<div class="row" style="padding:0"><span>TIERの自動化</span><button class="auto" id="aTier"'+(S.autoTier?' data-on':'')+'>'+(S.autoTier?'自動':'手動')+'</button></div>';pbody.appendChild(w);w.querySelector('#aTier').onclick=()=>{S.autoTier=!S.autoTier;renderPanel(true);};}
     visible.forEach(i=>{const d=DEVICES[i],w=document.createElement('div');w.className='dv';
       let trait=d.trait;if(d.spawn)trait+='<br>'+d.spawn.why+'：'+DEVICES[d.spawn.to].name+' 毎分+<span class="spn"></span>台';
-      w.innerHTML='<div class="dvRow"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"></svg><div style="flex:1;min-width:0"><div class="dvName"><span class="nw">'+d.name+'</span>'+(i!==ANCHOR?'<span class="tierR'+(TIERFX&&TIERFX.i===i&&Date.now()-TIERFX.t<1500?' tierNew':'')+'" style="color:'+rgb(mix(colRGB(d.col),G,1-A[d.col]),0.95)+'">TIER '+ROMAN[S.tier[i]]+'</span>':'')+'<span class="dvCnt nw"></span><span class="badge rg" style="display:none"></span></div><div class="dvOut"></div></div>'+(has('a'+i)?'<button class="auto" data-a="'+i+'">'+autoLabel(i)+'</button>':'')+'<button class="buy"></button></div><div class="dvTrait">'+trait+'</div><div class="upg"></div>'+(i===ANCHOR?'':'<div class="tk"></div>');pbody.appendChild(w);
+      w.innerHTML='<div class="dvRow"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"></svg><div style="flex:1;min-width:0"><div class="dvName"><span class="nw">'+d.name+'</span>'+(i!==ANCHOR?'<span class="tierR'+(TIERFX&&TIERFX.i===i&&Date.now()-TIERFX.t<1500?' tierNew':'')+'" style="color:'+rgb(mix(colRGB(d.col),G,1-A[d.col]),0.95)+'">TIER '+ROMAN[S.tier[i]]+'</span>':'')+'<span class="dvCnt nw"></span><span class="badge rg" style="display:none"></span></div><div class="dvOut"></div></div>'+((has('a'+i)||(S.voy&&i>ANCHOR))?'<button class="auto" data-a="'+i+'">'+autoLabel(i)+'</button>':'')+'<button class="buy"></button></div><div class="dvTrait">'+trait+'</div><div class="upg"></div>'+(i===ANCHOR?'':'<div class="tk"></div>');pbody.appendChild(w);
       const ab=w.querySelector('.auto');if(ab&&S.auto[i])ab.setAttribute('data-on','');if(ab)ab.onclick=()=>{S.auto[i]=S.auto[i]?0:1;renderPanel(true);};
       const svgE=w.querySelector('svg');
       const em=emblem(svgE,d.emb),ticks=[];const tk=w.querySelector('.tk');if(tk)for(let k=1;k<=100;k++){const t=document.createElement('i');t.big=(k===25||k===50||k===100);t.style.height=(t.big?9:4)+'px';tk.appendChild(t);ticks.push(t);}
@@ -257,9 +257,9 @@ function glowPick(id){if(id===glowSel)return;glowSel=id;const b=document.getElem
 function glowBindBuy(){const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{const L0=S.L;if(buyGlow(glowSel)){SND.play('light');GLOWFX={id:glowSel,t:Date.now()};glowIntroOff();renderGlowOv();
   const v=document.querySelector('#glowBody .gVal');if(v)v.classList.add('gRoll');const lb=document.querySelector('#glowBody .gL b'),L1=S.L,t0=performance.now();if(lb){const st=()=>{const p=Math.min(1,(performance.now()-t0)/700),e=1-Math.pow(1-p,3);lb.textContent=fmt(Math.round(L0+(L1-L0)*e));if(p<1&&glowOpen)requestAnimationFrame(st);};st();}}};}
 addEventListener('resize',()=>{if(glowOpen){glowIntroOff();renderGlowOv();}});
-function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[fmt(S.L),fmt(S.lTotal),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
+function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';const key='g|'+part+'|'+[S.autoGlow,fmt(S.L),fmt(S.lTotal),S.restarts,S.cleared,S.voy,glowSel,JSON.stringify(S.ag),lg].join('|');if(pbody.dataset.k===key)return;let h='';
   if(part==='restart'){
-    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">集めた記憶 '+fmt(S.lTotal)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。記憶は進んだ距離が2倍になるたびに入り（1回 '+fmt(lPer())+'）、自動で灯される。</div>'+(()=>{const w=Math.max(360,Math.min(560,(pbody.clientWidth||400)-40));return glowScene(w,230,166).replace('<svg class="gScene" width="'+w+'" height="230"','<svg class="gScene" style="width:100%;height:auto;display:block"');})()+glowDetail();   // 航海中は家並みをタブにそのまま出す（2026-11-19）
+    if(S.voy)h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">集めた記憶 '+fmt(S.lTotal)+'</span></div><div class="note">航海に出ているので、故郷には戻らない。記憶は進んだ距離が2倍になるたびに入る（1回 '+fmt(lPer())+'）。</div><div class="row"><span class="note" style="margin:0">記憶を自動で灯す（安い順に）</span><button class="auto" id="aGlow"'+(S.autoGlow!==false?' data-on':'')+'>'+(S.autoGlow!==false?'自動':'手動')+'</button></div>'+(()=>{const w=Math.max(360,Math.min(560,(pbody.clientWidth||400)-40));return glowScene(w,230,166).replace('<svg class="gScene" width="'+w+'" height="230"','<svg class="gScene" style="width:100%;height:auto;display:block"');})()+glowDetail();   // 航海中は家並みをタブにそのまま出す（2026-11-19）
     else h+='<div class="phead"><span class="lab">RESTART</span><span class="num" style="font-size:12px;color:var(--ink-dim)">記憶 '+fmt(S.L)+'</span></div>'+
     '<div class="row"><span>得られる記憶</span><span class="big">'+fmt(lg)+'</span></div>'+
     '<div class="note">故郷に着いたあと、もう一度、遠い宙域から船を出せる。歪みとスキル、距離、故郷の年月はなくなり、色もまた失っていく。日誌と実績、記憶は残る。</div>'+
@@ -269,6 +269,7 @@ function renderGlow(){const lg=lGain(),part=curTab==='restart'?'restart':'glow';
   pbody.dataset.k=key;pbody.innerHTML=h;
   pbody.querySelectorAll('[data-gs]').forEach(g=>g.onclick=()=>{glowSel=g.dataset.gs;pbody.dataset.k='';renderGlow();});
   const gb=document.getElementById('gBuy');if(gb)gb.onclick=()=>{if(buyGlow(glowSel)){fla=Math.max(fla,0.1);GLOWFX={id:glowSel,t:Date.now()};pbody.dataset.k='';renderGlow();}};
+  const agl=document.getElementById('aGlow');if(agl)agl.onclick=()=>{S.autoGlow=S.autoGlow===false;pbody.dataset.k='';renderGlow();};
   const rd=document.getElementById('rsDoor');if(rd)rd.onclick=()=>showDoor();
   const rs=document.getElementById('rsGo');if(rs)rs.onclick=()=>confirmBox('再出発','記憶を '+fmt(lg)+' 得て、遠い宙域からもう一度船を出す。歪みとスキル、距離、故郷の年月はなくなる。日誌と実績、記憶は残る。',()=>{startBrake(0);BRK.rs=true;});}
 /* ② チャレンジ（CHALLENGE タブ）：上位の星8つの「残光の星座」。星1つごとにチャレンジが1つ。越えるとその星が灯り、周回の最初から効いて消えない */
@@ -344,9 +345,11 @@ function renderVoy(){let h='';const part='voy';   // WAKE タブは 2026-11-19 �
     '<div class="row" style="padding:2px 0"><span class="note" style="margin:0">次の目的地</span><span class="num">'+(n?n.name+'（'+lyText(n.ly)+' 光年）':'もう、ない')+'</span></div>'+
     '<div class="note" style="margin:6px 0 0">航跡の強化　'+TRAIL.map(a=>a.name+' '+tg(a.id)).join('　·　')+'</div>'+
     '<div class="note">航路を引き直すと、故郷から航海をやり直す。航跡の強化は、引き直すときに買える。距離とエネルギー、装置、歪みとスキルはなくなる。航跡、見つけた色と装置の種類、記憶とその強化は残る。航海では船は止まらず、歪みは走りながらたまり、スキルは自動で覚える。進んだ距離が2倍になるたびに（1万・2万・4万光年…）記憶が入る（1回 '+fmt(lPer())+'）。</div>'+
+    (S.uni>0?'<div class="row"><span class="note" style="margin:0">航跡がたまったら自動で引き直す</span><button class="auto" id="aRedraw"'+(S.autoRedraw!==false?' data-on':'')+'>'+(S.autoRedraw!==false?'自動':'手動')+'</button></div>':'')+
     '<button class="act" id="vrGo"'+(tgn<1?' disabled':'')+'>航路を引き直す</button>';}
   pbody.dataset.k='';pbody.innerHTML=h;
   pbody.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>pickFork(b.dataset.rt));
+  const ard=document.getElementById('aRedraw');if(ard)ard.onclick=()=>{S.autoRedraw=S.autoRedraw===false;renderPanel(true);};
   const vr=document.getElementById('vrGo');if(vr)vr.onclick=()=>confirmBox('航路を引き直す','航跡を '+fmt(tGain())+' 得て、故郷から航海をやり直す。距離と装置、歪みとスキルはなくなる。航跡、見つけた色と装置、記憶は残る。光子は持ち越せない。',()=>startRedraw());
   const fg=document.getElementById('farGo');if(fg)fg.onclick=()=>showDoor();}   // どこから押しても、章の扉を通って航海へ
 function renderLog(){pbody.dataset.k='';const logMode=curTab==='ach'?'ach':'log';let h='<div class="phead"><span class="lab">'+(logMode==='log'?'LOG':'RECORD')+'</span>'+(logMode==='ach'?'<span class="num" style="font-size:12px;color:var(--ink-dim)">実績 '+S.ach.length+' / '+ACHIEVEMENTS.length+'</span>':'')+'</div>';

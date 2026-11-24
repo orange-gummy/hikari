@@ -235,7 +235,7 @@ function beyondAll(){return LAW_EQS.every(e=>S.beyond&&S.beyond[e.id]);}
 function goBeyond(eq){if(!canBeyond(eq))return false;S.U-=BEYOND[eq].cost;S.beyond[eq]=Date.now();return true;}
 function unbuyLaw(id){const a=LAWS.find(x=>x.id===id),l=law(id);if(!a||l<1)return false;S.law[id]=l-1;S.U+=a.cost(l-1);return true;}   // 畳んだときの小窓でだけ（戻す）
 function buyLaw(id){const n=lawNext(id);if(!n||S.U<n.cost)return false;S.U-=n.cost;S.law[id]=n.l+1;return true;}
-function autoRedrawReady(){return S.uni>0&&S.voy&&redrawReady();}   // 引き直しの自動は④に着いたら最初から（2026-11-24、法則「引き直しの記憶」はやめた）
+function autoRedrawReady(){return S.uni>0&&S.autoRedraw!==false&&S.voy&&redrawReady();}   // 引き直しの自動は④に着いたら最初から（2026-11-24、法則「引き直しの記憶」はやめた）
 function trailNext(id){const a=TRAIL.find(x=>x.id===id),l=tg(id);return a.max&&l>=a.max?null:{l,cost:a.cost(l),text:a.text(l+1)};}
 function trailAutoSpend(){let b=true;while(b){b=false;const c=TRAIL.map(a=>[a.id,trailNext(a.id)]).filter(x=>x[1]&&x[1].cost<=S.T).sort((x,y)=>x[1].cost*(x[0]==='va'?0.5:1)-y[1].cost*(y[0]==='va'?0.5:1));if(c.length){buyTrail(c[0][0]);b=true;}}}   // 自動の引き直しのとき、航跡の強化を安い順に（航跡の加速を少し優先、2026-11-19）
 function trailAffordable(){return TRAIL.some(a=>{const n=trailNext(a.id);return n&&S.T>=n.cost;});}
