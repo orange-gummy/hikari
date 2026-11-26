@@ -100,15 +100,16 @@ function phView(){return S.voy&&!S.chal&&S.view==='ph';}
 document.getElementById('viewT').addEventListener('click',e=>{e.stopPropagation();const ph=S.view!=='ph';SND.play('tap');curTab=ph?(lastTab.galaxy&&!tabHidden(lastTab.galaxy)?lastTab.galaxy:'photon'):(lastTab.home||'drive');renderPanel(true);S.view=ph?'ph':'e';paintHUD();});   // 切り替えるとタブも GALAXY／HOME へ
 document.getElementById('viewT').addEventListener('pointerdown',e=>e.stopPropagation());
 /* ③ 真ん中の表示の切り替え（2026-11-24、試作 C）：タブの層で ENERGY／PHOTON が切り替わるとき、リングの目盛りが半回転し、
-   その間に数字が奥へ沈んで、新しい数字が手前に浮かぶ（約0.6秒）。動きを減らす設定では動かさない */
+   その間に数字が奥へ沈んで、新しい数字が手前に浮かぶ（約0.6秒）。動きを減らす設定では動かさない。
+   ぼかし（filter）はかけない：iPhone の Safari で、ぼかしながら大きさを変えた文字の縁に赤い線がちらついていた（2026-11-26） */
 let viewAnim=null;
 function swapView(to){if(viewAnim&&viewAnim.to===to)return;const spd=document.getElementById('spd');
   const done=()=>{viewAnim=null;spd.style.transform='';spd.style.opacity='';spd.style.filter='';TKG.removeAttribute('transform');S.view=to;paintHUD();};
   if(viewAnim)viewAnim.stop=true;if(document.hidden||!frameEl.offsetWidth||fxLow||!S.voy||S.chal){done();return;}
   const me={to,t0:performance.now(),half:false},dir=to==='ph'?1:-1;viewAnim=me;const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   const st=now=>{if(me.stop)return;const p=Math.max(0,Math.min(1,(now-me.t0)/600)),e=ease(p);TKG.setAttribute('transform','rotate('+(dir*e*180).toFixed(1)+' 88 88)');
-    if(p<0.5){const a=p*2;spd.style.transform='translateY(-50%) scale('+(1-0.25*a).toFixed(3)+')';spd.style.opacity=(1-a).toFixed(2);spd.style.filter='blur('+(a*3).toFixed(1)+'px)';}
-    else{if(!me.half){me.half=true;S.view=to;paintHUD();}const b=(p-0.5)*2;spd.style.transform='translateY(-50%) scale('+(1.2-0.2*b).toFixed(3)+')';spd.style.opacity=b.toFixed(2);spd.style.filter='blur('+((1-b)*3).toFixed(1)+'px)';}
+    if(p<0.5){const a=p*2;spd.style.transform='translateY(-50%) scale('+(1-0.25*a).toFixed(3)+')';spd.style.opacity=(1-a).toFixed(2);}
+    else{if(!me.half){me.half=true;S.view=to;paintHUD();}const b=(p-0.5)*2;spd.style.transform='translateY(-50%) scale('+(1.2-0.2*b).toFixed(3)+')';spd.style.opacity=b.toFixed(2);}
     if(p<1)requestAnimationFrame(st);else done();};
   requestAnimationFrame(st);}
 function paintHUD(){const vt=document.getElementById('viewT'),on=S.voy&&!S.chal;vt.style.display='none';   // 切り替えはタブの層で（2026-11-17、リングの下の ENERGY · PHOTON は出さない）
