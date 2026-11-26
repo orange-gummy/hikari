@@ -211,7 +211,7 @@ function drawLaunch(){const r=RST;r.t++;const t=r.t;
   if(t>=270){SPDF=1;ROTV=0;RST=null;VROLD=null;document.getElementById('block').style.display='none';}}
 /* 自動の引き直し：操作は止めない。窓の中で小さな航路が巻き戻り、粒がリングへ昇る */
 function autoRedraw(){const path=S.route?S.route.path.slice():[],n=Math.max(2,voyDoublings(S.vdist||1e4)),g=redraw();if(!g)return;glowAutoSpend();trailAutoSpend();
-  const h=Math.min(FR.h*0.42,220);VMINI={t:0,n,path,g,geo:vrGeom(n,(S.st.redraws||0)+5,{x0:RC.x,yb:RC.y+h/2,yt:RC.y-h/2,amp:Math.min(FR.w*0.12,60)})};SND.play('learn');toast('航路を引き直した　航跡 +'+fmt(g));paintSpeed();renderPanel(true);}
+  const h=Math.min(FR.h*0.42,220);VMINI={t:0,n,path,g,geo:vrGeom(n,(S.st.redraws||0)+5,{x0:RC.x,yb:RC.y+h/2,yt:RC.y-h/2,amp:Math.min(FR.w*0.12,60)})};SND.play('learn');toast('自動で航路を引き直した　航跡 +'+fmt(g));paintSpeed();renderPanel(true);}
 function drawVMini(){const m=VMINI;m.t++;const t=m.t,gm=m.geo,N=gm.pts.length-1,a=0.55*cl(t/20)*(1-cl((t-95)/15));VRT={x:RC.x,y:RC.y};
   const tip=t<20?N:Math.round(N*(1-ei(cl((t-20)/75))));vrLine(gm.pts,tip,a,0.8);vrTip(gm.pts[tip].x,gm.pts[tip].y,a,false);vrHome(gm.P[0],a,false);if(t>20){vrEmit(gm,m.prev==null?N:m.prev,tip,1);m.prev=tip;}
   if(t>=110)VMINI=null;}
