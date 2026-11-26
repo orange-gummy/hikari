@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='2026.11.26.1';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
+const VERSION='2026.11.26.2';   // 版の表記（起動時のタイトルの右下と設定）。main に入れるたびに上げる：日付.その日の何回目か
 /* =====================================================================
    DATA  ― 数値・台本・色の定義（将来 data/*.js に切り出す）
    ===================================================================== */
@@ -186,19 +186,19 @@ const CHAL={
 // 2026-11-24：法則は「物理の式の項を書き換える」形に。式は宇宙を重ねるごとに開き（open：S.uni がこれ以上）、項（LAWS）を公理（S.U）で書き換える。
 // 宇宙を畳んだときの小窓でだけ書き換え・戻すができる。fx(l)：[名前, 値, +1得／-1損]。新しい項（Λ・ρ・ΔS・T・ħ・Δx）は航海の間だけ効く
 const ENV_=k=>typeof process!=='undefined'&&process.env[k]!=null?+process.env[k]:null;
-const LC_MAX=ENV_('LC_MAX')||6,NT_MAX=ENV_('NT_MAX')||5,LAW_GAIN=ENV_('LAW_GAIN')||1.2;   // 2026-11-24：超えるのが20日目前後になるように（光の上限は6段まで、新しい項は5段まで、畳むと得る公理 ×1.2）
+const LC_MAX=ENV_('LC_MAX')||6,NT_MAX=ENV_('NT_MAX')||5,LAW_GAIN=ENV_('LAW_GAIN')||1;   // 2026-11-24：超えるのが20日目前後になるように（光の上限は6段まで、新しい項は5段まで、畳むと得る公理 ×1.2）
 const LAW_EQS=[{id:'sr',name:'特殊相対論',open:1},{id:'ex',name:'宇宙の膨張',open:1},{id:'th',name:'熱力学',open:3},{id:'qu',name:'不確定性原理',open:5}];
 const LAWS=[
   {id:'lc',eq:'sr',sym:'c',name:'光の上限',max:LC_MAX,col:[235,238,250],cost:l=>Math.ceil(LC_A*Math.pow(LC_B,l)),fx:l=>[['softcap','9×'+(12+l),1]]},
   {id:'td',eq:'sr',sym:l=>l?(0.5+0.05*l).toFixed(2):'½',name:'時の遅れ',max:8,col:[170,200,255],cost:l=>1+Math.floor(l/2),fx:l=>[['時間の遅れの効き','γ^'+(1+0.1*l).toFixed(1),1]]},
-  {id:'L',eq:'ex',sym:'Λ',name:'宇宙項',max:NT_MAX,col:[255,214,170],cost:l=>2+l,fx:l=>[['畳むと得る公理','×'+(1+0.2*l).toFixed(1),1],['宇宙の果てまで','×'+Math.pow(2,l),-1]]},
-  {id:'rho',eq:'ex',sym:'ρ',name:'密度',max:NT_MAX,col:[160,225,200],cost:l=>2+l,fx:l=>[['進む距離','×'+Math.pow(2,l),1],['時間の遅れの効き','−'+(0.05*l).toFixed(2),-1]]},
-  {id:'S',eq:'th',sym:'ΔS',name:'エントロピー',max:NT_MAX,col:[255,190,170],cost:l=>2+l,fx:l=>[['航海で入る記憶','×'+Math.pow(1.5,l).toFixed(2),1],['引き直しの航跡','×'+Math.pow(0.85,l).toFixed(2),-1]]},
-  {id:'T',eq:'th',sym:'T',name:'温度',max:NT_MAX,col:[255,226,150],cost:l=>2+l,fx:l=>[['光子の生産','×'+Math.pow(3,l),1],['エネルギーの生産','×'+Math.pow(0.7,l).toFixed(2),-1]]},
+  {id:'L',eq:'ex',sym:'Λ',name:'宇宙項',max:NT_MAX,col:[255,214,170],cost:l=>2+l,fx:l=>[['畳むと得る公理','×'+(1+0.2*l).toFixed(1),1]]},
+  {id:'rho',eq:'ex',sym:'ρ',name:'密度',max:NT_MAX,col:[160,225,200],cost:l=>2+l,fx:l=>[['進む距離','×'+Math.pow(2,l),1]]},
+  {id:'S',eq:'th',sym:'ΔS',name:'エントロピー',max:NT_MAX,col:[255,190,170],cost:l=>2+l,fx:l=>[['航海で入る記憶','×'+Math.pow(1.5,l).toFixed(2),1]]},
+  {id:'T',eq:'th',sym:'T',name:'温度',max:NT_MAX,col:[255,226,150],cost:l=>2+l,fx:l=>[['光子の生産','×'+Math.pow(3,l),1]]},
   {id:'hb',eq:'qu',sym:'ħ',name:'作用量子',max:3,col:[200,180,255],cost:l=>4+2*l,fx:l=>[['分かれ道の候補','+'+l,1],['未知の星系','+'+(4*l)+'%',1]]},
-  {id:'dx',eq:'qu',sym:'Δx',name:'位置の幅',max:3,col:[180,230,255],cost:l=>4+2*l,fx:l=>[['宇宙の性格の候補','+'+l,1],['候補の引き直し','×'+Math.pow(2,l),-1]]}];
+  {id:'dx',eq:'qu',sym:'Δx',name:'位置の幅',max:3,col:[180,230,255],cost:l=>4+2*l,fx:l=>[['宇宙の性格の候補','+'+l,1]]}];
 // 法則を超える（2026-11-24）：式の項をすべて最後の段にすると、公理を払ってその式を超えられる。超えた式は宇宙を畳んでも残る。4つ超えると④の終わり
-const BEYOND={sr:{name:'相対論',fx:'softcap がなくなる',cost:+(typeof process!=='undefined'&&process.env.BY_SR||40),wall:'光速の壁',from:'−',to:'+'},ex:{name:'宇宙の膨張',fx:'宇宙項 Λ で、宇宙の果てが遠くならない',cost:+(typeof process!=='undefined'&&process.env.BY_EX||15),wall:'宇宙の果て',from:'Λ',to:'∞'},th:{name:'熱力学',fx:'エントロピー ΔS で、航跡が減らない',cost:+(typeof process!=='undefined'&&process.env.BY_TH||20),wall:'時間の矢',from:'≥',to:'≤'},qu:{name:'不確定性原理',fx:'分かれ道と宇宙の性格の候補が、すべて出る',cost:+(typeof process!=='undefined'&&process.env.BY_QU||10),wall:'不確かさ',from:'≥',to:'='}};
+const BEYOND={sr:{name:'相対論',fx:'softcap がなくなる',cost:+(typeof process!=='undefined'&&process.env.BY_SR||60),wall:'光速の壁',from:'−',to:'+'},ex:{name:'宇宙の膨張',fx:'宇宙の果てが、半分の距離になる',cost:+(typeof process!=='undefined'&&process.env.BY_EX||22),wall:'宇宙の果て',from:'Λ',to:'∞'},th:{name:'熱力学',fx:'引き直しで得る航跡が ×2',cost:+(typeof process!=='undefined'&&process.env.BY_TH||30),wall:'時間の矢',from:'≥',to:'≤'},qu:{name:'不確定性原理',fx:'分かれ道と宇宙の性格の候補が、すべて出る',cost:+(typeof process!=='undefined'&&process.env.BY_QU||15),wall:'不確かさ',from:'≥',to:'='}};
 function lawSym(L,l){return typeof L.sym==='function'?L.sym(l):L.sym;}
    // 宇宙の色合い（ut）は 2026-11-18 にやめ、宇宙の性格の色にした（使っていた法則は normalize で返す）
 const UNI_TINT=[{name:'白',a:[235,238,250],b:[200,210,240]},{name:'青緑',a:[150,230,210],b:[255,214,150]},{name:'朱',a:[255,170,140],b:[255,230,180]},{name:'紫',a:[180,160,255],b:[150,200,255]},{name:'橙',a:[255,200,120],b:[255,140,120]},
