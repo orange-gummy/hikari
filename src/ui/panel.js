@@ -43,7 +43,7 @@ function paintChap(){const el=document.getElementById('chap'),L=curLayer;if(!(L=
 function renderPanel(force){
   if(tabHidden(curTab))curTab='drive';
   curLayer=layerOf(curTab)||'home';lastTab[curLayer]=curTab;
-  if(S.voy&&!S.chal){const v=curLayer==='galaxy'?'ph':curLayer==='home'?'e':null;if(v&&v!==S.view)swapView(v);}   // 真ん中の表示をタブと合わせる（2026-11-17）：GALAXY は PHOTON、HOME は ENERGY。ほかの層では前のまま
+  if(S.voy&&!S.chal){const v=curLayer==='galaxy'?'ph':(curLayer==='home'||curLayer==='star')?'e':null;if(v&&v!==S.view)swapView(v);}   // 真ん中の表示をタブと合わせる（2026-11-17）：GALAXY は PHOTON、HOME は ENERGY。ほかの層では前のまま
   const isSet=curTab==='set',ps=document.getElementById('pset');pbody.style.display=isSet?'none':'';ps.style.display=isSet?'':'none';
   paintTabs();paintChap();
   if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='photon'||curTab==='sail')renderPhoton();else if(curTab==='uni'||curTab==='laws')renderUniverse();else if(curTab==='light')renderLight();else if(curTab==='set')renderSet();else if(curTab==='stats')renderStats();else renderLog();
