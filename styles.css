@@ -570,3 +570,12 @@ html,body,#app,#cv{height:var(--appH,100%)}   /* 高さは JS（scene.js fitVP�
 #wLine .wMail{display:block;margin-top:10px;color:#fff1dc}
 #tabs button.fkDot{position:relative}
 #tabs button.fkDot::before{content:"";position:absolute;right:6px;top:6px;width:4px;height:4px;border-radius:50%;background:#ffd6aa;box-shadow:0 0 6px rgba(255,214,170,.9);animation:hPulse 1.6s ease-in-out infinite}
+
+/* ④ UNIVERSE の窓（2026-11-26、ui/universe.js paintUniView）：リング・目標を隠して、宇宙を外から見た景色 */
+#uniView{position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity .8s}
+#uniView svg{position:absolute;inset:0}
+#app.uvOn #uniView{opacity:1}
+#app.uvOn #ringWrap,#app.uvOn #goal{opacity:0;transition:opacity .6s;pointer-events:none}
+#uniView .uvShip{animation:uvPulse 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes uvPulse{0%,100%{opacity:.55}50%{opacity:.9}}
+@media (prefers-reduced-motion:reduce){#uniView .uvShip{animation:none}}
