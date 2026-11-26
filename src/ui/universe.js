@@ -186,6 +186,12 @@ function showBeyondEnd(){if(endOpen)return;endOpen=true;S.flags.beyondSeen=1;sav
    航路は中心から外へ巻く一本の明るい線、先が船。真ん中に AXIOM・公理・果てまで ○%／畳むと +○・UNIVERSE ○ */
 const uvEl=document.createElement('div');uvEl.id='uniView';uvEl.setAttribute('aria-hidden','true');uvEl.innerHTML='<canvas></canvas><div class="uvTx"><div class="a">AXIOM</div><div class="n"></div><div class="s"></div><div class="u"></div></div>';frameEl.appendChild(uvEl);
 const uvCv=uvEl.querySelector('canvas'),uvX=uvCv.getContext('2d');let uvRun=false,uvT0=0,uvLast=0,uvTxt='';
+// 指でなぞると宇宙が回る（離すと惰性でゆっくり止まり、ふだんの回転に戻る）。ちょんと触れたところには光の波紋（2026-11-26）。窓のタップの生産は今までどおり
+let uvRot=0,uvVel=0,uvDrag=null;const uvRip=[];
+frameEl.addEventListener('pointerdown',e=>{if(!document.getElementById('app').classList.contains('uvOn'))return;uvDrag={x0:e.clientX,y0:e.clientY,lx:e.clientX,lt:performance.now(),mv:0};uvVel=0;});
+addEventListener('pointermove',e=>{if(!uvDrag)return;const dx=e.clientX-uvDrag.lx,now=performance.now(),k=2.4/Math.max(200,FR.w);uvRot+=dx*k;uvVel=dx*k/Math.max(16,now-uvDrag.lt)*33;uvDrag.lx=e.clientX;uvDrag.lt=now;uvDrag.mv=Math.max(uvDrag.mv,Math.hypot(e.clientX-uvDrag.x0,e.clientY-uvDrag.y0));});
+addEventListener('pointerup',e=>{if(!uvDrag)return;if(uvDrag.mv<8)uvRip.push({x:e.clientX-FR.x,y:e.clientY-FR.y,t0:performance.now()});uvDrag=null;});
+addEventListener('pointercancel',()=>{uvDrag=null;});
 const UV=(()=>{let sd=5;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
   const COLS=[[255,170,110],[150,230,140],[255,160,200],[255,230,120],[120,170,255],[245,245,255],[190,190,200]];
   const GRAD=[[0,[255,226,170]],[0.35,[255,170,190]],[0.6,[200,150,255]],[0.85,[120,170,255]],[1.0,[255,130,140]],[1.2,[255,110,120]]];
@@ -203,16 +209,22 @@ function paintUniView(){const on=uniViewOn();document.getElementById('app').clas
 function uvFrame(now){if(!document.getElementById('app').classList.contains('uvOn')||document.hidden){uvRun=false;return;}requestAnimationFrame(uvFrame);
   if(now-uvLast<(fxLow?1000:33))return;uvLast=now;   // 30コマ/秒（動きを減らす設定では止めて1秒に1回）
   const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(FR.w*dpr),H=Math.round(FR.h*dpr);if(!W||!H)return;if(uvCv.width!==W||uvCv.height!==H){uvCv.width=W;uvCv.height=H;}
-  const x=uvX,t=fxLow?0:(now-uvT0)/1000,cx=W/2,cy=H*0.46,R=Math.min(W*0.44,H*0.4),E=0.55,CT=Math.cos(0.583),SN=Math.sin(0.583),rot=t*0.05;
+  if(!uvDrag){uvRot+=uvVel;uvVel*=0.93;}
+  const x=uvX,t=fxLow?0:(now-uvT0)/1000,cx=W/2,cy=H*0.46,R=Math.min(W*0.44,H*0.4),E=0.55,CT=Math.cos(0.583),SN=Math.sin(0.583),rot=t*0.05+uvRot;
   const P3=(px,py,pz)=>{const ca=Math.cos(rot),sa=Math.sin(rot),X=px*ca-pz*sa,Z=px*sa+pz*ca,sy=py*CT+Z*SN,dz=Z*CT-py*SN,f=3/(3+dz);return [cx+X*R*f,cy+sy*R*f,f,dz];};
   x.globalCompositeOperation='source-over';x.fillStyle='#04050C';x.fillRect(0,0,W,H);x.globalCompositeOperation='lighter';
   for(const n of UV.NB){const q=P3(n.x,n.y,n.z);if(q[2]<=0)continue;const rr=n.s*R*q[2],g=x.createRadialGradient(q[0],q[1],0,q[0],q[1],rr);g.addColorStop(0,'rgba('+n.c+',.12)');g.addColorStop(0.5,'rgba('+n.c+',.04)');g.addColorStop(1,'rgba('+n.c+',0)');x.fillStyle=g;x.fillRect(q[0]-rr,q[1]-rr,rr*2,rr*2);}
   for(const p of UV.BG){const q=P3(p.x,p.y,p.z);if(q[2]<=0)continue;const dep=Math.max(0,Math.min(1,(2.2-q[3])/4)),a=(0.18+0.62*dep)*(0.7+0.3*Math.sin(t*0.8+p.ph)),z=p.s*q[2]*1.5*dpr;x.fillStyle='rgba('+p.c+','+a.toFixed(3)+')';if(z<1.6)x.fillRect(q[0]-z/2,q[1]-z/2,z,z);else{x.beginPath();x.arc(q[0],q[1],z/2,0,6.283);x.fill();}}
   const g0=x.createRadialGradient(cx,cy,0,cx,cy,R*0.5);g0.addColorStop(0,'rgba(255,236,214,.2)');g0.addColorStop(1,'rgba(255,236,214,0)');x.fillStyle=g0;x.fillRect(cx-R*0.5,cy-R*0.5,R,R);
-  x.lineCap='round';for(const s of UV.ST){const r=R*s.r,sp=0.22/Math.sqrt(s.r),a0=s.a+t*sp,n=12;x.lineWidth=s.w*dpr;
+  x.lineCap='round';for(const s of UV.ST){const r=R*s.r,sp=0.22/Math.sqrt(s.r),a0=s.a+t*sp+uvRot,n=12;x.lineWidth=s.w*dpr;
     for(let k=0;k<n;k++){const a=a0-s.len*k/n,a2=a0-s.len*(k+1)/n,r1=r*(1+0.06*(a0-a)),r2=r*(1+0.06*(a0-a2));x.strokeStyle='rgba('+s.c+','+(s.al*(1-k/n)).toFixed(3)+')';x.beginPath();x.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1*E);x.lineTo(cx+Math.cos(a2)*r2,cy+Math.sin(a2)*r2*E);x.stroke();}}
   // 航路：中心から外へ巻く線、先が船（果ての先でも渦の外縁までに収める）
   const edge=edgeLy(),d=Math.max(1e4,S.vdist||1e4),past=d>=edge,nb=past?Math.log2(d/edge):0,uu=past?Math.min(1.12,1+nb*0.012):Math.min(1,Math.log(d/1e4)/Math.log(edge/1e4));
-  const rp=u=>R*(0.05+0.95*u),ap=u=>-1+u*4.2+t*0.05;x.lineWidth=1.3*dpr;x.strokeStyle='rgba(255,246,230,.75)';x.beginPath();for(let i=0;i<=80;i++){const u=uu*i/80;i?x.lineTo(cx+Math.cos(ap(u))*rp(u),cy+Math.sin(ap(u))*rp(u)*E):x.moveTo(cx+Math.cos(ap(u))*rp(u),cy+Math.sin(ap(u))*rp(u)*E);}x.stroke();
-  const sx=cx+Math.cos(ap(uu))*rp(uu),sy=cy+Math.sin(ap(uu))*rp(uu)*E,g2=x.createRadialGradient(sx,sy,0,sx,sy,16*dpr);g2.addColorStop(0,'rgba(255,246,230,.85)');g2.addColorStop(1,'rgba(255,246,230,0)');x.fillStyle=g2;x.fillRect(sx-16*dpr,sy-16*dpr,32*dpr,32*dpr);
+  const GC=[[0,[255,226,170]],[0.35,[255,170,190]],[0.6,[200,150,255]],[0.85,[120,170,255]],[1.0,[255,130,140]],[1.2,[255,110,120]]],gc=v=>{for(let k=1;k<GC.length;k++)if(v<=GC[k][0]){const [a0,c0]=GC[k-1],[a1,c1]=GC[k],f=(v-a0)/(a1-a0);return c0.map((q,j)=>Math.round(q+(c1[j]-q)*f)).join(',');}return '255,110,120';};
+  const rp=u=>R*(0.05+0.95*u),ap=u=>-1+u*4.2+t*0.05+uvRot,PT=u=>[cx+Math.cos(ap(u))*rp(u),cy+Math.sin(ap(u))*rp(u)*E];
+  x.lineWidth=1.6*dpr;for(let i=0;i<80;i++){const u0=uu*i/80,u1=uu*(i+1)/80,p0=PT(u0),p1=PT(u1);x.strokeStyle='rgba('+gc(u0)+','+(0.35+0.55*i/80).toFixed(3)+')';x.beginPath();x.moveTo(p0[0],p0[1]);x.lineTo(p1[0],p1[1]);x.stroke();}   // 航路：通ってきた場所の色で
+  const [sx,sy]=PT(uu),g2=x.createRadialGradient(sx,sy,0,sx,sy,12*dpr);g2.addColorStop(0,'rgba(255,246,230,.85)');g2.addColorStop(1,'rgba(255,246,230,0)');x.fillStyle=g2;x.fillRect(sx-12*dpr,sy-12*dpr,24*dpr,24*dpr);
+  x.fillStyle='#fff6e6';x.beginPath();x.arc(sx,sy,2.2*dpr,0,6.283);x.fill();
+  x.lineWidth=0.9*dpr;for(let k=0;k<2;k++){const ph=((t/2.6)+k*0.5)%1;x.strokeStyle='rgba(255,246,230,'+(0.6*(1-ph)).toFixed(3)+')';x.beginPath();x.ellipse(sx,sy,(4+26*ph)*dpr,(4+26*ph)*dpr*E,0,0,6.283);x.stroke();}   // いまここ：光の波紋が広がって消える
+  for(let k=uvRip.length-1;k>=0;k--){const r0=uvRip[k],ph=(now-r0.t0)/900;if(ph>=1){uvRip.splice(k,1);continue;}x.strokeStyle='rgba(255,246,230,'+(0.5*(1-ph)).toFixed(3)+')';x.lineWidth=1*dpr;x.beginPath();x.arc(r0.x*dpr,r0.y*dpr,(6+40*ph)*dpr,0,6.283);x.stroke();}   // 触れたところの波紋
   x.globalCompositeOperation='source-over';const gt=x.createRadialGradient(cx,cy,0,cx,cy,62*dpr);gt.addColorStop(0,'rgba(4,5,12,.55)');gt.addColorStop(1,'rgba(4,5,12,0)');x.fillStyle=gt;x.fillRect(cx-62*dpr,cy-62*dpr,124*dpr,124*dpr);}
