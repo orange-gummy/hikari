@@ -180,39 +180,51 @@ function showBeyondEnd(){if(endOpen)return;endOpen=true;S.flags.beyondSeen=1;sav
   v+='<circle cx="'+f(cx)+'" cy="'+f(cy)+'" r="'+Math.min(60,W*0.14)+'" fill="url(#egc)" opacity="0"><animate attributeName="opacity" values="0;.9;.5" keyTimes="0;.3;1" begin="5.3s" dur="2.5s" fill="freeze"/></circle><circle cx="'+f(cx)+'" cy="'+f(cy)+'" r="2.6" fill="#fff" opacity="0"><animate attributeName="opacity" to="1" begin="5.3s" dur=".6s" fill="freeze"/></circle></svg>';
   el.innerHTML=v+'<div class="eLine">すべての法則を、超えた。</div><div class="eTap">タップで続ける</div>';el.classList.add('on');SND.play('lightEnd');
   setTimeout(()=>{el.classList.add('t1');el.onclick=()=>{el.onclick=null;el.classList.add('out');setTimeout(()=>{el.classList.remove('on','t1','out');showRecord(()=>{endOpen=false;});},900);};},7200);}
-/* ④ UNIVERSE の層を開いたときの窓（2026-11-26、試作 C）：リングと星の流れの代わりに、宇宙を外から見た景色。
-   真ん中にいまの宇宙の渦巻き銀河、外周に宇宙の果ての赤くかすむ輪、故郷（銀河の中心）から船まで外へ巻く光の線と4つの目的地。
-   距離は桁で並べる（宇宙の果ては隣の銀河の約2万倍遠い）。果ての先は、公理 +1 ごと（距離が2倍になるごと）に細い光の輪を重ね、外ほど間を詰める */
-const uvEl=document.createElement('div');uvEl.id='uniView';uvEl.setAttribute('aria-hidden','true');frameEl.appendChild(uvEl);
-let uvKey='';
+/* ④ UNIVERSE の層を開いたときの窓（2026-11-26、試作 C → 3D の A「はじまりの光の殻」）：リングと星の流れの代わりに、宇宙を外から見た景色。
+   いまの宇宙の渦巻き銀河を光の粒で、斜め上から見下ろしてゆっくり回す（手前は明るく大きく、奥は暗く小さい）。
+   宇宙の果ては、赤くかすむ光の粒でできた球の殻（はじまりの赤＝最初の光が届く場所）。果ての先は公理 +1 ごとに外へ淡い殻が重なる（外ほど間を詰める）。
+   航路は故郷（銀河の中心）から銀河の面で外へ巻き、4つの目的地と船の光の点。距離は桁で並べる（宇宙の果ては隣の銀河の約2万倍遠い） */
+const uvEl=document.createElement('div');uvEl.id='uniView';uvEl.setAttribute('aria-hidden','true');uvEl.innerHTML='<canvas></canvas><div class="uvTx"><div class="l"></div><div class="n"></div><div class="s"></div></div>';frameEl.appendChild(uvEl);
+const uvCv=uvEl.querySelector('canvas'),uvX=uvCv.getContext('2d');let uvRun=false,uvT0=0,uvLast=0,uvTxt='';
+const UV=(()=>{let sd=11;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;const G=[],SH=[],OUT=[];
+  for(let i=0;i<1200;i++){const arm=i%4,t=r(),rr=0.03+t*0.18,a=arm*Math.PI/2+t*5.2+(r()-.5)*0.5;G.push({x:Math.cos(a)*rr,y:(r()-.5)*0.02*(1-t),z:Math.sin(a)*rr,core:t<0.15,s:0.4+r()*0.9,k:r()});}
+  for(let i=0;i<300;i++){const rr=r()*0.05,a=r()*6.283,b=(r()-.5)*Math.PI;G.push({x:Math.cos(a)*Math.cos(b)*rr,y:Math.sin(b)*rr*0.6,z:Math.sin(a)*Math.cos(b)*rr,core:true,s:0.6+r(),k:r()});}
+  const sph=n=>{const P=[];for(let i=0;i<n;i++){const u=r()*2-1,a=r()*6.283,q=Math.sqrt(1-u*u);P.push({x:Math.cos(a)*q,y:u,z:Math.sin(a)*q,ph:r()*6.283});}return P;};
+  return {G,SH:sph(700),OUT:sph(260)};})();
 function uniViewOn(){return curLayer==='universe'&&S.voy&&!S.chal&&!FOLD&&!climax&&!LIGHTFX&&!document.getElementById('app').classList.contains('vrOn');}
-function paintUniView(){const on=uniViewOn();document.getElementById('app').classList.toggle('uvOn',on);if(!on)return;
-  const W=FR.w,H=FR.h;if(!W||!H)return;const edge=edgeLy(),d=Math.max(1e4,S.vdist||1e4),past=d>=edge,nb=past?Math.log2(d/edge):0,n=Math.floor(nb),fr=nb-n;
-  const lr=x=>Math.min(1,Math.log(Math.max(1e4,x)/1e4)/Math.log(edge/1e4)),tS=past?1:lr(d);
-  const key=[Math.round(W),Math.round(H),S.uni,S.uTint,Math.round(tS*300),n,Math.round(fr*40),fmt(S.U),uGain()].join('|');if(key===uvKey)return;uvKey=key;
-  const q=v=>v.toFixed(1),cx=W/2,cy=H*0.44,M=Math.min(W,H),rg=M*0.075,Re=Math.min(W*0.4,H*0.34),Rmax=Math.min(W*0.48,H*0.42),E=0.82;
-  const sc=Math.min(1,10/(n+1)),ringR=k=>Re+(Rmax-Re)*(1-Math.pow(0.8,k*sc));   // 果ての先の k 番目の輪（外ほど詰まる。輪が多いときは間を広げて、いちばん外がいつも窓に収まる）
-  const angIn=t=>-2.2+t*3.4,angOut=b=>angIn(1)+b*0.6*sc;
-  const P=(r,a)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r*E];
-  const inner=t=>P(rg+(Re-rg)*t,angIn(t)),outer=b=>{const k=Math.floor(b),f=b-k;return P(ringR(k)+(ringR(k+1)-ringR(k))*f,angOut(b));};
-  let v='<svg width="'+q(W)+'" height="'+q(H)+'" viewBox="0 0 '+q(W)+' '+q(H)+'"><defs><radialGradient id="uvBg"><stop offset="0" stop-color="#04050c" stop-opacity=".6"/><stop offset="1" stop-color="#04050c" stop-opacity=".94"/></radialGradient><radialGradient id="uvGl"><stop offset="0" stop-color="#fff6e6" stop-opacity=".9"/><stop offset="1" stop-color="#fff6e6" stop-opacity="0"/></radialGradient><radialGradient id="uvEd"><stop offset=".86" stop-color="rgb(255,140,130)" stop-opacity="0"/><stop offset="1" stop-color="rgb(255,140,130)" stop-opacity=".1"/><stop offset="1" stop-color="rgb(255,140,130)" stop-opacity="0"/></radialGradient></defs>';
-  v+='<rect width="'+q(W)+'" height="'+q(H)+'" fill="url(#uvBg)"/>';
-  // 果ての先の輪：越えた輪は淡い光、次の輪は点線
-  if(past){const K=n+1;for(let k=K;k>=Math.max(1,K-12);k--){const r=ringR(k),nx=k===n+1;v+='<ellipse cx="'+q(cx)+'" cy="'+q(cy)+'" rx="'+q(r)+'" ry="'+q(r*E)+'" fill="none" stroke="rgba(255,236,210,'+(nx?0.3:Math.max(0.04,0.16-0.012*(n-k)))+')" stroke-width="'+(nx?0.7:0.6)+'"'+(nx?' stroke-dasharray="2 4"':'')+'/>';}}
-  v+='<ellipse cx="'+q(cx)+'" cy="'+q(cy)+'" rx="'+q(Re*1.04)+'" ry="'+q(Re*1.04*E)+'" fill="url(#uvEd)"/><ellipse cx="'+q(cx)+'" cy="'+q(cy)+'" rx="'+q(Re)+'" ry="'+q(Re*E)+'" fill="none" stroke="rgba(255,150,140,.45)" stroke-width=".8" stroke-dasharray="1 4"/>';
-  v+='<text x="'+q(cx+Re*0.71)+'" y="'+q(cy-Re*E*0.71-8)+'" font-size="9.5" fill="rgba(255,180,170,.6)">宇宙の果て</text>';
-  v+='<g transform="translate('+q(cx)+' '+q(cy)+')">'+galaxySvg(S.uni,rg*1.1,0.95,S.uTint)+'</g>';
-  // 航路
-  let path='';for(let i=0;i<=90;i++){const p=inner(i/90*tS);path+=(path?'L':'M')+q(p[0])+' '+q(p[1]);}
-  if(past){const steps=Math.max(8,Math.ceil(nb*10));for(let i=1;i<=steps;i++){const p=outer(i/steps*nb);path+='L'+q(p[0])+' '+q(p[1]);}}
-  else{let g='';for(let i=0;i<=40;i++){const p=inner(tS+(1-tS)*i/40);g+=(g?'L':'M')+q(p[0])+' '+q(p[1]);}v+='<path d="'+g+'" fill="none" stroke="rgba(236,238,242,.16)" stroke-width=".7" stroke-dasharray="2 4"/>';}
-  v+='<path d="'+path+'" fill="none" stroke="rgba(255,241,220,.7)" stroke-width="1"/>';
-  DEST.forEach((D,i)=>{const last=i===DEST.length-1,t=last?1:lr(D.ly),p=inner(t),got=d>=(last?edge:D.ly),c=NEW_COLORS[i]?NEW_COLORS[i].rgb:[236,238,242];
-    v+='<circle cx="'+q(p[0])+'" cy="'+q(p[1])+'" r="'+(got?2.6:1.8)+'" fill="rgba('+c+','+(got?0.95:0.35)+')"/>'+(last?'':'<text x="'+q(p[0]+7)+'" y="'+q(p[1]+3)+'" font-size="9" fill="rgba(236,238,242,'+(got?0.6:0.3)+')">'+D.name+'</text>');});
-  const sp=past?outer(nb):inner(tS);v+='<circle class="uvShip" cx="'+q(sp[0])+'" cy="'+q(sp[1])+'" r="14" fill="url(#uvGl)"/><circle cx="'+q(sp[0])+'" cy="'+q(sp[1])+'" r="2.4" fill="#fff6e6"/>';
-  // 下の文字
-  const lab=past?('畳むと 公理 +'+uGain()+'　·　次の +1 まで '+Math.floor(fr*100)+'%'):('宇宙の果てまで '+Math.floor(Math.min(0.999,tS)*100)+'%');
-  v+='<text x="'+q(cx)+'" y="'+q(H-58)+'" text-anchor="middle" font-family="Michroma,Jura,sans-serif" font-size="9" letter-spacing="2.5" fill="rgba(236,238,242,.5)">UNIVERSE '+roman(S.uni+1)+'</text>';
-  v+='<text x="'+q(cx)+'" y="'+q(H-34)+'" text-anchor="middle" font-family="Jura,sans-serif" font-size="20" fill="#f6f7fb">公理 '+fmt(S.U)+'</text>';
-  v+='<text x="'+q(cx)+'" y="'+q(H-15)+'" text-anchor="middle" font-size="11" fill="rgba(236,238,242,.6)">'+lab+'</text>';
-  uvEl.innerHTML=v+'</svg>';}
+function paintUniView(){const on=uniViewOn();document.getElementById('app').classList.toggle('uvOn',on);
+  if(on&&!uvRun){uvRun=true;uvT0=uvT0||performance.now();requestAnimationFrame(uvFrame);}
+  if(!on)return;const edge=edgeLy(),d=Math.max(1e4,S.vdist||1e4),past=d>=edge,nb=past?Math.log2(d/edge):0,t=Math.min(1,Math.log(d/1e4)/Math.log(edge/1e4));
+  const tx=['UNIVERSE '+roman(S.uni+1),'公理 '+fmt(S.U),past?('畳むと 公理 +'+uGain()+'　·　次の +1 まで '+Math.floor((nb%1)*100)+'%'):('宇宙の果てまで '+Math.floor(Math.min(0.999,t)*100)+'%')];
+  const k=tx.join('|');if(k!==uvTxt){uvTxt=k;const e=uvEl.querySelectorAll('.uvTx div');tx.forEach((v,i)=>e[i].textContent=v);}}
+function uvFrame(now){if(!document.getElementById('app').classList.contains('uvOn')||document.hidden){uvRun=false;return;}requestAnimationFrame(uvFrame);
+  if(now-uvLast<(fxLow?1000:33))return;uvLast=now;   // 30コマ/秒で十分（動きを減らす設定では1秒に1回）
+  const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(FR.w*dpr),H=Math.round(FR.h*dpr);if(!W||!H)return;if(uvCv.width!==W||uvCv.height!==H){uvCv.width=W;uvCv.height=H;}
+  const x=uvX,t=fxLow?0:(now-uvT0)/1000,rot=t*0.08,tilt=1.18,ct=Math.cos(tilt),st=Math.sin(tilt);
+  const edge=edgeLy(),d=Math.max(1e4,S.vdist||1e4),past=d>=edge,nb=past?Math.log2(d/edge):0,n=Math.floor(nb),tS=Math.min(1,Math.log(d/1e4)/Math.log(edge/1e4));
+  const Re=0.5,sc=Math.min(1,8/(n+1)),shR=k=>Re+0.16*(1-Math.pow(0.8,k*sc)),Rout=past?shR(n+1):Re;
+  const SC=Math.min(W,H-110*dpr)*0.46/Rout,cx=W/2,cy=(H-60*dpr)*0.5;
+  const P=(px,py,pz,r)=>{const ca=Math.cos(r),sa=Math.sin(r),X=px*ca-pz*sa,Z=px*sa+pz*ca;const Y2=py*st-Z*ct,Z2=Z*st+py*ct,f=2.6/(2.6+Z2);return [cx+X*SC*f,cy+Y2*SC*f,f,Z2];};
+  const dep=z=>Math.max(0,Math.min(1,(1.2-z)/1.6));
+  x.fillStyle='rgba(4,5,12,.94)';x.fillRect(0,0,W,H);x.globalCompositeOperation='lighter';
+  // 宇宙の果て：赤い光の殻（まばたく）と、果ての先の淡い殻
+  const shell=(R,Ps,al,col,sz)=>{for(const p of Ps){const q=P(p.x*R,p.y*R,p.z*R,rot*0.6),a=al*(0.6+0.4*Math.sin(t*1.3+p.ph))*(0.25+0.75*dep(q[3]));x.fillStyle='rgba('+col+','+a.toFixed(3)+')';x.fillRect(q[0],q[1],sz*q[2]*dpr,sz*q[2]*dpr);}};
+  shell(Re,UV.SH,0.55,'255,140,130',1.6);
+  if(past)for(let k=Math.max(1,n-5);k<=n+1;k++)shell(shR(k),UV.OUT,k===n+1?0.12:Math.max(0.05,0.2-0.03*(n-k)),'255,236,210',1.2);
+  // 銀河（いまの宇宙の色合い）
+  const tc=UNI_TINT[S.uTint%UNI_TINT.length].a;
+  for(const p of UV.G){const q=P(p.x,p.y,p.z,rot),a=0.55*(0.4+0.6*dep(q[3])),c=p.core?'255,240,220':Math.round(tc[0]*0.6+190*0.4*(1+p.k*0.3))+','+Math.round(tc[1]*0.6+170*0.4)+','+Math.round(tc[2]*0.6+255*0.4);x.fillStyle='rgba('+c+','+a.toFixed(3)+')';const z=p.s*q[2]*1.5*dpr;x.fillRect(q[0]-z/2,q[1]-z/2,z,z);}
+  const c0=P(0,0,0,rot),gr=x.createRadialGradient(c0[0],c0[1],0,c0[0],c0[1],SC*0.12);gr.addColorStop(0,'rgba(255,240,220,.5)');gr.addColorStop(1,'rgba(255,240,220,0)');x.fillStyle=gr;x.fillRect(c0[0]-SC*0.12,c0[1]-SC*0.12,SC*0.24,SC*0.24);
+  x.globalCompositeOperation='source-over';
+  // 航路と目的地と船（隣の銀河までは銀河の中に収め、その先を広げて目的地の名前が重ならないように）
+  const inPt=u=>{const r=0.03+0.19*Math.min(u,0.25)/0.25+0.28*Math.max(0,(u-0.25)/0.75),a=-0.6+u*3.6;return P(Math.cos(a)*r,-0.02*u,Math.sin(a)*r,rot);};
+  const outPt=b=>{const k=Math.floor(b),f=b-k,r=shR(k)+(shR(k+1)-shR(k))*f,a=-0.6+3.6+b*0.5*sc;return P(Math.cos(a)*r,-0.02,Math.sin(a)*r,rot);};
+  x.lineWidth=1.2*dpr;x.strokeStyle='rgba(255,241,220,.7)';x.beginPath();for(let i=0;i<=90;i++){const q=inPt(i/90*tS);i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]);}
+  if(past){const m=Math.max(8,Math.ceil(nb*8));for(let i=1;i<=m;i++){const q=outPt(i/m*nb);x.lineTo(q[0],q[1]);}}x.stroke();
+  if(!past){x.setLineDash([2*dpr,4*dpr]);x.strokeStyle='rgba(236,238,242,.18)';x.beginPath();for(let i=0;i<=40;i++){const q=inPt(tS+(1-tS)*i/40);i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]);}x.stroke();x.setLineDash([]);}
+  x.font=(9.5*dpr)+'px Murecho,sans-serif';
+  const nxt=DEST.findIndex((D,i)=>d<(i===DEST.length-1?edge:D.ly));   // 名前は次の目的地だけ（回る向きで重なるため）
+  DEST.forEach((D,i)=>{const last=i===DEST.length-1,u=last?1:Math.log(D.ly/1e4)/Math.log(edge/1e4),q=inPt(u),got=d>=(last?edge:D.ly),c=NEW_COLORS[i]?NEW_COLORS[i].rgb:[236,238,242];
+    x.fillStyle='rgba('+c+','+(got?0.95:0.35)+')';x.beginPath();x.arc(q[0],q[1],(got?2.6:1.8)*dpr,0,6.283);x.fill();if(!last&&i===nxt){x.fillStyle='rgba(236,238,242,'+(got?0.6:0.3)+')';x.fillText(D.name,q[0]+7*dpr,q[1]+3*dpr);}});
+  const sp=past?outPt(nb):inPt(tS),g2=x.createRadialGradient(sp[0],sp[1],0,sp[0],sp[1],16*dpr);g2.addColorStop(0,'rgba(255,246,230,'+(0.6+0.25*Math.sin(t*2.6)).toFixed(2)+')');g2.addColorStop(1,'rgba(255,246,230,0)');
+  x.fillStyle=g2;x.fillRect(sp[0]-16*dpr,sp[1]-16*dpr,32*dpr,32*dpr);x.fillStyle='#fff6e6';x.beginPath();x.arc(sp[0],sp[1],2.4*dpr,0,6.283);x.fill();}

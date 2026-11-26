@@ -571,11 +571,12 @@ html,body,#app,#cv{height:var(--appH,100%)}   /* 高さは JS（scene.js fitVP�
 #tabs button.fkDot{position:relative}
 #tabs button.fkDot::before{content:"";position:absolute;right:6px;top:6px;width:4px;height:4px;border-radius:50%;background:#ffd6aa;box-shadow:0 0 6px rgba(255,214,170,.9);animation:hPulse 1.6s ease-in-out infinite}
 
-/* ④ UNIVERSE の窓（2026-11-26、ui/universe.js paintUniView）：リング・目標を隠して、宇宙を外から見た景色 */
+/* ④ UNIVERSE の窓（2026-11-26、ui/universe.js paintUniView・uvFrame）：リング・目標を隠して、回る宇宙の景色（canvas） */
 #uniView{position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity .8s}
-#uniView svg{position:absolute;inset:0}
+#uniView canvas{position:absolute;inset:0;width:100%;height:100%}
+#uniView .uvTx{position:absolute;left:0;right:0;bottom:12px;text-align:center}
+#uniView .uvTx .l{font-family:var(--label);font-size:9px;letter-spacing:.28em;padding-left:.28em;color:var(--ink-dim)}
+#uniView .uvTx .n{font-family:var(--num);font-size:20px;margin-top:4px;color:#f6f7fb}
+#uniView .uvTx .s{font-size:11px;color:var(--ink-dim);margin-top:2px}
 #app.uvOn #uniView{opacity:1}
 #app.uvOn #ringWrap,#app.uvOn #goal{opacity:0;transition:opacity .6s;pointer-events:none}
-#uniView .uvShip{animation:uvPulse 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
-@keyframes uvPulse{0%,100%{opacity:.55}50%{opacity:.9}}
-@media (prefers-reduced-motion:reduce){#uniView .uvShip{animation:none}}
