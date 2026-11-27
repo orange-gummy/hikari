@@ -63,7 +63,7 @@ function drawFold(){const f=FOLD;if(!f)return;if((pickOpen||lawOpen)&&f.t>=340)r
   if(pt>0){blob(X,Y,(t<380?16+70*pt:16+260*(1-pt)),[230,235,255],0.5*pt);blob(X,Y,6,[255,255,255],pt);}
   if(t>=380){const a=Math.sin(Math.PI*cl((t-380)/180));cx.save();cx.font='400 17px "Shippori Mincho B1",serif';cx.textAlign='center';cx.fillStyle='rgba(236,238,242,'+(0.85*a).toFixed(3)+')';cx.fillText('宇宙 '+roman(S.uni+1),X,Y+125*RCS);cx.restore();}}
 /* 新しい宇宙の色合い：窓の中心に、その宇宙の色をうっすら重ねる（宇宙 I の白は重ねない） */
-function drawTint(){if(!S.uTint||LANDED||HOMEA||FR.w<=0)return;const c=UNI_TINT[S.uTint%UNI_TINT.length],X=FR.x+FR.w/2,Y=FR.y+FR.h*0.45,r=Math.max(FR.w,FR.h)*0.75;const g=cx.createRadialGradient(X,Y,0,X,Y,r);g.addColorStop(0,rgb(c.a,0.13));g.addColorStop(0.55,rgb(c.b,0.05));g.addColorStop(1,rgb(c.a,0));cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);}
+function drawTint(){if(!S.uTint||LANDED||HOMEA||FR.w<=0)return;const c=UNI_TINT[S.uTint%UNI_TINT.length],X=FR.x+FR.w/2,Y=FR.y+FR.h*0.45,r=Math.min(FR.w,FR.h)*0.48;/* 2026-11-27：窓の縁まで届かないように（縁は外と同じ紺黒） */const g=cx.createRadialGradient(X,Y,0,X,Y,r);g.addColorStop(0,rgb(c.a,0.13));g.addColorStop(0.55,rgb(c.b,0.05));g.addColorStop(1,rgb(c.a,0));cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);}
 /* 背景の奥行き（2026-11-22、案 B）：故郷への周回の間は、窓を斜めに横切る淡い星の帯と暗い塵の筋（いちばん奥の層で、加速してもほとんど動かない）。窓の中心をわずかに明るく、四隅を暗く。航海中は光の帯と銀河がもうあるので、帯は出さず濃淡だけ */
 let NEB=null;
 function nebCanvas(W,H){const c=document.createElement('canvas'),k=Math.min(2,devicePixelRatio||1);c.width=Math.round(W*k);c.height=Math.round(H*k);const g=c.getContext('2d');g.scale(k,k);let sd=5;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},s=Math.max(W,H)/360;
@@ -76,9 +76,10 @@ function nebCanvas(W,H){const c=document.createElement('canvas'),k=Math.min(2,de
 function drawDepth(){if(LANDED||HOMEA||FR.w<=0)return;cx.save();cx.beginPath();cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);cx.clip();
   if(!S.voy){const W=Math.round(FR.w),H=Math.round(FR.h);if(!NEB||NEB.w!==W||NEB.h!==H)NEB={w:W,h:H,c:nebCanvas(W,H)};cx.globalAlpha=1-CONV;cx.drawImage(NEB.c,FR.x+Math.sin(T*0.0006)*6,FR.y+Math.cos(T*0.0005)*4,W,H);cx.globalAlpha=1;}
   const X=RC.x||FR.x+FR.w/2,Y=RC.y||FR.y+FR.h*0.45,m=Math.min(FR.w,FR.h),M=Math.max(FR.w,FR.h);
-  let g=cx.createRadialGradient(X,Y,0,X,Y,m*0.6);g.addColorStop(0,'rgba(40,50,90,.16)');g.addColorStop(1,'rgba(40,50,90,0)');cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);
-  g=cx.createRadialGradient(X,Y,m*0.25,X,Y,M*0.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(0.5,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.5)');cx.fillStyle=g;cx.fillRect(FR.x,FR.y,FR.w,FR.h);cx.restore();}
-let HAZE_A=0.034,HAZE_WIN=true;   // HAZE_WIN：もやを窓（#frame）の四隅に置く
+  // 2026-11-27：窓の中の地の色を外と同じ紺黒に（UNIVERSE の窓と同じ）。中心をわずかに明るい紺、四隅を黒く沈めていたのをやめた（窓の縁で外と色が大きく違って見えていた）
+  cx.restore();}
+let HAZE_A=0,HAZE_WIN=true;   // 2026-11-27 に0（窓の四隅の色のもやが窓の縁で切れて見えていた。戻すときは 0.034）
+   // HAZE_WIN：もやを窓（#frame）の四隅に置く
 function frameInner(){
   if(!STILL)T++;for(let i=0;i<7;i++){A[i]+=(TG[i]-A[i])*(TG[i]?0.03:0.022);if(TG[i])RV[i]=Math.min(1,RV[i]+0.012);POP[i]*=0.93;}BB*=0.993;
   const BV=[0,0,0,0.01,0.02,0.03,0.05,0.1,0.18,0.3,0.4,0.5,0.7,0.82,0.9,0.94,0.96,0.97,0.975,0.98,0.983,0.985,0.987];const bvT=BV[Math.min(22,S.stage)];if(BVC<0)BVC=bvT;if(!(ACC&&ACC.t<CH_T)&&!BRK)BVC+=(bvT-BVC)*0.03;const aw=A[5],ag=A[6],bv=BVC*(1-CONV)+CONV*0.995,sc=Math.max(CW,CH)/600;
