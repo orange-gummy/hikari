@@ -46,7 +46,7 @@ function forkGauge(f){if(forkOpen)return forkChooser(f);const W=FR.w,H=FR.h,n=f.
       '<path d="M'+f1(bx+6)+' '+f1(ym)+'C'+f1(bx+30)+' '+f1(ym)+' '+f1(bx+20)+' '+f1(y)+' '+f1(ex-10)+' '+f1(y)+'H'+f1(ex-8)+'" fill="none" stroke="'+col+'" stroke-opacity=".75" stroke-width="1"/>'+
       '<g transform="translate('+f1(ex)+' '+f1(y)+')" class="fkNode">'+sym+'</g>'+(tight?'<text x="'+f1(ex+14)+'" y="'+f1(y+4)+'" font-size="10.5" fill="#f6f7fb">'+o.name+'<tspan dx="8" font-size="9.5" fill="'+col+'">'+forkText(id)+'</tspan></text>':'<text x="'+f1(ex+14)+'" y="'+f1(y-1)+'" font-size="11" fill="#f6f7fb">'+o.name+'</text><text x="'+f1(ex+14)+'" y="'+f1(y+12)+'" font-size="9.5" fill="'+col+'">'+forkText(id)+'</text>')+'</g>';});
   return v+'</svg>';}
-// 2026-11-24：窓の中の分岐図（NEXT SECTOR）はやめた。道が出ている間は GALAXY の層と VOYAGE のタブに光の点（panel.js paintTabs の fkDot）、選ぶのは VOYAGE の一覧で
+// 2026-11-24：窓の中の分岐図（NEXT SECTOR）はやめた。道が出ている間は VOYAGE のタブに光の点（panel.js paintTabs の fkDot。GALAXY の層の点は 2026-11-27 にやめた）、選ぶのは VOYAGE の一覧で
 function paintFork(){const f=S.fork,show=!!(f&&S.voy&&!S.chal);forkOpen=false;if(forkEl.innerHTML){forkEl.innerHTML='';forkEl.classList.remove('on');document.body.classList.remove('forkOn');}
   const key=show?f.opts.join(','):'';if(key===forkKey)return;forkKey=key;paintTabs();
   if(show)setTimeout(()=>firstHint('fork','次の宙域の道を、GALAXY の VOYAGE で選べる',()=>{const g=document.querySelector('#tabs [data-l="galaxy"]');if(!g||!g.offsetWidth)return null;const r=g.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top};},'up'),400);}

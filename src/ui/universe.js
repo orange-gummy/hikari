@@ -203,7 +203,7 @@ const UV=(()=>{let sd=5;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
   return {ST,BG,NB};})();
 function uniViewOn(){return curLayer==='universe'&&S.voy&&!S.chal&&(!FOLD||FOLD.uv)&&!climax&&!LIGHTFX&&!document.getElementById('app').classList.contains('vrOn');}
 function paintUniView(){const on=uniViewOn();document.getElementById('app').classList.toggle('uvOn',on);
-  if(on&&!uvRun){uvRun=true;uvT0=uvT0||performance.now();requestAnimationFrame(uvFrame);}
+  if(on&&!uvRun){uvRun=true;uvT0=uvT0||performance.now();uvLast=0;uvFrame(performance.now());}   // すぐ1枚描く（前の絵が一瞬見えないように）
   if(!on)return;const edge=edgeLy(),d=Math.max(1e4,S.vdist||1e4,S.ubest||0),past=d>=edge,   // 文字はこの宇宙でいちばん遠く（S.ubest）で。引き直したあとの航海の距離ではない（2026-11-27）
   nb=past?Math.log2(d/edge):0,t=Math.min(1,Math.log(d/1e4)/Math.log(edge/1e4));
   const tx=[fmt(S.U),past?('畳むと +'+uGain()+'　·　次の +1 まで '+Math.floor((nb%1)*100)+'%'):('宇宙の果てまで '+Math.floor(Math.min(0.999,t)*100)+'%'),'UNIVERSE '+roman(S.uni+1)];

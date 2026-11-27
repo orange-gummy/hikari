@@ -28,7 +28,7 @@ function closeSkill(){const wasPick=skillPick;skillOpen=false;skillPick=false;if
 // 変わったときだけ書き込む（同じ値でも書くたびに、iPhone では文字が描き直されて明るさがちらつく）
 function setSel(b,v){const s=v?'true':'false';if(b.getAttribute('aria-selected')!==s)b.setAttribute('aria-selected',s);}
 function setCls(b,c,v){if(b.classList.contains(c)!==!!v)b.classList.toggle(c,!!v);}
-function paintTabs(){buildTabs();const fk=!!(S.fork&&S.voy&&!S.chal);tabs.forEach(b=>{if(b.dataset.l){setSel(b,b.dataset.l===curLayer);setCls(b,'fkDot',fk&&b.dataset.l==='galaxy');return;}setCls(b,'fkDot',fk&&b.dataset.t==='voy');setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
+function paintTabs(){buildTabs();const fk=!!(S.fork&&S.voy&&!S.chal);tabs.forEach(b=>{if(b.dataset.l){setSel(b,b.dataset.l===curLayer);setCls(b,'fkDot',false);return;}setCls(b,'fkDot',fk&&b.dataset.t==='voy');setSel(b,b.dataset.t===curTab);setCls(b,'locked',tabLocked(b.dataset.t));});}
 function tabHidden(t){const L=layerOf(t);if(L&&!layerOpen(L))return true;if((t==='photon'||t==='sail')&&(!S.voy||S.chal))return true;if(t==='laws'&&!(S.uni>0))return true;return (t==='battery'&&((S.chal==='c7')||!S.flags.bat))||(t==='reset'&&((S.maxStage<BRAKE_STAGE&&S.restarts===0)||(S.voy&&!S.chal)))||(t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0);}   // 層が開くまでタブごと出さない
 function tabLocked(t){return (t==='skill'&&S.prestiges<1&&S.W<1&&S.skills.length===0&&S.lTotal===0)||(t==='battery'&&!S.flags.bat);}
 let devUI=[],TIERFX=null;
