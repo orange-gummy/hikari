@@ -51,7 +51,7 @@ function frameStep(){FRK=1;if(++MEAS_N>=20){MEAS_N=0;measure();}   // リング�
 const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawSail();frClip(drawShower);drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
 /* ④ 宇宙を畳む：星がすべて中心へ流れ込み（4秒）→ 光の点ひとつ（2秒）→ 点がほどけて新しい色合いの空が広がる */
 let FOLD=null;
-function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
+function startFold(){if(!canFold()||FOLD)return;FOLD={t:0,uv:document.getElementById('app').classList.contains('uvOn')};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
 function drawFold(){const f=FOLD;if(!f)return;if((pickOpen||lawOpen)&&f.t>=340)return;f.t++;const t=f.t,X=RC.x||CW/2,Y=RC.y||CH/2;let dark=0,pt=0;   // 2026-11-20：真っ暗になったところで次の宇宙を選び、選び終えてから新しい宇宙が明ける（前は新しい宇宙が明けてから選ぶ画面が出ていた）
   if(t===150)document.getElementById('app').classList.add('foldOn');   // 暗くなる前に上の表示とリングの数字を消す（0に戻るのが見えていた、2026-11-24）
   if(t===430)document.getElementById('app').classList.remove('foldOn');

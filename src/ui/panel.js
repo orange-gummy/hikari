@@ -45,7 +45,7 @@ function renderPanel(force){
   curLayer=layerOf(curTab)||'home';lastTab[curLayer]=curTab;
   if(S.voy&&!S.chal){const v=curLayer==='galaxy'?'ph':(curLayer==='home'||curLayer==='star')?'e':null;if(v&&v!==S.view)swapView(v);}   // 真ん中の表示をタブと合わせる（2026-11-17）：GALAXY は PHOTON、HOME は ENERGY。ほかの層では前のまま
   const isSet=curTab==='set',ps=document.getElementById('pset');pbody.style.display=isSet?'none':'';ps.style.display=isSet?'':'none';
-  paintTabs();paintChap();
+  paintTabs();paintChap();if(typeof paintUniView==='function')paintUniView();   // UNIVERSE の窓の切り替えをすぐに（0.25秒ごとの書き換えを待つと、裏の窓が見えていた。2026-11-27）
   if(curTab==='drive')renderDrive(force);else if(curTab==='boost')renderBoost();else if(curTab==='battery')renderBattery();else if(curTab==='reset')renderReset();else if(curTab==='glow'||curTab==='restart')renderGlow();else if(curTab==='stars')renderUnlock();else if(curTab==='voy'||curTab==='wake')renderVoy();else if(curTab==='photon'||curTab==='sail')renderPhoton();else if(curTab==='uni'||curTab==='laws')renderUniverse();else if(curTab==='light')renderLight();else if(curTab==='set')renderSet();else if(curTab==='stats')renderStats();else renderLog();
 }
 function devVisible(i){return devOpen(i);}

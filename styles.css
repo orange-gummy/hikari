@@ -572,7 +572,7 @@ html,body,#app,#cv{height:var(--appH,100%)}   /* 高さは JS（scene.js fitVP�
 #tabs button.fkDot::before{content:"";position:absolute;right:6px;top:6px;width:4px;height:4px;border-radius:50%;background:#ffd6aa;box-shadow:0 0 6px rgba(255,214,170,.9);animation:hPulse 1.6s ease-in-out infinite}
 
 /* ④ UNIVERSE の窓（2026-11-26、ui/universe.js paintUniView・uvFrame）：リング・目標を隠して、回る宇宙の景色（canvas） */
-#uniView{position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity .8s}
+#uniView{position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity .35s}
 #uniView canvas{position:absolute;inset:0;width:100%;height:100%}
 #uniView .uvTx{position:absolute;left:0;right:0;top:46%;transform:translateY(-50%);text-align:center;text-shadow:0 0 10px #04050c}
 #uniView .uvTx .a{font-family:var(--label);font-size:10px;letter-spacing:.16em;padding-left:.16em;color:var(--ink-dim)}
@@ -580,4 +580,6 @@ html,body,#app,#cv{height:var(--appH,100%)}   /* 高さは JS（scene.js fitVP�
 #uniView .uvTx .s{font-size:11px;color:rgba(236,238,242,.65);margin-top:3px}
 #uniView .uvTx .u{font-size:10px;color:var(--ink-dim);margin-top:4px;letter-spacing:.06em}
 #app.uvOn #uniView{opacity:1}
+#app.foldOn #uniView .uvTx{opacity:0;transition:opacity 1.2s}   /* 畳む間は真ん中の文字を消す（2026-11-27） */
+#uniView .uvTx{transition:opacity 1.2s}
 #app.uvOn #ringWrap,#app.uvOn #goal{opacity:0;transition:opacity .6s;pointer-events:none}

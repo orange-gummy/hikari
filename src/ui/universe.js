@@ -201,7 +201,7 @@ const UV=(()=>{let sd=5;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
   const BG=[];for(let i=0;i<900;i++){const u=r()*2-1,an=r()*6.283,q=Math.sqrt(1-u*u),rr=0.35+Math.pow(r(),0.7)*1.9;BG.push({x:Math.cos(an)*q*rr,y:u*rr,z:Math.sin(an)*q*rr,s:0.5+r()*1.1,ph:r()*6.283,c:(r()<0.6?[236,238,242]:COLS[Math.floor(r()*7)]).join(',')});}
   const NC=[[255,150,190],[170,140,255],[110,180,255],[255,200,140],[140,230,200],[255,120,120]];const NB=[];for(let i=0;i<9;i++){const an=r()*6.283,rr=0.5+r()*1.0;NB.push({x:Math.cos(an)*rr,y:(r()-.5)*0.7,z:Math.sin(an)*rr,s:0.35+r()*0.45,c:NC[i%NC.length].join(',')});}
   return {ST,BG,NB};})();
-function uniViewOn(){return curLayer==='universe'&&S.voy&&!S.chal&&!FOLD&&!climax&&!LIGHTFX&&!document.getElementById('app').classList.contains('vrOn');}
+function uniViewOn(){return curLayer==='universe'&&S.voy&&!S.chal&&(!FOLD||FOLD.uv)&&!climax&&!LIGHTFX&&!document.getElementById('app').classList.contains('vrOn');}
 function paintUniView(){const on=uniViewOn();document.getElementById('app').classList.toggle('uvOn',on);
   if(on&&!uvRun){uvRun=true;uvT0=uvT0||performance.now();requestAnimationFrame(uvFrame);}
   if(!on)return;const edge=edgeLy(),d=Math.max(1e4,S.vdist||1e4,S.ubest||0),past=d>=edge,   // 文字はこの宇宙でいちばん遠く（S.ubest）で。引き直したあとの航海の距離ではない（2026-11-27）
@@ -212,9 +212,11 @@ function uvFrame(now){if(!document.getElementById('app').classList.contains('uvO
   if(now-uvLast<(fxLow?1000:33))return;uvLast=now;   // 30コマ/秒（動きを減らす設定では止めて1秒に1回）
   const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(FR.w*dpr),H=Math.round(FR.h*dpr);if(!W||!H)return;if(uvCv.width!==W||uvCv.height!==H){uvCv.width=W;uvCv.height=H;}
   if(!uvDrag){uvRot+=uvVel;uvVel*=0.93;}
-  const x=uvX,t=fxLow?0:(now-uvT0)/1000,cx=W/2,cy=H*0.46,R=Math.min(W*0.44,H*0.4)*(FR.w>=600?1.25:1),E=0.55,CT=Math.cos(0.583),SN=Math.sin(0.583),rot=t*0.035+uvRot;
+  const fd=uvFold(),FC=fd.c;   // 宇宙を畳む：星・星雲・渦・航路が中心の一点へ吸いこまれ、新しい宇宙でまた広がる（2026-11-27）
+  if(fd.on)uvRot+=0.02+0.25*FC*(1-FC);
+  const x=uvX,t=fxLow?0:(now-uvT0)/1000,cx=W/2,cy=H*0.46,R=Math.min(W*0.44,H*0.4)*(FR.w>=600?1.25:1)*(1-0.985*FC),E=0.55,CT=Math.cos(0.583),SN=Math.sin(0.583),rot=t*0.035+uvRot;x.globalAlpha=1;
   const P3=(px,py,pz)=>{const ca=Math.cos(rot),sa=Math.sin(rot),X=px*ca-pz*sa,Z=px*sa+pz*ca,sy=py*CT+Z*SN,dz=Z*CT-py*SN,f=3/(3+dz);return [cx+X*R*f,cy+sy*R*f,f,dz];};
-  x.globalCompositeOperation='source-over';x.fillStyle='#04050C';x.fillRect(0,0,W,H);x.globalCompositeOperation='lighter';
+  x.globalCompositeOperation='source-over';x.fillStyle='#04050C';x.fillRect(0,0,W,H);x.globalCompositeOperation='lighter';x.globalAlpha=Math.pow(1-FC,1.6);
   for(const n of UV.NB){const q=P3(n.x,n.y,n.z);if(q[2]<=0)continue;const rr=n.s*R*q[2]*1.3,g=x.createRadialGradient(q[0],q[1],0,q[0],q[1],rr);g.addColorStop(0,'rgba('+n.c+',.24)');g.addColorStop(0.5,'rgba('+n.c+',.08)');g.addColorStop(1,'rgba('+n.c+',0)');x.fillStyle=g;x.fillRect(q[0]-rr,q[1]-rr,rr*2,rr*2);}
   for(const p of UV.BG){const q=P3(p.x,p.y,p.z);if(q[2]<=0)continue;const dep=Math.max(0,Math.min(1,(2.2-q[3])/4)),a=(0.18+0.62*dep)*(0.7+0.3*Math.sin(t*0.8+p.ph)),z=p.s*q[2]*1.5*dpr;x.fillStyle='rgba('+p.c+','+a.toFixed(3)+')';if(z<1.6)x.fillRect(q[0]-z/2,q[1]-z/2,z,z);else{x.beginPath();x.arc(q[0],q[1],z/2,0,6.283);x.fill();}}
   const g0=x.createRadialGradient(cx,cy,0,cx,cy,R*0.5);g0.addColorStop(0,'rgba(255,236,214,.2)');g0.addColorStop(1,'rgba(255,236,214,0)');x.fillStyle=g0;x.fillRect(cx-R*0.5,cy-R*0.5,R,R);
@@ -230,8 +232,14 @@ function uvFrame(now){if(!document.getElementById('app').classList.contains('uvO
   x.lineWidth=0.9*dpr;for(let k=0;k<2;k++){const ph=((t/2.6)+k*0.5)%1;x.strokeStyle='rgba(255,246,230,'+(0.6*(1-ph)).toFixed(3)+')';x.beginPath();x.ellipse(sx,sy,(4+26*ph)*dpr,(4+26*ph)*dpr*E,0,0,6.283);x.stroke();}   // いまここ：光の波紋が広がって消える
   for(let k=uvRip.length-1;k>=0;k--){const r0=uvRip[k],ph=(now-r0.t0)/900;if(ph>=1){uvRip.splice(k,1);continue;}x.strokeStyle='rgba(255,246,230,'+(0.5*(1-ph)).toFixed(3)+')';x.lineWidth=1*dpr;x.beginPath();x.arc(r0.x*dpr,r0.y*dpr,(6+40*ph)*dpr,0,6.283);x.stroke();}   // 触れたところの波紋
   x.globalCompositeOperation='source-over';const gt=x.createRadialGradient(cx,cy,0,cx,cy,62*dpr);gt.addColorStop(0,'rgba(4,5,12,.55)');gt.addColorStop(1,'rgba(4,5,12,0)');x.fillStyle=gt;x.fillRect(cx-62*dpr,cy-62*dpr,124*dpr,124*dpr);
-  uvFx(x,dpr);}
-// 流れ星・流星群・捕まえたときの光と数（#cv に描いたものは渦の下に隠れるので、同じ位置にもう一度描く。2026-11-27）
+  x.globalAlpha=1;if(fd.on)uvFoldFx(x,dpr,cx,cy,fd);
+  if(FC<0.5)uvFx(x,dpr);}
+// 畳む演出の進み（sky.js の FOLD.t と合わせる）：0〜240 吸いこまれる、240〜380 一点（ここで次の宇宙を選ぶ）、380〜560 新しい宇宙が広がる
+function uvFold(){const f=FOLD;if(!f||!f.uv)return {on:false,c:0};const t=f.t;let c,pt;if(t<=240){c=ei(t/240);pt=t/240;}else if(t<380){c=1;pt=1;}else{const k=Math.min(1,(t-380)/180);c=1-ei(k);pt=1-k;}return {on:true,c,pt,t};}
+function uvFoldFx(x,dpr,cx,cy,fd){const pt=fd.pt,t=fd.t;x.globalCompositeOperation='lighter';
+  const r1=(t<380?16+70*pt:16+260*(1-pt))*dpr,g=x.createRadialGradient(cx,cy,0,cx,cy,r1);g.addColorStop(0,'rgba(230,235,255,'+(0.5*pt).toFixed(3)+')');g.addColorStop(1,'rgba(230,235,255,0)');x.fillStyle=g;x.fillRect(cx-r1,cy-r1,r1*2,r1*2);
+  x.fillStyle='rgba(255,255,255,'+pt.toFixed(3)+')';x.beginPath();x.arc(cx,cy,2.4*dpr,0,6.283);x.fill();x.globalCompositeOperation='source-over';
+  if(t>=380){const a=Math.sin(Math.PI*Math.min(1,(t-380)/180));x.font='400 '+(17*dpr)+'px "Shippori Mincho B1",serif';x.textAlign='center';x.fillStyle='rgba(236,238,242,'+(0.85*a).toFixed(3)+')';x.fillText('宇宙 '+roman(S.uni+1),cx,cy+90*dpr);}}// 流れ星・流星群・捕まえたときの光と数（#cv に描いたものは渦の下に隠れるので、同じ位置にもう一度描く。2026-11-27）
 function uvFx(x,dpr){const ox=FR.x,oy=FR.y,X=v=>(v-ox)*dpr,Y=v=>(v-oy)*dpr;x.globalCompositeOperation='lighter';x.lineCap='round';
   const st=(m,tl,w,c,r)=>{const sp=Math.hypot(m.vx,m.vy)||1,ux=m.vx/sp,uy=m.vy/sp,L=sp*tl,g=x.createLinearGradient(X(m.x),Y(m.y),X(m.x-ux*L),Y(m.y-uy*L));g.addColorStop(0,'rgba('+c+',.95)');g.addColorStop(1,'rgba('+c+',0)');x.strokeStyle=g;x.lineWidth=w*dpr;x.beginPath();x.moveTo(X(m.x),Y(m.y));x.lineTo(X(m.x-ux*L),Y(m.y-uy*L));x.stroke();
     const h=x.createRadialGradient(X(m.x),Y(m.y),0,X(m.x),Y(m.y),r*4*dpr);h.addColorStop(0,'rgba('+c+',.5)');h.addColorStop(1,'rgba('+c+',0)');x.fillStyle=h;x.fillRect(X(m.x)-r*4*dpr,Y(m.y)-r*4*dpr,r*8*dpr,r*8*dpr);x.fillStyle='#fffaf0';x.beginPath();x.arc(X(m.x),Y(m.y),r*dpr,0,6.283);x.fill();};
