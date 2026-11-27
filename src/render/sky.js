@@ -123,7 +123,7 @@ function frameInner(){
   for(let i=P.length-1;i>=0;i--){const p=P[i];p.x+=p.vx;p.y+=p.vy;p.vx*=0.975;p.vy*=0.975;p.l-=p.dr;if(p.l<=0){P.splice(i,1);continue;}const gk=p.gr?cl((1-p.l)*3):0,cc=mix(p.c,G,gk);if(i%2===0)blob(p.x,p.y,p.r*5,cc,p.l*0.18);cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.283);cx.fillStyle=rgb(cc,p.l*0.95);cx.fill();}
   cx.font='300 15px Jura, sans-serif';cx.textAlign='center';
   for(let i=POPS.length-1;i>=0;i--){const q=POPS[i];q.t++;const p=q.t/55;if(p>=1){POPS.splice(i,1);continue;}cx.fillStyle='rgba(246,247,251,'+(1-p)+')';const hw=cx.measureText(q.s).width/2+6;cx.fillText(q.s,Math.max(hw,Math.min(CW-hw,q.x)),q.y-eo(p)*44);}   // 長い表記が画面の端で切れないように
-  if(ACC)drawAcc();
+  if(ACC){if(uvShown())accCut();else drawAcc();}
   frClip(drawMeteor);
   if(BRK)drawBrk();
   if(RST)drawRst();
@@ -138,6 +138,9 @@ let GA=0;
 function drawCrack(){const c=CRACK;c.t++;const p=cl(c.t/90);cx.save();cx.strokeStyle='rgba(240,244,255,'+(0.9)+')';cx.lineWidth=1;cx.shadowColor='rgba(220,230,255,.8)';cx.shadowBlur=6;
   c.br.forEach(b=>{const n=Math.floor(b.length*p);if(n<2)return;cx.beginPath();cx.moveTo(b[0][0],b[0][1]);for(let k=1;k<n;k++)cx.lineTo(b[k][0],b[k][1]);cx.stroke();});cx.restore();if(c.t>110)CRACK=null;}
 // 流れ星と流星群は窓の中だけに描く（前は窓の外、上の表示やパネルの上にも流れていた。2026-11-27）
+// UNIVERSE の窓が出ているか。出ている間は加速の演出を出さず、途中なら打ち切る（2026-11-27）
+function uvShown(){return document.getElementById('app').classList.contains('uvOn');}
+function accCut(){ZOOM=1;SPDF=1;ROTV=0;stk=0;ROT=Math.round(ROT/5)*5;TKG.setAttribute('transform','rotate('+ROT+' 88 88)');for(const sg of SEG)sg.setAttribute('stroke-width','2.2');ACC=null;HVR=null;accEndAt=Date.now();frameEl.classList.remove('shake');}
 function frClip(f){cx.save();cx.beginPath();if(cx.roundRect)cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);else cx.rect(FR.x,FR.y,FR.w,FR.h);cx.clip();try{f();}finally{cx.restore();}}
 function drawMeteor(){if(LANDED||HOMEA||SHOWER){MET=null;return;}if(!MET){const rate=(S.flags.bat?1/(60*20):0)*(has('e2')?1.5:1)+(has('cS')?1/(60*20):0);if(rate>0&&!BRK&&!RST&&!STILL&&FR.w>0&&Math.random()<rate*FRK){const L=Math.random()<0.5,sx=L?FR.x-20:FR.x+FR.w+20,sy=FR.y+R(10,FR.h*0.45),tx=L?FR.x+FR.w+40:FR.x-40,ty=sy+R(FR.h*0.35,FR.h*0.7),d=R(150,190);MET={x:sx,y:sy,vx:(tx-sx)/d,vy:(ty-sy)/d,t:0,d};}return;}
   const m=MET;m.t+=FRK;m.x+=m.vx*FRK;m.y+=m.vy*FRK;if(m.t>m.d){MET=null;return;}const tl=Math.hypot(m.vx,m.vy)*14,ux=m.vx/Math.hypot(m.vx,m.vy),uy=m.vy/Math.hypot(m.vx,m.vy),c=mix([255,236,200],G,1-A[3]*0.6);
