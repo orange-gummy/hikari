@@ -121,9 +121,9 @@ function frameInner(){
   for(let i=RIP.length-1;i>=0;i--){const q=RIP[i];q.t++;if(q.m==='in'){const p=q.t/70;if(p>=1){RIP.splice(i,1);continue;}const rr=6+eo(p)*Math.max(CW,CH)*0.9;cx.beginPath();cx.arc(q.x,q.y,rr,0,6.283);cx.strokeStyle=rgb(q.c,0.25*(1-p));cx.lineWidth=1+2*(1-p);cx.stroke();blob(q.x,q.y,24*(1-p)+6,q.c,0.7*(1-p));}
     else{const p=q.t/36;if(p>=1){RIP.splice(i,1);continue;}const rr=30*(1-eo(p));cx.beginPath();cx.arc(q.x,q.y,rr,0,6.283);cx.strokeStyle=rgb(mix(q.c,G,p),0.5*(1-p*0.5));cx.lineWidth=0.8;cx.stroke();}}
   for(let i=TRIP.length-1;i>=0;i--){const q=TRIP[i];q.t++;const p=q.t/45;if(p>=1){TRIP.splice(i,1);continue;}cx.beginPath();cx.arc(q.x,q.y,12+eo(p)*60,0,6.283);cx.strokeStyle=rgb(q.c,0.7*(1-p));cx.lineWidth=1.2*(1-p)+0.3;cx.stroke();}
-  for(let i=P.length-1;i>=0;i--){const p=P[i];p.x+=p.vx;p.y+=p.vy;p.vx*=0.975;p.vy*=0.975;p.l-=p.dr;if(p.l<=0){P.splice(i,1);continue;}const gk=p.gr?cl((1-p.l)*3):0,cc=mix(p.c,G,gk);if(i%2===0)blob(p.x,p.y,p.r*5,cc,p.l*0.18);cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.283);cx.fillStyle=rgb(cc,p.l*0.95);cx.fill();}
+  for(let i=P.length-1;i>=0;i--){const p=P[i];p.x+=p.vx;p.y+=p.vy;p.vx*=0.975;p.vy*=0.975;p.l-=p.dr;if(p.l<=0){P.splice(i,1);continue;}const gk=p.gr?cl((1-p.l)*3):0,cc=mix(p.c,G,gk);if(uvq&&inFR(p))continue;if(i%2===0)blob(p.x,p.y,p.r*5,cc,p.l*0.18);cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.283);cx.fillStyle=rgb(cc,p.l*0.95);cx.fill();}   // UNIVERSE の窓の中の粒は uvFx() が渦の上に描く
   cx.font='300 15px Jura, sans-serif';cx.textAlign='center';
-  for(let i=POPS.length-1;i>=0;i--){const q=POPS[i];q.t++;const p=q.t/55;if(p>=1){POPS.splice(i,1);continue;}cx.fillStyle='rgba(246,247,251,'+(1-p)+')';const hw=cx.measureText(q.s).width/2+6;cx.fillText(q.s,Math.max(hw,Math.min(CW-hw,q.x)),q.y-eo(p)*44);}   // 長い表記が画面の端で切れないように
+  for(let i=POPS.length-1;i>=0;i--){const q=POPS[i];q.t++;const p=q.t/55;if(p>=1){POPS.splice(i,1);continue;}if(uvq&&inFR(q))continue;cx.fillStyle='rgba(246,247,251,'+(1-p)+')';const hw=cx.measureText(q.s).width/2+6;cx.fillText(q.s,Math.max(hw,Math.min(CW-hw,q.x)),q.y-eo(p)*44);}   // 長い表記が画面の端で切れないように
   if(ACC){if(uvShown())accCut();else drawAcc();}
   frClip(drawMeteor);
   if(BRK)drawBrk();
@@ -140,6 +140,7 @@ function drawCrack(){const c=CRACK;c.t++;const p=cl(c.t/90);cx.save();cx.strokeS
   c.br.forEach(b=>{const n=Math.floor(b.length*p);if(n<2)return;cx.beginPath();cx.moveTo(b[0][0],b[0][1]);for(let k=1;k<n;k++)cx.lineTo(b[k][0],b[k][1]);cx.stroke();});cx.restore();if(c.t>110)CRACK=null;}
 // 流れ星と流星群は窓の中だけに描く（前は窓の外、上の表示やパネルの上にも流れていた。2026-11-27）
 // UNIVERSE の窓が出ているか。出ている間は加速の演出を出さず、途中なら打ち切る（2026-11-27）
+function inFR(q){return q.x>=FR.x&&q.x<=FR.x+FR.w&&q.y>=FR.y&&q.y<=FR.y+FR.h;}
 function uvShown(){return document.getElementById('app').classList.contains('uvOn');}
 function accCut(){ZOOM=1;SPDF=1;ROTV=0;stk=0;ROT=Math.round(ROT/5)*5;TKG.setAttribute('transform','rotate('+ROT+' 88 88)');for(const sg of SEG)sg.setAttribute('stroke-width','2.2');ACC=null;HVR=null;accEndAt=Date.now();frameEl.classList.remove('shake');}
 function frClip(f){cx.save();cx.beginPath();if(cx.roundRect)cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);else cx.rect(FR.x,FR.y,FR.w,FR.h);cx.clip();try{f();}finally{cx.restore();}}

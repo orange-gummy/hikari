@@ -238,9 +238,9 @@ function uvFx(x,dpr){const ox=FR.x,oy=FR.y,X=v=>(v-ox)*dpr,Y=v=>(v-oy)*dpr;x.glo
   if(MET)st(MET,14,2,'255,236,200',2.2);
   const s=SHOWER;if(s){for(const m of s.ms)if(!m.dead)st(m,9,1.4,m.c.map(Math.round).join(','),1.6);
     for(const q of s.trail){x.strokeStyle='rgba(255,226,190,'+(0.6*q.l).toFixed(3)+')';x.lineWidth=(1.6*q.l+0.4)*dpr;x.beginPath();x.moveTo(X(q.ax),Y(q.ay));x.lineTo(X(q.bx),Y(q.by));x.stroke();}}
-  for(const p of P){if(p.l<=0)continue;x.fillStyle='rgba('+p.c.map(Math.round).join(',')+','+Math.min(1,p.l).toFixed(3)+')';x.beginPath();x.arc(X(p.x),Y(p.y),p.r*dpr,0,6.283);x.fill();}
+  for(const p of P){if(p.l<=0||!inFR(p))continue;x.fillStyle='rgba('+p.c.map(Math.round).join(',')+','+Math.min(1,p.l).toFixed(3)+')';x.beginPath();x.arc(X(p.x),Y(p.y),p.r*dpr,0,6.283);x.fill();}
   x.globalCompositeOperation='source-over';x.textAlign='center';
-  for(const q of POPS){const p=q.t/55;if(p>=1)continue;x.font='300 '+(15*dpr)+'px Jura, sans-serif';x.fillStyle='rgba(246,247,251,'+(1-p).toFixed(3)+')';x.fillText(q.s,X(q.x),Y(q.y-p*44));}
+  x.font='300 '+(15*dpr)+'px Jura, sans-serif';for(const q of POPS){const p=q.t/55;if(p>=1||!inFR(q))continue;const hw=x.measureText(q.s).width/2+8*dpr,Wc=FR.w*dpr;x.fillStyle='rgba(246,247,251,'+(1-p).toFixed(3)+')';x.fillText(q.s,Math.max(hw,Math.min(Wc-hw,X(q.x))),Y(q.y-p*44));}   // 窓の端で切れないよう、窓の中に収める
   if(s){const cX=FR.w/2*dpr,cY=FR.h*0.86*dpr,left=Math.max(0,Math.ceil((s.dur-s.t)/60));
     if(s.combo>=2){x.font='300 '+(34*dpr)+'px Jura';x.fillStyle='rgba(255,226,190,.95)';x.fillText(s.combo+' 連',cX,cY-18*dpr);}
     if(s.t<=s.dur){x.font='300 '+(11*dpr)+'px Murecho';x.fillStyle='rgba(236,238,242,.55)';x.fillText('流れ星をタップか、なぞって捕まえる　残り '+left+'秒',cX,cY+8*dpr);}}}
