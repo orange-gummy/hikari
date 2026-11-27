@@ -91,14 +91,15 @@ function frameInner(){
   SKYV=0;   // 背景のオーロラ（aurBand）は 2026-11-16 に外した（宇宙らしく見えないため）。戻すときは for(i<5) で aurBand(cx,i,COLORS[i],A[i]*(1-0.8*SKYV),RV[i])   // 晴れた昼の空が出ている間は、オーロラを弱める
   // stars
   const tw=0.25*aw,CXs=RC.x||CW/2,CYs=RC.y||CH/2,rs=420*sc*(1-CONV*0.92)*ZOOM;
-  if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const s of STARS){s.t+=s.v*0.75*SPDF*(1+CONV*4);if(s.t>3.1){s.t=0.02+Math.random()*0.2;s.p=Math.random()*6.283;}else if(s.t<0.02&&SPDF<0){s.t=2.95+Math.random()*0.14;s.p=Math.random()*6.283;}
+  const uvq=uvShown();   // UNIVERSE の窓では流れる星と漂う色の粒を描かない（窓の外に動く粒だけが見えていた。2026-11-27）
+  if(!uvq&&!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const s of STARS){s.t+=s.v*0.75*SPDF*(1+CONV*4);if(s.t>3.1){s.t=0.02+Math.random()*0.2;s.p=Math.random()*6.283;}else if(s.t<0.02&&SPDF<0){s.t=2.95+Math.random()*0.14;s.p=Math.random()*6.283;}
     const c=Math.cos(s.t),ca=(c+bv)/(1+bv*c),ta=Math.acos(Math.max(-1,Math.min(1,ca))),r=0.5*rs*Math.tan(Math.min(ta,3.0)/2),x=CXs+r*Math.cos(s.p),y=CYs+r*Math.sin(s.p);if(x<-8||x>CW+8||y<-8||y>CH+8)continue;
     const col=mix(COLORS[s.k].rgb,G,1-A[s.k]),f=1-2*ta/Math.PI;const ly=s.s<0.8?0.62:s.s<1.2?0.9:1.15;let al=cl((0.35+0.5*s.w+f*0.3)*(0.55+0.45*aw)*ly+Math.sin(T*0.05+s.ph)*tw+CONV*0.4);if(al<0.05)al=0.05;   // 遠い層ほど暗く（2026-11-22、奥行き）
     if(stk>0&&(s.big||s.q<0.5)){const k=Math.min(1,stk/46),SL=Math.min(0.6,0.28+0.015*(ACC?ACC.lvl:0)),rr=r*(1-SL*k),sc2=f>0?mix(col,[150,190,255],0.55*A[4]):mix(col,[255,140,120],0.55*A[0]);cx.beginPath();cx.moveTo(CXs+rr*Math.cos(s.p),CYs+rr*Math.sin(s.p));cx.lineTo(x,y);cx.strokeStyle=rgb(sc2,Math.min(1,al*k*1.3));cx.lineWidth=s.s*(0.45+0.3*k);cx.stroke();}
     if(s.big&&al>0.4)blob(x,y,7*(0.6+0.4*aw),col,al*0.32);
     cx.beginPath();cx.arc(x,y,s.s*(0.7+0.3*aw)*(s.s<0.8?0.85:s.s>1.2?1.12:1),0,6.283);cx.fillStyle=rgb(col,al);cx.fill();}
   if(stk>0)stk--;
-  if(!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const m of FLY){const a=A[m.k];if(!STILL){m.x+=(m.vx+Math.sin(T*0.01+m.ph)*0.2)*0.4/CW;m.y+=m.vy*0.4/CH;}if(SPDF>1){const f2=(SPDF-1)*0.012;m.x+=(m.x*CW-CXs)*f2/CW;m.y+=(m.y*CH-CYs)*f2/CH;}if(m.y>1.04||m.y<-0.02||m.x<-0.02||m.x>1.02){if(SPDF>1.05){const an=Math.random()*6.283,rr=R(0.03,0.2)*Math.min(CW,CH);m.x=(CXs+Math.cos(an)*rr)/CW;m.y=(CYs+Math.sin(an)*rr)/CH;}else if(m.y<-0.02){m.y=1.02;m.x=Math.random();}else{m.x=Math.random();m.y=Math.random();}}
+  if(!uvq&&!LANDED&&!(HOMEA&&HOMEA.t>45)&&!(HEARD&&HEARD.t>100))for(const m of FLY){const a=A[m.k];if(!STILL){m.x+=(m.vx+Math.sin(T*0.01+m.ph)*0.2)*0.4/CW;m.y+=m.vy*0.4/CH;}if(SPDF>1){const f2=(SPDF-1)*0.012;m.x+=(m.x*CW-CXs)*f2/CW;m.y+=(m.y*CH-CYs)*f2/CH;}if(m.y>1.04||m.y<-0.02||m.x<-0.02||m.x>1.02){if(SPDF>1.05){const an=Math.random()*6.283,rr=R(0.03,0.2)*Math.min(CW,CH);m.x=(CXs+Math.cos(an)*rr)/CW;m.y=(CYs+Math.sin(an)*rr)/CH;}else if(m.y<-0.02){m.y=1.02;m.x=Math.random();}else{m.x=Math.random();m.y=Math.random();}}
     const px=m.x*CW,py=m.y*CH;if(Math.abs(px-CXs)<52&&Math.abs(py-CYs)<34)continue;const pu=0.5+0.5*Math.sin(T*0.04+m.ph),cc=mix(COLORS[m.k].rgb,G,1-a),al=(0.25+0.6*pu)*(0.4+0.6*a);blob(px,py,m.r*6,cc,al*0.3);cx.beginPath();cx.arc(px,py,m.r,0,6.283);cx.fillStyle=rgb(cc,al);cx.fill();}
   // scenes inside the window
   if(HEARD&&!LANDED){HEARD.t++;cx.fillStyle='rgba(19,21,30,'+ei(cl(HEARD.t/100)).toFixed(3)+')';cx.fillRect(0,0,CW,CH);}
