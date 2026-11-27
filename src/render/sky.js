@@ -48,7 +48,7 @@ const n=Math.min(S.sail||0,14),r0=74*RCS+10;
   if(Math.random()<0.25+0.05*n){const an=Math.random()*6.283;SAILP.push({a:an,r:r0*0.5,v:0.6+Math.random()*(0.8+n*0.15),l:1});}
   for(let i=SAILP.length-1;i>=0;i--){const q=SAILP[i];q.r+=q.v;q.l-=0.012;if(q.l<=0){SAILP.splice(i,1);continue;}const x=RC.x+Math.cos(q.a)*q.r,y=RC.y+Math.sin(q.a)*q.r;cx.beginPath();cx.arc(x,y,0.9,0,6.283);cx.fillStyle='rgba(255,240,215,'+(0.7*q.l).toFixed(3)+')';cx.fill();}}
 function frameStep(){FRK=1;if(++MEAS_N>=20){MEAS_N=0;measure();}   // リングと窓の位置を、ときどき測り直す
-const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawSail();drawShower();drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
+const f0=FR;if(LANDED||HOMEA)FR={x:0,y:0,w:CW,h:CH};try{frameInner();drawSail();frClip(drawShower);drawFold();drawLightMark();drawLightEnd();}finally{FR=f0;}}
 /* ④ 宇宙を畳む：星がすべて中心へ流れ込み（4秒）→ 光の点ひとつ（2秒）→ 点がほどけて新しい色合いの空が広がる */
 let FOLD=null;
 function startFold(){if(!canFold()||FOLD)return;FOLD={t:0};SND.play('fold');document.getElementById('block').style.display='block';const p=document.getElementById('panel');p.style.transition='opacity 1.5s';p.style.opacity='0.12';paintGoal();}
@@ -124,7 +124,7 @@ function frameInner(){
   cx.font='300 15px Jura, sans-serif';cx.textAlign='center';
   for(let i=POPS.length-1;i>=0;i--){const q=POPS[i];q.t++;const p=q.t/55;if(p>=1){POPS.splice(i,1);continue;}cx.fillStyle='rgba(246,247,251,'+(1-p)+')';const hw=cx.measureText(q.s).width/2+6;cx.fillText(q.s,Math.max(hw,Math.min(CW-hw,q.x)),q.y-eo(p)*44);}   // 長い表記が画面の端で切れないように
   if(ACC)drawAcc();
-  drawMeteor();
+  frClip(drawMeteor);
   if(BRK)drawBrk();
   if(RST)drawRst();
   if(VMINI)drawVMini();if(VRP.length)drawVrP();
@@ -137,6 +137,8 @@ function frameInner(){
 let GA=0;
 function drawCrack(){const c=CRACK;c.t++;const p=cl(c.t/90);cx.save();cx.strokeStyle='rgba(240,244,255,'+(0.9)+')';cx.lineWidth=1;cx.shadowColor='rgba(220,230,255,.8)';cx.shadowBlur=6;
   c.br.forEach(b=>{const n=Math.floor(b.length*p);if(n<2)return;cx.beginPath();cx.moveTo(b[0][0],b[0][1]);for(let k=1;k<n;k++)cx.lineTo(b[k][0],b[k][1]);cx.stroke();});cx.restore();if(c.t>110)CRACK=null;}
+// 流れ星と流星群は窓の中だけに描く（前は窓の外、上の表示やパネルの上にも流れていた。2026-11-27）
+function frClip(f){cx.save();cx.beginPath();if(cx.roundRect)cx.roundRect(FR.x,FR.y,FR.w,FR.h,18);else cx.rect(FR.x,FR.y,FR.w,FR.h);cx.clip();try{f();}finally{cx.restore();}}
 function drawMeteor(){if(LANDED||HOMEA||SHOWER){MET=null;return;}if(!MET){const rate=(S.flags.bat?1/(60*20):0)*(has('e2')?1.5:1)+(has('cS')?1/(60*20):0);if(rate>0&&!BRK&&!RST&&!STILL&&FR.w>0&&Math.random()<rate*FRK){const L=Math.random()<0.5,sx=L?FR.x-20:FR.x+FR.w+20,sy=FR.y+R(10,FR.h*0.45),tx=L?FR.x+FR.w+40:FR.x-40,ty=sy+R(FR.h*0.35,FR.h*0.7),d=R(150,190);MET={x:sx,y:sy,vx:(tx-sx)/d,vy:(ty-sy)/d,t:0,d};}return;}
   const m=MET;m.t+=FRK;m.x+=m.vx*FRK;m.y+=m.vy*FRK;if(m.t>m.d){MET=null;return;}const tl=Math.hypot(m.vx,m.vy)*14,ux=m.vx/Math.hypot(m.vx,m.vy),uy=m.vy/Math.hypot(m.vx,m.vy),c=mix([255,236,200],G,1-A[3]*0.6);
   const g=cx.createLinearGradient(m.x,m.y,m.x-ux*tl,m.y-uy*tl);g.addColorStop(0,rgb(c,0.95));g.addColorStop(1,rgb(c,0));cx.strokeStyle=g;cx.lineWidth=2;cx.beginPath();cx.moveTo(m.x,m.y);cx.lineTo(m.x-ux*tl,m.y-uy*tl);cx.stroke();blob(m.x,m.y,18,c,0.55);cx.beginPath();cx.arc(m.x,m.y,2.2,0,6.283);cx.fillStyle='#fffaf0';cx.fill();}

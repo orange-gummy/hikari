@@ -188,7 +188,8 @@ const uvEl=document.createElement('div');uvEl.id='uniView';uvEl.setAttribute('ar
 const uvCv=uvEl.querySelector('canvas'),uvX=uvCv.getContext('2d');let uvRun=false,uvT0=0,uvLast=0,uvTxt='';
 // 指でなぞると宇宙が回る（離すと惰性でゆっくり止まり、ふだんの回転に戻る）。ちょんと触れたところには光の波紋（2026-11-26）。窓のタップの生産は今までどおり
 let uvRot=0,uvVel=0,uvDrag=null;const uvRip=[];
-frameEl.addEventListener('pointerdown',e=>{if(!document.getElementById('app').classList.contains('uvOn'))return;uvDrag={x0:e.clientX,y0:e.clientY,lx:e.clientX,lt:performance.now(),mv:0};uvVel=0;});
+frameEl.addEventListener('pointerdown',e=>{if(!document.getElementById('app').classList.contains('uvOn')||SHOWER)return;   // 流星群の間はなぞると流れ星を捕まえるので回さない
+  uvDrag={x0:e.clientX,y0:e.clientY,lx:e.clientX,lt:performance.now(),mv:0};uvVel=0;});
 addEventListener('pointermove',e=>{if(!uvDrag)return;const dx=e.clientX-uvDrag.lx,now=performance.now(),k=2.4/Math.max(200,FR.w);uvRot+=dx*k;uvVel=dx*k/Math.max(16,now-uvDrag.lt)*33;uvDrag.lx=e.clientX;uvDrag.lt=now;uvDrag.mv=Math.max(uvDrag.mv,Math.hypot(e.clientX-uvDrag.x0,e.clientY-uvDrag.y0));});
 addEventListener('pointerup',e=>{if(!uvDrag)return;if(uvDrag.mv<8)uvRip.push({x:e.clientX-FR.x,y:e.clientY-FR.y,t0:performance.now()});uvDrag=null;});
 addEventListener('pointercancel',()=>{uvDrag=null;});
@@ -203,7 +204,8 @@ const UV=(()=>{let sd=5;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
 function uniViewOn(){return curLayer==='universe'&&S.voy&&!S.chal&&!FOLD&&!climax&&!LIGHTFX&&!document.getElementById('app').classList.contains('vrOn');}
 function paintUniView(){const on=uniViewOn();document.getElementById('app').classList.toggle('uvOn',on);
   if(on&&!uvRun){uvRun=true;uvT0=uvT0||performance.now();requestAnimationFrame(uvFrame);}
-  if(!on)return;const edge=edgeLy(),d=Math.max(1e4,S.vdist||1e4),past=d>=edge,nb=past?Math.log2(d/edge):0,t=Math.min(1,Math.log(d/1e4)/Math.log(edge/1e4));
+  if(!on)return;const edge=edgeLy(),d=Math.max(1e4,S.vdist||1e4,S.ubest||0),past=d>=edge,   // 文字はこの宇宙でいちばん遠く（S.ubest）で。引き直したあとの航海の距離ではない（2026-11-27）
+  nb=past?Math.log2(d/edge):0,t=Math.min(1,Math.log(d/1e4)/Math.log(edge/1e4));
   const tx=[fmt(S.U),past?('畳むと +'+uGain()+'　·　次の +1 まで '+Math.floor((nb%1)*100)+'%'):('宇宙の果てまで '+Math.floor(Math.min(0.999,t)*100)+'%'),'UNIVERSE '+roman(S.uni+1)];
   const k=tx.join('|');if(k!==uvTxt){uvTxt=k;const e=uvEl.querySelectorAll('.uvTx .n,.uvTx .s,.uvTx .u');tx.forEach((v,i)=>e[i].textContent=v);}}
 function uvFrame(now){if(!document.getElementById('app').classList.contains('uvOn')||document.hidden){uvRun=false;return;}requestAnimationFrame(uvFrame);
@@ -227,4 +229,18 @@ function uvFrame(now){if(!document.getElementById('app').classList.contains('uvO
   x.fillStyle='#fff6e6';x.beginPath();x.arc(sx,sy,2.2*dpr,0,6.283);x.fill();
   x.lineWidth=0.9*dpr;for(let k=0;k<2;k++){const ph=((t/2.6)+k*0.5)%1;x.strokeStyle='rgba(255,246,230,'+(0.6*(1-ph)).toFixed(3)+')';x.beginPath();x.ellipse(sx,sy,(4+26*ph)*dpr,(4+26*ph)*dpr*E,0,0,6.283);x.stroke();}   // いまここ：光の波紋が広がって消える
   for(let k=uvRip.length-1;k>=0;k--){const r0=uvRip[k],ph=(now-r0.t0)/900;if(ph>=1){uvRip.splice(k,1);continue;}x.strokeStyle='rgba(255,246,230,'+(0.5*(1-ph)).toFixed(3)+')';x.lineWidth=1*dpr;x.beginPath();x.arc(r0.x*dpr,r0.y*dpr,(6+40*ph)*dpr,0,6.283);x.stroke();}   // 触れたところの波紋
-  x.globalCompositeOperation='source-over';const gt=x.createRadialGradient(cx,cy,0,cx,cy,62*dpr);gt.addColorStop(0,'rgba(4,5,12,.55)');gt.addColorStop(1,'rgba(4,5,12,0)');x.fillStyle=gt;x.fillRect(cx-62*dpr,cy-62*dpr,124*dpr,124*dpr);}
+  x.globalCompositeOperation='source-over';const gt=x.createRadialGradient(cx,cy,0,cx,cy,62*dpr);gt.addColorStop(0,'rgba(4,5,12,.55)');gt.addColorStop(1,'rgba(4,5,12,0)');x.fillStyle=gt;x.fillRect(cx-62*dpr,cy-62*dpr,124*dpr,124*dpr);
+  uvFx(x,dpr);}
+// 流れ星・流星群・捕まえたときの光と数（#cv に描いたものは渦の下に隠れるので、同じ位置にもう一度描く。2026-11-27）
+function uvFx(x,dpr){const ox=FR.x,oy=FR.y,X=v=>(v-ox)*dpr,Y=v=>(v-oy)*dpr;x.globalCompositeOperation='lighter';x.lineCap='round';
+  const st=(m,tl,w,c,r)=>{const sp=Math.hypot(m.vx,m.vy)||1,ux=m.vx/sp,uy=m.vy/sp,L=sp*tl,g=x.createLinearGradient(X(m.x),Y(m.y),X(m.x-ux*L),Y(m.y-uy*L));g.addColorStop(0,'rgba('+c+',.95)');g.addColorStop(1,'rgba('+c+',0)');x.strokeStyle=g;x.lineWidth=w*dpr;x.beginPath();x.moveTo(X(m.x),Y(m.y));x.lineTo(X(m.x-ux*L),Y(m.y-uy*L));x.stroke();
+    const h=x.createRadialGradient(X(m.x),Y(m.y),0,X(m.x),Y(m.y),r*4*dpr);h.addColorStop(0,'rgba('+c+',.5)');h.addColorStop(1,'rgba('+c+',0)');x.fillStyle=h;x.fillRect(X(m.x)-r*4*dpr,Y(m.y)-r*4*dpr,r*8*dpr,r*8*dpr);x.fillStyle='#fffaf0';x.beginPath();x.arc(X(m.x),Y(m.y),r*dpr,0,6.283);x.fill();};
+  if(MET)st(MET,14,2,'255,236,200',2.2);
+  const s=SHOWER;if(s){for(const m of s.ms)if(!m.dead)st(m,9,1.4,m.c.map(Math.round).join(','),1.6);
+    for(const q of s.trail){x.strokeStyle='rgba(255,226,190,'+(0.6*q.l).toFixed(3)+')';x.lineWidth=(1.6*q.l+0.4)*dpr;x.beginPath();x.moveTo(X(q.ax),Y(q.ay));x.lineTo(X(q.bx),Y(q.by));x.stroke();}}
+  for(const p of P){if(p.l<=0)continue;x.fillStyle='rgba('+p.c.map(Math.round).join(',')+','+Math.min(1,p.l).toFixed(3)+')';x.beginPath();x.arc(X(p.x),Y(p.y),p.r*dpr,0,6.283);x.fill();}
+  x.globalCompositeOperation='source-over';x.textAlign='center';
+  for(const q of POPS){const p=q.t/55;if(p>=1)continue;x.font='300 '+(15*dpr)+'px Jura, sans-serif';x.fillStyle='rgba(246,247,251,'+(1-p).toFixed(3)+')';x.fillText(q.s,X(q.x),Y(q.y-p*44));}
+  if(s){const cX=FR.w/2*dpr,cY=FR.h*0.86*dpr,left=Math.max(0,Math.ceil((s.dur-s.t)/60));
+    if(s.combo>=2){x.font='300 '+(34*dpr)+'px Jura';x.fillStyle='rgba(255,226,190,.95)';x.fillText(s.combo+' 連',cX,cY-18*dpr);}
+    if(s.t<=s.dur){x.font='300 '+(11*dpr)+'px Murecho';x.fillStyle='rgba(236,238,242,.55)';x.fillText('流れ星をタップか、なぞって捕まえる　残り '+left+'秒',cX,cY+8*dpr);}}}
